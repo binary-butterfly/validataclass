@@ -6,54 +6,34 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Optional
+from typing import Union
 
 
-class ValidationError(ValueError):
-    """
-    will add an validation error
-    """
+class ValidationError(Exception):
+    code: str = 'unknown_error'
+    extra_data: dict = None
 
-    message: str
+    def __init__(self, *, code: str = None, **kwargs):
+        if code is not None:
+            self.code = code
+        self.extra_data = kwargs
 
-    def __init__(self, message: Optional[str] = None):
-        self.message = message
-
-
-class StopValidation(Exception):
-    """
-    will add an error and stop validation because more validators will run in errors
-    """
-
-    message: str
-
-    def __init__(self, message: Optional[str] = None):
-        self.message = message
+    def to_dict(self):
+        extra_data = self.extra_data if self.extra_data is not None else {}
+        return {
+            'code': self.code,
+            **extra_data,
+        }
 
 
-class ClearValidation(Exception):
-    """
-    not really an exception: clears errors from validations before, usually for optional fields
-    """
-    pass
+class RequiredValueError(ValidationError):
+    code = 'required_value'
 
 
-class NotValidated(Exception):
-    """
-    will be thrown if somebody tries to access data before validating
-    """
-    pass
+class InvalidTypeError(ValidationError):
+    code = 'invalid_type'
 
-
-class InvalidData(Exception):
-    """
-    will be thrown if somebody tries to access data which is not there
-    """
-    pass
-
-
-class InvalidValidator(Exception):
-    """
-    will be thrown if the validator is not suitable for this type of field
-    """
-    pass
+    def __init__(self, *, expected_type: Union[type, str]):
+        self.extra_data = {
+            'expected_type': expected_type if isinstance(expected_type, str) else expected_type.__name__,
+        }

@@ -6,20 +6,26 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Any
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
-from ..abstract_input import AbstractInput
-from ..fields import Field
-from ..validators import Validator
-from ..exceptions import ValidationError
+from .string_validator import StringValidator
+from wtfjson.exceptions import ValidationError
 
 
-class DecimalValidator(Validator):
-    default_message = 'invalid decimal'
+class DecimalValidator(StringValidator):
+    """
+    Validator that parses decimal values.
 
-    def __call__(self, value: Any, form: AbstractInput, field: Field):
+    Valid input: `str` in a format accepted by `decimal.Decimal`
+    Output: `decimal.Decimal`
+    """
+    def validate(self, input_data: Any) -> Decimal:
+        # First, validate input data as string
+        decimal_string = super().validate(input_data)
+
         try:
-            field.data_processed = Decimal(value)
+            # Now, try to parse string as decimal value
+            return Decimal(decimal_string)
         except InvalidOperation:
-            raise ValidationError(self.message)
+            raise ValidationError(code='invalid_decimal')

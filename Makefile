@@ -1,4 +1,6 @@
-.PHONY: all tox open-coverage clean clean-all
+.PHONY: all \
+	tox test flake8 open-coverage \
+	clean clean-all
 
 # Default target
 all: tox
@@ -6,9 +8,16 @@ all: tox
 
 # Test suite
 # ----------
+
+# Run complete tox suite
 tox:
 	tox
 
+# Only run pytest
+test:
+	tox -e 'py{39,38,37,py3}'
+
+# Only run flake8 linter
 flake8:
 	tox -e flake8
 
