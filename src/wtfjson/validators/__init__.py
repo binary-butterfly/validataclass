@@ -15,3 +15,6 @@ from .string_validator import StringValidator
 
 # Extended type validators (based on basic type validators)
 from .decimal_validator import DecimalValidator
+
+# Composite type validators
+from .list_validator import ListValidator

@@ -17,7 +17,7 @@ class Validator(ABC):
     Base class for building extendable validator classes that validate, sanitize and transform input.
     """
 
-    @abstractmethod
+    @abstractmethod  # pragma: nocover
     def validate(self, input_data: Any):
         """
         Validates any input data with the given Validator class.
