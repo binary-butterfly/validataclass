@@ -57,6 +57,16 @@ class DictValidator(Validator):
              required_fields: List of field names that must exist in a dict (default: all fields are required)
              optional_fields: If set, list of field names that are not required (mutually exclusive with required_fields)
         """
+        # For easier subclassing: If 'field_validators' etc. are already set (e.g. as class members in a subclass), use those values as
+        # default for the constructor parameters. That way subclasses can simply define fields at class scope without needing to define
+        # a custom __init__() method. Specifying the parameters explicitly in the constructor still takes precedence over the defaults.
+        if field_validators is None:
+            field_validators = getattr(self, 'field_validators', None)
+        if default_validator is None:
+            default_validator = getattr(self, 'default_validator', None)
+        if required_fields is None and optional_fields is None:
+            required_fields = getattr(self, 'required_fields', None)
+
         # Check parameter validity
         if field_validators is None and default_validator is None:
             raise InvalidValidatorOptionException(
