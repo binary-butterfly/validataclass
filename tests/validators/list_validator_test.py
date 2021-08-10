@@ -76,5 +76,3 @@ class ListValidatorTest:
                 3: {'code': 'invalid_decimal'},
             }
         }
-
-    # TODO: Nested list of dicts/dataclasses

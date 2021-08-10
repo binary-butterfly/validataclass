@@ -13,13 +13,26 @@ from wtfjson.exceptions import ValidationError, ListItemsValidationError
 
 
 class ListValidator(Validator):
+    """
+    Validator for lists that validates list items with a specified item validator.
+    Raises a `ListItemsValidationError` containing the validation errors of the item validator when one or more
+    items failed validation.
+
+    Example:
+        ListValidator(item_validator=IntegerValidator())
+
+    Valid input: [item1, item2, ...] (if all items are valid input for the item validator)
+    Output: [validated_item1, validated_item2, ...]
+    """
     item_validator: Validator
 
-    # TODO: optional min/max count requirements; allow_empty?
     def __init__(self, item_validator: Validator):
         self.item_validator = item_validator
 
     def validate(self, input_data: Any) -> list:
+        """
+        Validate input data. Returns a validated list.
+        """
         self._ensure_type(input_data, list)
 
         validated_list = []

@@ -10,6 +10,15 @@ from wtfjson.exceptions import ValidationError
 
 
 class ListItemsValidationError(ValidationError):
+    """
+    Validation error raised by `ListValidator` when one or more list items has validation errors, i.e. errors raised
+    by the 'item_validator'.
+
+    Contains the extra field 'item_errors', which is a dictionary containing further `ValidationErrors`. The keys of
+    the dictionary are the indices of the invalid list items (as given in the input list).
+
+    The implementation of `to_dict()` recursively converts the item validation errors to dictionaries.
+    """
     code = 'list_item_errors'
     item_errors: dict
 
