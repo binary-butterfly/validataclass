@@ -22,3 +22,4 @@ from .decimal_validator import DecimalValidator
 # Composite type validators
 from .list_validator import ListValidator
 from .dict_validator import DictValidator
+from .dataclass_validator import DataclassValidator

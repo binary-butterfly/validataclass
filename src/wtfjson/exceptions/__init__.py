@@ -7,6 +7,6 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from .common_exceptions import ValidationError, InvalidTypeError, RequiredValueError
-from .meta_exceptions import InvalidValidatorOptionException
+from .meta_exceptions import InvalidValidatorOptionException, DataclassInvalidFieldValidatorException
 from .list_exceptions import ListItemsValidationError
 from .dict_exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, DictRequiredFieldError

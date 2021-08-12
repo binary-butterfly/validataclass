@@ -7,7 +7,6 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
-
 import pytest
 
 from wtfjson.exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, InvalidTypeError, RequiredValueError, \
@@ -446,6 +445,7 @@ class DictValidatorTest:
     @staticmethod
     def test_subclassed_dict_valid():
         """ Create a subclassed DictValidator and test it with valid data. """
+
         class UnitTestDictValidator(DictValidator):
             field_validators = {
                 'name': StringValidator(),
@@ -484,6 +484,7 @@ class DictValidatorTest:
     @staticmethod
     def test_subclassed_dict_invalid():
         """ Create a subclassed DictValidator and test it with invalid data. """
+
         class UnitTestDictValidator(DictValidator):
             field_validators = {
                 'name': StringValidator(),
@@ -531,6 +532,7 @@ class DictValidatorTest:
     @staticmethod
     def test_subclassed_dict_with_default_validator_valid():
         """ Create a subclassed DictValidator with default_validator instead of field_validators and test it with valid data. """
+
         class UnitTestDefaultDictValidator(DictValidator):
             default_validator = DecimalValidator()
 
@@ -550,6 +552,7 @@ class DictValidatorTest:
     @staticmethod
     def test_subclassed_dict_with_default_validator_invalid():
         """ Create a subclassed DictValidator with default_validator instead of field_validators and test it with invalid data. """
+
         class UnitTestDefaultDictValidator(DictValidator):
             default_validator = DecimalValidator()
 
