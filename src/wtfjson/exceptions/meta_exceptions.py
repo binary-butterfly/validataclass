@@ -12,19 +12,19 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 class InvalidValidatorOptionException(ValueError):
     """
-    Exception that is raised when attempting to create a validator with invalid options (e.g. setting two options
-    that are mutually exclusive).
+    Exception that is raised when attempting to create a validator with invalid options (e.g. setting two options that are
+    mutually exclusive).
 
     (This is not an input validation error.)
     """
     pass
 
 
-class DataclassInvalidFieldValidatorException(Exception):
+class DataclassValidatorFieldException(Exception):
     """
-    Exception that is raised at creation of a DataclassValidator when a field of the dataclass does not have a valid
-    Validator associated with it (e.g. if no Validator was specified, or the 'validator' metadata contains something
-    that is not a Validator object).
+    Exception that is raised at creation of a validator_dataclass or a DataclassValidator when a field of the dataclass does not
+    match the requirements. For example if no validator is specified for a field, or an object of invalid type is specified as
+    in the field metadata.
 
     (This is not an input validation error.)
     """

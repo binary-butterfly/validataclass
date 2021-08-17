@@ -313,7 +313,7 @@ class DictValidatorTest:
             DictValidator()
 
         assert str(exception_info.value) == \
-               "At least one of the parameters 'field_validators' and 'default_validator' needs to be specified."
+               'At least one of the parameters "field_validators" and "default_validator" needs to be specified.'
 
     @staticmethod
     def test_dict_validator_with_required_fields_and_optional_fields():
@@ -328,7 +328,7 @@ class DictValidatorTest:
                 optional_fields=['b']
             )
 
-        assert str(exception_info.value) == "Parameters 'required_fields' and 'optional_fields' cannot be combined."
+        assert str(exception_info.value) == 'Parameters "required_fields" and "optional_fields" cannot be combined.'
 
     # Test DictValidator with invalid keys
 

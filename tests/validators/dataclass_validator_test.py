@@ -12,10 +12,9 @@ from typing import Optional
 import pytest
 
 from wtfjson.exceptions import DictFieldsValidationError, RequiredValueError, InvalidValidatorOptionException, \
-    DataclassInvalidFieldValidatorException
-
+    DataclassValidatorFieldException
+from wtfjson.helpers import validator_dataclass, validator_field, Default
 from wtfjson.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
-from wtfjson.helpers.dataclasses import validator_dataclass, validator_field
 
 
 # Simple example dataclass
@@ -26,10 +25,9 @@ class UnitTestDataclass:
     Simple dataclass for testing DataclassValidator.
     """
     name: str = StringValidator()
+    color: str = StringValidator(), Default('unknown color')
     amount: int = IntegerValidator()
     weight: Decimal = DecimalValidator()
-    # Currently, all fields with default values have to be defined at the end of a dataclass
-    color: str = validator_field(StringValidator(), default='unknown color')
 
 
 # More complex / nested dataclass
@@ -198,6 +196,34 @@ class DataclassValidatorTest:
             },
         }
 
+    # Test dataclasses with non-init fields and __post_init__() methods
+
+    @staticmethod
+    def test_dataclass_with_post_init():
+        """ Validate dataclasses with non-init fields and a __post_init__() method. """
+
+        @validator_dataclass
+        class UnitTestPostInitDataclass:
+            # Normal validated fields
+            base: str = StringValidator()
+            count: int = IntegerValidator()
+            # Non-init field: Field exists in the resulting class, but is *not* set in __init__()
+            result: str = field(init=False)
+
+            def __post_init__(self):
+                # Set non-init field
+                self.result = self.count * self.base
+
+        validator: DataclassValidator[UnitTestPostInitDataclass] = DataclassValidator(UnitTestPostInitDataclass)
+        validated_data = validator.validate({
+            'base': 'meow',
+            'count': 3,
+        })
+
+        assert validated_data.base == 'meow'
+        assert validated_data.count == 3
+        assert validated_data.result == 'meowmeowmeow'
+
     # Test invalid validator options
 
     @staticmethod
@@ -205,8 +231,7 @@ class DataclassValidatorTest:
         """ Test that a DataclassValidator cannot be created without a dataclass. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DataclassValidator()
-
-        assert str(exception_info.value) == "Parameter 'dataclass_cls' must be specified (or set as class member in a subclass)."
+        assert str(exception_info.value) == 'Parameter "dataclass_cls" must be specified (or set as class member in a subclass).'
 
     @staticmethod
     def test_invalid_dataclass_validator_with_invalid_dataclass():
@@ -217,18 +242,17 @@ class DataclassValidatorTest:
 
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DataclassValidator(Foo)
-
-        assert str(exception_info.value) == "Parameter 'dataclass_cls' must be a dataclass type."
+        assert str(exception_info.value) == 'Parameter "dataclass_cls" must be a dataclass type.'
 
     @staticmethod
     def test_invalid_dataclass_validator_with_dataclass_instance():
         """ Test that a DataclassValidator cannot be created with an *instance* of a dataclass. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
-            dataclass_instance = UnitTestDataclass(name='test', amount=3, weight=Decimal('1.234'))
+            dataclass_instance = UnitTestDataclass(name='bluenana', color='blue', amount=3, weight=Decimal('1.234'))
             # Note: Type checkers will obviously complain about this line, the 'noqa' silences this warning.
             DataclassValidator(dataclass_instance)  # noqa
 
-        assert str(exception_info.value) == "Parameter 'dataclass_cls' is a dataclass instance, but must be a dataclass type."
+        assert str(exception_info.value) == 'Parameter "dataclass_cls" is a dataclass instance, but must be a dataclass type.'
 
     # Test DataclassValidator with incompatible dataclasses
 
@@ -241,10 +265,9 @@ class DataclassValidatorTest:
             # No validator specified
             foo: str = 'unknown'
 
-        with pytest.raises(DataclassInvalidFieldValidatorException) as exception_info:
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
-
-        assert str(exception_info.value) == "Dataclass field 'foo' has no defined Validator."
+        assert str(exception_info.value) == 'Dataclass field "foo" has no defined Validator.'
 
     @staticmethod
     def test_dataclass_field_with_invalid_validator():
@@ -255,7 +278,19 @@ class DataclassValidatorTest:
             # Metadata contains 'validator' but it is not of type Validator
             foo: str = field(default='unknown', metadata={'validator': 'foobar'})
 
-        with pytest.raises(DataclassInvalidFieldValidatorException) as exception_info:
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
+        assert str(exception_info.value) == 'Validator specified for dataclass field "foo" is not of type "Validator".'
 
-        assert str(exception_info.value) == "Validator specified for dataclass field 'foo' is not of type 'Validator')."
+    @staticmethod
+    def test_dataclass_field_with_invalid_default():
+        """ Test that DataclassValidator raises exceptions for fields with invalid 'validator_default' metadata. """
+
+        @dataclass
+        class IncompatibleDataclass:
+            # Metadata contains 'validator_default' but it is not of type Default
+            foo: str = field(default='unknown', metadata={'validator': StringValidator(), 'validator_default': 'foobar'})
+
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
+            DataclassValidator(IncompatibleDataclass)
+        assert str(exception_info.value) == 'Default specified for dataclass field "foo" is not of type "Default".'

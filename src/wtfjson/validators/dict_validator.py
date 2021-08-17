@@ -70,10 +70,10 @@ class DictValidator(Validator):
         # Check parameter validity
         if field_validators is None and default_validator is None:
             raise InvalidValidatorOptionException(
-                "At least one of the parameters 'field_validators' and 'default_validator' needs to be specified.")
+                'At least one of the parameters "field_validators" and "default_validator" needs to be specified.')
 
         if required_fields is not None and optional_fields is not None:
-            raise InvalidValidatorOptionException("Parameters 'required_fields' and 'optional_fields' cannot be combined.")
+            raise InvalidValidatorOptionException('Parameters "required_fields" and "optional_fields" cannot be combined.')
 
         # Set field and default validators
         self.field_validators = field_validators if field_validators is not None else {}
