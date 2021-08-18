@@ -8,12 +8,12 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Union
 import pytest
 
 from wtfjson.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
     InternalValidationError, InvalidValidatorOptionException, DataclassValidatorFieldException
-from wtfjson.helpers import validator_dataclass, validator_field, Default
+from wtfjson.helpers import validator_dataclass, validator_field, Default, DefaultFactory, DefaultUnset, UnsetValue, UnsetValueType
 from wtfjson.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
 
@@ -145,6 +145,31 @@ class DataclassValidatorTest:
         assert validated_data.color == 'unknown color'
         assert validated_data.amount == 3
         assert validated_data.weight == Decimal('0.5')
+
+    @staticmethod
+    def test_dataclass_with_various_default_classes():
+        """ Test DataclassValidator with a dataclass with all kinds of Default objects (Default, DefaultUnset, DefaultFactory). """
+
+        def counter():
+            """ Function that counts up every time it is called and saves the current number as an attribute of itself. """
+            current = getattr(counter, 'current', 0) + 1
+            setattr(counter, 'current', current)
+            return current
+
+        @validator_dataclass
+        class DataclassWithDefaults:
+            foo: str = StringValidator(), Default('example default')
+            bar: int = IntegerValidator(), DefaultFactory(counter)
+            baz: Union[UnsetValueType, str] = StringValidator(), DefaultUnset()
+
+        validator: DataclassValidator[DataclassWithDefaults] = DataclassValidator(DataclassWithDefaults)
+
+        # Repeat this to check that the counter actually counts up
+        for i in (1, 2, 3):
+            validated_data = validator.validate({})
+            assert validated_data.foo == 'example default'
+            assert validated_data.bar == i
+            assert validated_data.baz is UnsetValue
 
     # Tests for more complex and nested validators using dataclasses
 

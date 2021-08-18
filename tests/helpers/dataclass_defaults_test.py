@@ -9,11 +9,11 @@ Use of this source code is governed by an MIT-style license that can be found in
 from copy import copy
 import pytest
 
-from wtfjson.helpers import Default, NoDefault
+from wtfjson.helpers import Default, DefaultFactory, DefaultUnset, NoDefault, UnsetValue
 
 
 class DefaultTest:
-    # Tests for Default()
+    """ Tests for the base Default class. """
 
     @staticmethod
     def test_default_none():
@@ -43,8 +43,63 @@ class DefaultTest:
         assert default.get_value() == []
 
 
+class DefaultFactoryTest:
+    """ Tests for the DefaultFactory class. """
+
+    @staticmethod
+    def test_default_factory_repr():
+        """ Test DefaultFactory __repr__ method. """
+        default_factory = DefaultFactory(list)
+        assert repr(default_factory) == "DefaultFactory(<class 'list'>)"
+
+    @staticmethod
+    def test_default_factory_list():
+        """ Test DefaultFactory with `list` as default generator. """
+        default_factory = DefaultFactory(list)
+        value1 = default_factory.get_value()
+        value2 = default_factory.get_value()
+        assert value1 == [] and value2 == []
+        assert value1 is not value2
+
+    @staticmethod
+    def test_default_factory_lambda():
+        """ Test DefaultFactory with a lambda function. """
+        # This lambda function will create a new list and return its object ID, which will be a different one each time.
+        default_factory = DefaultFactory(lambda: id(list()))
+        value1 = default_factory.get_value()
+        value2 = default_factory.get_value()
+        assert type(value1) is int and type(value2) is int
+        assert value1 != value2
+
+    @staticmethod
+    def test_default_factory_counter_function():
+        """ Test DefaultFactory with a counter function. """
+
+        def counter():
+            """ Function that counts up every time it is called and saves the current number as an attribute of itself. """
+            current = getattr(counter, 'current', 0) + 1
+            setattr(counter, 'current', current)
+            return current
+
+        default_factory = DefaultFactory(counter)
+        assert default_factory.get_value() == 1
+        assert default_factory.get_value() == 2
+        assert default_factory.get_value() == 3
+
+
+class DefaultUnsetTest:
+    """ Tests for the DefaultUnset class. """
+
+    @staticmethod
+    def test_default_unset():
+        """ Test the DefaultUnset class. """
+        default = DefaultUnset()
+        assert repr(default) == 'DefaultUnset()'
+        assert default.get_value() is UnsetValue
+
+
 class NoDefaultTest:
-    # Tests for the NoDefault sentinel
+    """ Tests for the NoDefault sentinel. """
 
     @staticmethod
     def test_no_default():

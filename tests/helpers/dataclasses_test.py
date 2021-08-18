@@ -21,7 +21,7 @@ def assert_field_default(field: dataclasses.Field, default_value: Any, default_t
 
 
 class ValidatorFieldTest:
-    # Tests for validator_field()
+    """ Tests for the validator_field() helper method. """
 
     @staticmethod
     def test_validator_fields_in_dataclass():
@@ -73,7 +73,7 @@ class ValidatorFieldTest:
 
 
 class ValidatorDataclassTest:
-    # Tests for @validator_dataclass decorator
+    """ Tests for the @validator_dataclass decorator. """
 
     @staticmethod
     def test_validator_dataclass_without_kwargs():
