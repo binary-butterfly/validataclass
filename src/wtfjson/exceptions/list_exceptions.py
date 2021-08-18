@@ -20,15 +20,17 @@ class ListItemsValidationError(ValidationError):
     The implementation of `to_dict()` recursively converts the item validation errors to dictionaries.
     """
     code = 'list_item_errors'
-    item_errors: dict
+    item_errors: dict[int, ValidationError]
 
-    def __init__(self, *, item_errors: dict[int, ValidationError]):
+    def __init__(self, *, item_errors: dict[int, ValidationError], **kwargs):
+        super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in item_errors.values())
         self.item_errors = item_errors
 
     def to_dict(self):
+        base_dict = super().to_dict()
         return {
-            'code': self.code,
+            **base_dict,
             'item_errors': {
                 index: error.to_dict() for index, error in self.item_errors.items()
             },

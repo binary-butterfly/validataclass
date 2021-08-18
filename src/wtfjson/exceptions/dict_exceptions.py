@@ -20,15 +20,17 @@ class DictFieldsValidationError(ValidationError):
     The implementation of `to_dict()` recursively converts the field validation errors to dictionaries.
     """
     code = 'field_errors'
-    field_errors: dict
+    field_errors: dict[str, ValidationError]
 
-    def __init__(self, *, field_errors: dict[str, ValidationError]):
+    def __init__(self, *, field_errors: dict[str, ValidationError], **kwargs):
+        super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in field_errors.values())
         self.field_errors = field_errors
 
     def to_dict(self):
+        base_dict = super().to_dict()
         return {
-            'code': self.code,
+            **base_dict,
             'field_errors': {
                 field_name: error.to_dict() for field_name, error in self.field_errors.items()
             },

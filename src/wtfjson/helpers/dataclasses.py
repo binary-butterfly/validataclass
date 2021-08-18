@@ -29,9 +29,13 @@ def _prepare_dataclass_metadata(cls: type) -> None:
 
     (Used internally by the @validator_dataclass decorator.)
     """
-    for name in cls.__annotations__.keys():
+    for name, field_type in cls.__annotations__.items():
         value = getattr(cls, name, None)
         arguments = []
+
+        # InitVars currently do not work, so better raise an Exception right here to avoid confusing error messages
+        if type(field_type) is dataclasses.InitVar:
+            raise DataclassValidatorFieldException(f'Dataclass field "{name}": InitVars currently not supported by DataclassValidator.')
 
         # Skip field if it is already a dataclass Field object (created by field() or validator_field())
         if isinstance(value, dataclasses.Field):

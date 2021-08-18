@@ -208,7 +208,6 @@ class ValidatorDataclassTest:
     @staticmethod
     def test_validator_dataclass_with_invalid_tuple_length():
         """ Test that @validator_dataclass raises exceptions when a field has a tuple with invalid length. """
-
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validator_dataclass
             class InvalidDataclass:
@@ -219,10 +218,19 @@ class ValidatorDataclassTest:
     @staticmethod
     def test_validator_dataclass_with_invalid_tuple_arguments():
         """ Test that @validator_dataclass raises exceptions when a field has a tuple with invalid arguments. """
-
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validator_dataclass
             class InvalidDataclass:
                 foo: int = IntegerValidator(), 5
 
         assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument (expected Default).'
+
+    @staticmethod
+    def test_validator_dataclass_with_init_vars_exception():
+        """ Test that @validator_dataclass raises an exception when it detects InitVars (because they don't work currently). """
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
+            @validator_dataclass
+            class InvalidDataclass:
+                foo: dataclasses.InitVar[int] = IntegerValidator()
+
+        assert str(exception_info.value) == 'Dataclass field "foo": InitVars currently not supported by DataclassValidator.'

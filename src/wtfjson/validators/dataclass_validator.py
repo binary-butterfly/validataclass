@@ -10,11 +10,9 @@ import dataclasses
 from typing import Any, Optional, TypeVar, Generic
 
 from . import Validator, DictValidator
-from wtfjson.exceptions import InvalidValidatorOptionException, DataclassValidatorFieldException
+from wtfjson.exceptions import InvalidValidatorOptionException, DataclassValidatorFieldException, ValidationError, \
+    DataclassPostValidationError, InternalValidationError
 from wtfjson.helpers import Default, NoDefault
-
-# See also: `wtfjson.helpers.dataclasses`, which defines some helper functions to easily create DataclassValidator-friendly dataclasses.
-
 
 # Type variable for type hints in DataclassValidator
 T_Dataclass = TypeVar('T_Dataclass')
@@ -63,6 +61,10 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
     above for how to specify default values.
 
     All fields that do not specify a default value (or explicitly use the special value `NoDefault`) are required.
+
+    Post-validation checks can be implemented either as a `__post_init__()` method in the dataclass or by subclassing DataclassValidator
+    and overriding the `post_validate()` method. In both cases, you can raise either `DataclassPostValidationError` exceptions directly
+    or raise normal `ValidationError` exceptions, which will be wrapped inside a `DataclassPostValidationError` automatically.
     """
 
     # Dataclass type that the validated dictionary will be converted to
@@ -153,5 +155,27 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
             if field_name not in validated_dict:
                 validated_dict[field_name] = field_default.get_value()
 
-        # Create dataclass object from validated dictionary
-        return self.dataclass_cls(**validated_dict)
+        # Try to create dataclass object from validated dictionary and catch exceptions that may be raised by a __post_init__() method
+        try:
+            validated_object = self.dataclass_cls(**validated_dict)
+            return self.post_validate(validated_object)
+        except DataclassPostValidationError as error:
+            # Error already has correct exception type, just reraise
+            raise error
+        except ValidationError as error:
+            # Wrap validation error in a DataclassPostValidationError
+            raise DataclassPostValidationError(error=error)
+        except Exception as error:
+            # Wrap unknown exception in an 'internal_error' (the exception will not be included in to_dict() but accessible for debugging)
+            internal_error = InternalValidationError(internal_error=error)
+            raise DataclassPostValidationError(error=internal_error)
+
+    # noinspection PyMethodMayBeStatic
+    def post_validate(self, validated_object: T_Dataclass) -> T_Dataclass:
+        """
+        Run post-validation checks on the validated dataclass instance. Returns the dataclass instance.
+
+        This method does nothing, but can be overridden by subclasses to implement user-defined checks (and optionally modify the
+        instance). Exceptions raised in this method will be caught in `validate()` and handled as DataclassPostValidationErrors.
+        """
+        return validated_object
