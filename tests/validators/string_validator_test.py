@@ -8,7 +8,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import pytest
 
-from wtfjson.exceptions import RequiredValueError, InvalidTypeError
+from wtfjson.exceptions import RequiredValueError, InvalidTypeError, StringTooShortError, StringTooLongError
 from wtfjson.validators import StringValidator
 
 
@@ -34,4 +34,74 @@ class StringValidatorTest:
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_type': 'str',
+        }
+
+    # Test length requirement checks: Only min_length specified
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['abc', 'banana', '1234567890abcdef'])
+    def test_string_min_length_valid(input_data):
+        validator = StringValidator(min_length=3)
+        assert validator.validate(input_data) == input_data
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['', 'a', 'ab'])
+    def test_string_min_length_too_short(input_data):
+        validator = StringValidator(min_length=3)
+        with pytest.raises(StringTooShortError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {
+            'code': 'string_too_short',
+            'min_length': 3,
+        }
+
+    # Test length requirement checks: Only max_length specified
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['', 'a', 'banana', '1234567890'])
+    def test_string_max_length_valid(input_data):
+        validator = StringValidator(max_length=10)
+        assert validator.validate(input_data) == input_data
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['1234567890a', '1234567890abcdef'])
+    def test_string_max_length_too_long(input_data):
+        validator = StringValidator(max_length=10)
+        with pytest.raises(StringTooLongError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {
+            'code': 'string_too_long',
+            'max_length': 10,
+        }
+
+    # Test length requirement checks: Both min_length and max_length specified
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['abc', 'banana', '1234567890'])
+    def test_string_min_max_length_valid(input_data):
+        validator = StringValidator(min_length=3, max_length=10)
+        assert validator.validate(input_data) == input_data
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['', 'a', 'ab'])
+    def test_string_min_max_length_too_short(input_data):
+        validator = StringValidator(min_length=3, max_length=10)
+        with pytest.raises(StringTooShortError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {
+            'code': 'string_too_short',
+            'min_length': 3,
+            'max_length': 10,
+        }
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['1234567890a', '1234567890abcdef'])
+    def test_string_min_max_length_too_long(input_data):
+        validator = StringValidator(min_length=3, max_length=10)
+        with pytest.raises(StringTooLongError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {
+            'code': 'string_too_long',
+            'min_length': 3,
+            'max_length': 10,
         }
