@@ -28,6 +28,7 @@ class DictValidator(Validator):
     required. Alternatively you can set `optional_fields` to only specify the fields that are NOT required.
     (Setting both `required_fields` and `optional_fields` will result in an error.)
     """
+
     # Dictionary to specify which validators are applied to which fields of the input dictionary
     field_validators: dict[str, Validator]
 

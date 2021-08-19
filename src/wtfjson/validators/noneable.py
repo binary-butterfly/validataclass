@@ -26,7 +26,10 @@ class Noneable(Validator):
     Valid input: `None` or any data accepted by the wrapped validator
     Output: `None` (or default value specified in constructor) or the output of the wrapped validator
     """
+
+    # Default value returned in case the input is None
     default_value: Any
+    # Validator used in case the input is not None
     wrapped_validator: Validator
 
     def __init__(self, validator: Validator, *, default: Any = None):

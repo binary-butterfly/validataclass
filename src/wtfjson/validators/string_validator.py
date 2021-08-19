@@ -9,7 +9,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from typing import Any, Optional
 
 from .validator import Validator
-from wtfjson.exceptions import StringTooShortError, StringTooLongError
+from wtfjson.exceptions import StringTooShortError, StringTooLongError, InvalidValidatorOptionException
 
 
 class StringValidator(Validator):
@@ -27,11 +27,23 @@ class StringValidator(Validator):
     Valid input: `str`
     Output: `str`
     """
+
     # Length constraints
     min_length: Optional[int] = None
     max_length: Optional[int] = None
 
-    def __init__(self, min_length: Optional[int] = None, max_length: Optional[int] = None):
+    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None):
+        """
+        Create a StringValidator with optional length requirements.
+
+        Parameters:
+            min_length: Integer, specifies minimum length of input strings (default: None, no minimum length)
+            max_length: Integer, specifies maximum length of input strings (default: None, no maximum length)
+        """
+        # Check parameter validity
+        if min_length is not None and max_length is not None and min_length > max_length:
+            raise InvalidValidatorOptionException('Parameter "min_length" cannot be greater than "max_length".')
+
         self.min_length = min_length
         self.max_length = max_length
 

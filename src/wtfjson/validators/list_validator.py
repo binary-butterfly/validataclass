@@ -24,6 +24,8 @@ class ListValidator(Validator):
     Valid input: [item1, item2, ...] (if all items are valid input for the item validator)
     Output: [validated_item1, validated_item2, ...]
     """
+
+    # Validator used to validate the list items
     item_validator: Validator
 
     def __init__(self, item_validator: Validator):
