@@ -41,6 +41,10 @@ class StringValidator(Validator):
             max_length: Integer, specifies maximum length of input strings (default: None, no maximum length)
         """
         # Check parameter validity
+        if min_length is not None and min_length < 0:
+            raise InvalidValidatorOptionException('Parameter "min_length" cannot be negative.')
+        if max_length is not None and max_length < 0:
+            raise InvalidValidatorOptionException('Parameter "max_length" cannot be negative.')
         if min_length is not None and max_length is not None and min_length > max_length:
             raise InvalidValidatorOptionException('Parameter "min_length" cannot be greater than "max_length".')
 

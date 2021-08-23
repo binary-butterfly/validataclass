@@ -146,3 +146,17 @@ class StringValidatorTest:
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             StringValidator(min_length=4, max_length=3)
         assert str(exception_info.value) == 'Parameter "min_length" cannot be greater than "max_length".'
+
+    @staticmethod
+    def test_min_length_negative():
+        """ Check that StringValidator raises exception when min_length is less than 0. """
+        with pytest.raises(InvalidValidatorOptionException) as exception_info:
+            StringValidator(min_length=-1)
+        assert str(exception_info.value) == 'Parameter "min_length" cannot be negative.'
+
+    @staticmethod
+    def test_max_length_negative():
+        """ Check that StringValidator raises exception when max_length is less than 0. """
+        with pytest.raises(InvalidValidatorOptionException) as exception_info:
+            StringValidator(max_length=-1)
+        assert str(exception_info.value) == 'Parameter "max_length" cannot be negative.'
