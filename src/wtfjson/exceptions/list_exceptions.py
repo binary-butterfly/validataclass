@@ -8,6 +8,10 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from wtfjson.exceptions import ValidationError
 
+__all__ = [
+    'ListItemsValidationError',
+]
+
 
 class ListItemsValidationError(ValidationError):
     """

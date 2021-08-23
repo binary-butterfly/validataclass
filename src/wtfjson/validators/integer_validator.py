@@ -11,6 +11,10 @@ from typing import Any, Optional
 from .validator import Validator
 from wtfjson.exceptions import InvalidValidatorOptionException, NumberRangeError
 
+__all__ = [
+    'IntegerValidator',
+]
+
 
 class IntegerValidator(Validator):
     """

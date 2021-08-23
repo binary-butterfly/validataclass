@@ -11,6 +11,10 @@ from typing import Any
 from .validator import Validator
 from wtfjson.exceptions import ValidationError, ListItemsValidationError
 
+__all__ = [
+    'ListValidator',
+]
+
 
 class ListValidator(Validator):
     """

@@ -11,6 +11,10 @@ from typing import Any, Optional
 from .validator import Validator
 from wtfjson.exceptions import StringTooShortError, StringTooLongError, InvalidValidatorOptionException
 
+__all__ = [
+    'StringValidator',
+]
+
 
 class StringValidator(Validator):
     """

@@ -10,6 +10,10 @@ from typing import Optional
 
 from wtfjson.exceptions import ValidationError
 
+__all__ = [
+    'DataclassPostValidationError',
+]
+
 
 class DataclassPostValidationError(ValidationError):
     """

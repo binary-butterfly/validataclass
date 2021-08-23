@@ -6,6 +6,11 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
+__all__ = [
+    'InvalidValidatorOptionException',
+    'DataclassValidatorFieldException',
+]
+
 
 # These are "meta exceptions" that are not validation errors, but rather logic errors in the code.
 # For example when creating a validator with invalid options.

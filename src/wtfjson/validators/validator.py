@@ -11,6 +11,10 @@ from typing import Any
 
 from wtfjson.exceptions import RequiredValueError, InvalidTypeError
 
+__all__ = [
+    'Validator',
+]
+
 
 class Validator(ABC):
     """

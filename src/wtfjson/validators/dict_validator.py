@@ -12,6 +12,10 @@ from .validator import Validator
 from wtfjson.exceptions import ValidationError, InvalidValidatorOptionException, DictFieldsValidationError, \
     DictInvalidKeyTypeError, DictRequiredFieldError
 
+__all__ = [
+    'DictValidator',
+]
+
 
 class DictValidator(Validator):
     """

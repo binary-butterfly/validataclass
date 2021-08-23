@@ -13,6 +13,10 @@ from typing import Any, Optional, Union
 from .string_validator import StringValidator
 from wtfjson.exceptions import InvalidDecimalError, NumberRangeError, DecimalPlacesError, InvalidValidatorOptionException
 
+__all__ = [
+    'DecimalValidator',
+]
+
 
 class DecimalValidator(StringValidator):
     """
@@ -117,6 +121,9 @@ class DecimalValidator(StringValidator):
             self.output_quantum = Decimal('0.1') ** output_places
 
     def validate(self, input_data: Any) -> Decimal:
+        """
+        Validate input data as a string, convert it to a Decimal object and check optional constraints.
+        """
         # First, validate input data as string
         decimal_string = super().validate(input_data)
 

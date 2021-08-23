@@ -14,6 +14,11 @@ from wtfjson.exceptions import InvalidValidatorOptionException, DataclassValidat
     DataclassPostValidationError, InternalValidationError
 from wtfjson.helpers import Default, NoDefault
 
+__all__ = [
+    'DataclassValidator',
+    'T_Dataclass',
+]
+
 # Type variable for type hints in DataclassValidator
 T_Dataclass = TypeVar('T_Dataclass')
 
