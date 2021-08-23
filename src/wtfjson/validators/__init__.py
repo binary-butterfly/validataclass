@@ -10,6 +10,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from .validator import Validator
 
 # Basic type validators
+from .boolean_validator import BooleanValidator
 from .integer_validator import IntegerValidator
 from .float_validator import FloatValidator
 from .string_validator import StringValidator

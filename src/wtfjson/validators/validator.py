@@ -30,13 +30,21 @@ class Validator(ABC):
         raise NotImplementedError()
 
     @staticmethod
-    def _ensure_type(input_data: Any, expected_type: type) -> None:
+    def _ensure_not_none(input_data: Any) -> None:
         """
-        Raises an InvalidTypeError if type of input data is not the expected type.
+        Raises a `RequiredValueError` if input data is None.
         """
         # Ensure input is not None
         if input_data is None:
             raise RequiredValueError()
+
+    def _ensure_type(self, input_data: Any, expected_type: type) -> None:
+        """
+        Checks if input data is not None and has the expected type.
+        Raises `RequiredValueError` and `InvalidTypeError`.
+        """
+        # Ensure input is not None
+        self._ensure_not_none(input_data)
 
         # Ensure input has correct type
         if type(input_data) is not expected_type:
