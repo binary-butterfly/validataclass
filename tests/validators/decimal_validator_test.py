@@ -9,7 +9,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from decimal import Decimal
 import pytest
 
-from wtfjson.exceptions import ValidationError, RequiredValueError, InvalidTypeError, NumberRangeError, DecimalPlacesError, \
+from wtfjson.exceptions import RequiredValueError, InvalidTypeError, InvalidDecimalError, NumberRangeError, DecimalPlacesError, \
     InvalidValidatorOptionException
 from wtfjson.validators import DecimalValidator
 
@@ -49,7 +49,7 @@ class DecimalValidatorTest:
     def test_invalid_malformed_string(input_data):
         """ Test DecimalValidator with malformed strings. """
         validator = DecimalValidator()
-        with pytest.raises(ValidationError) as exception_info:
+        with pytest.raises(InvalidDecimalError) as exception_info:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == {'code': 'invalid_decimal'}
 
@@ -98,10 +98,8 @@ class DecimalValidatorTest:
 
         # Construct error dict with min_value and/or max_value, depending on which is specified
         expected_error_dict = {'code': 'number_range_error'}
-        if min_value is not None:
-            expected_error_dict['min_value'] = str(min_value)
-        if max_value is not None:
-            expected_error_dict['max_value'] = str(max_value)
+        expected_error_dict.update({'min_value': str(min_value)} if min_value is not None else {})
+        expected_error_dict.update({'max_value': str(max_value)} if max_value is not None else {})
 
         for input_data in input_data_list:
             with pytest.raises(NumberRangeError) as exception_info:
@@ -155,10 +153,8 @@ class DecimalValidatorTest:
 
         # Construct error dict with min_places and/or max_places, depending on which is specified
         expected_error_dict = {'code': 'decimal_places'}
-        if min_places is not None:
-            expected_error_dict['min_places'] = min_places
-        if max_places is not None:
-            expected_error_dict['max_places'] = max_places
+        expected_error_dict.update({'min_places': min_places} if min_places is not None else {})
+        expected_error_dict.update({'max_places': max_places} if max_places is not None else {})
 
         for input_data in input_data_list:
             with pytest.raises(DecimalPlacesError) as exception_info:

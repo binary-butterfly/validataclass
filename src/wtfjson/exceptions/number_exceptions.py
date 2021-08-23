@@ -14,6 +14,7 @@ __all__ = [
     'NumberRangeError',
     'DecimalPlacesError',
     'InvalidDecimalError',
+    'NonFiniteNumberError',
 ]
 
 
@@ -53,3 +54,11 @@ class InvalidDecimalError(ValidationError):
     Validation error raised by `DecimalValidator` when an input string cannot be parsed as a decimal value, i.e. the string is malformed.
     """
     code = 'invalid_decimal'
+
+
+class NonFiniteNumberError(ValidationError):
+    """
+    Validation error raised by `FloatValidator` (and subclasses) when an input string can be parsed as a float, but does not have a
+    finite value (i.e. it is either (+/-)Infinity or NaN).
+    """
+    code = 'not_a_finite_number'
