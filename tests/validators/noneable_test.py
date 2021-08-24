@@ -16,21 +16,25 @@ from wtfjson.validators import Noneable, DecimalValidator, IntegerValidator
 class NoneableTest:
     @staticmethod
     def test_valid_none():
+        """ Test that Noneable allows None as value and returns None in that case by default. """
         validator = Noneable(DecimalValidator())
         assert validator.validate(None) is None
 
     @staticmethod
     def test_valid_with_default():
+        """ Test that Noneable allows None as value and returns a specified default value. """
         validator = Noneable(DecimalValidator(), default=Decimal('3.1415'))
         assert validator.validate(None) == Decimal('3.1415')
 
     @staticmethod
     def test_valid_not_none_value():
+        """ Test that Noneable correctly wraps a specified validator in case of non-None values. """
         validator = Noneable(DecimalValidator())
         assert validator.validate('12.34') == Decimal('12.34')
 
     @staticmethod
     def test_invalid_not_none_value():
+        """ Test that Noneable correctly wraps a specified validator and leaves exceptions unmodified. """
         validator = Noneable(DecimalValidator())
         with pytest.raises(ValidationError) as exception_info:
             validator.validate('foobar')

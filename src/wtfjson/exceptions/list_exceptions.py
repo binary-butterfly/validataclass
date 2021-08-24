@@ -6,10 +6,13 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
+from typing import Optional
+
 from wtfjson.exceptions import ValidationError
 
 __all__ = [
     'ListItemsValidationError',
+    'ListLengthError',
 ]
 
 
@@ -39,3 +42,18 @@ class ListItemsValidationError(ValidationError):
                 index: error.to_dict() for index, error in self.item_errors.items()
             },
         }
+
+
+class ListLengthError(ValidationError):
+    """
+    Validation error raised by `ListValidator` when a minimum and/or maximum list length is specified and the input list has too many
+    or not enough items.
+
+    May contain the extra fields 'min_length' and 'max_length', depending on which are specified in the validator.
+    """
+    code = 'list_invalid_length'
+
+    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None, **kwargs):
+        min_length_args = {'min_length': min_length} if min_length is not None else {}
+        max_length_args = {'max_length': max_length} if max_length is not None else {}
+        super().__init__(**min_length_args, **max_length_args, **kwargs)
