@@ -29,7 +29,7 @@ open-coverage:
 # Cleanup
 # -------
 clean:
-	rm -rf .coverage reports
+	rm -rf .coverage .pytest_cache reports
 
 clean-all: clean
 	rm -rf .tox .eggs venv

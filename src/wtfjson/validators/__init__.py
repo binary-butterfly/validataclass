@@ -18,9 +18,10 @@ from .string_validator import StringValidator
 # Meta validators / helpers
 from .noneable import Noneable
 
-# Extended type validators (based on basic type validators)
+# Extended type validators
 from .decimal_validator import DecimalValidator
 from .float_to_decimal_validator import FloatToDecimalValidator
+from .enum_validator import EnumValidator
 
 # Composite type validators
 from .list_validator import ListValidator

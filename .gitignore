@@ -9,6 +9,7 @@ __pycache__/
 /.tox
 /.eggs
 /.coverage
+/.pytest_cache
 /build
 /dist
 /reports

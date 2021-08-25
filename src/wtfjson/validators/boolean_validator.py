@@ -70,4 +70,4 @@ class BooleanValidator(Validator):
             elif input_str == 'false':
                 return False
 
-        raise InvalidTypeError(expected_type=bool)
+        raise InvalidTypeError(expected_types=bool)

@@ -14,6 +14,7 @@ from .common_exceptions import ValidationError, InternalValidationError, Invalid
 
 from .dataclass_exceptions import DataclassPostValidationError
 from .dict_exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, DictRequiredFieldError
+from .enum_exceptions import EnumInvalidValueError
 from .list_exceptions import ListItemsValidationError, ListLengthError
 from .number_exceptions import NumberRangeError, DecimalPlacesError, InvalidDecimalError, NonFiniteNumberError
 from .string_exceptions import StringInvalidLengthError, StringTooShortError, StringTooLongError

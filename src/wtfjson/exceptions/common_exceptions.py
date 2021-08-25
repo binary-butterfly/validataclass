@@ -65,18 +65,32 @@ class RequiredValueError(ValidationError):
 
 class InvalidTypeError(ValidationError):
     """
-    Validation error raised when the input data has the wrong data type. Contains 'expected_type' as extra data.
+    Validation error raised when the input data has the wrong data type.
 
-    Note that this is about the raw input data, not about its content. For example, `DecimalValidator` parses a string
-    to a Decimal object, so it would raise this error when the input data is anything else but a string, with
-    'expected_type' being set to 'str', not to 'Decimal' or similar. If the input is a string but not a valid decimal
-    value, a different validator error will be raised.
+    Contains either 'expected_type' (string) or 'expected_types' (list of strings) as extra fields, depending on whether there is
+    a single or multiple allowed types.
+
+    Note that this is about the raw input data, not about its content. For example, `DecimalValidator` parses a string to a Decimal
+    object, so it would raise this error when the input data is anything else but a string, with 'expected_type' being set to 'str',
+    not to 'Decimal' or similar. If the input is a string but not a valid decimal value, a different ValidationError will be raised.
     """
     code = 'invalid_type'
+    expected_types: list[str] = None
 
-    def __init__(self, *, expected_type: Union[type, str], **kwargs):
-        expected_type_str = expected_type if isinstance(expected_type, str) else expected_type.__name__
-        super().__init__(expected_type=expected_type_str, **kwargs)
+    def __init__(self, *, expected_types: Union[type, str, list[Union[type, str]]], **kwargs):
+        super().__init__(**kwargs)
+
+        if type(expected_types) is not list:
+            expected_types = [expected_types]
+        self.expected_types = [t if type(t) is str else t.__name__ for t in expected_types]
+
+    def to_dict(self):
+        base_dict = super().to_dict()
+        if len(self.expected_types) == 1:
+            base_dict.update({'expected_type': self.expected_types[0]})
+        else:
+            base_dict.update({'expected_types': self.expected_types})
+        return base_dict
 
 
 class InternalValidationError(ValidationError):
