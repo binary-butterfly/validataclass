@@ -9,7 +9,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from decimal import Decimal, InvalidOperation
 from typing import Any, Optional, Union
 
-from . import FloatValidator
+from .float_validator import FloatValidator
 from wtfjson.exceptions import InvalidDecimalError, InvalidValidatorOptionException
 
 __all__ = [

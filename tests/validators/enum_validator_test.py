@@ -9,7 +9,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from enum import Enum
 import pytest
 
-from wtfjson.exceptions import RequiredValueError, InvalidTypeError, EnumInvalidValueError, InvalidValidatorOptionException
+from wtfjson.exceptions import RequiredValueError, InvalidTypeError, ValueNotAllowedError, InvalidValidatorOptionException
 from wtfjson.validators import EnumValidator
 
 
@@ -60,9 +60,9 @@ class EnumValidatorTest:
     def test_string_enum_invalid_value(input_data):
         """ Test EnumValidator with string based Enum with invalid enum values. """
         validator = EnumValidator(UnitTestStringEnum)
-        with pytest.raises(EnumInvalidValueError) as exception_info:
+        with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'enum_invalid_value'}
+        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1, 1.234, True, ['red apple']])
@@ -91,9 +91,9 @@ class EnumValidatorTest:
     def test_integer_enum_invalid_value(input_data):
         """ Test EnumValidator with integer based Enum with invalid enum values. """
         validator = EnumValidator(UnitTestIntegerEnum)
-        with pytest.raises(EnumInvalidValueError) as exception_info:
+        with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'enum_invalid_value'}
+        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
 
     @staticmethod
     @pytest.mark.parametrize('input_data', ['red apple', 'RED', 1.234, True, [1]])
@@ -121,9 +121,9 @@ class EnumValidatorTest:
     def test_mixed_enum_invalid_value(input_data):
         """ Test EnumValidator with mixed value Enum with invalid enum values. """
         validator = EnumValidator(UnitTestMixedEnum)
-        with pytest.raises(EnumInvalidValueError) as exception_info:
+        with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'enum_invalid_value'}
+        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1.234, True, [1], ['foo']])
@@ -137,17 +137,33 @@ class EnumValidatorTest:
             'expected_types': ['str', 'int'],
         }
 
+    # Test EnumValidator with explicit allowed_values parameter
+
+    @staticmethod
+    def test_string_enum_allowed_values_valid():
+        """ Test EnumValidator with string based Enum and explicit allowed_values parameter, with valid enum values. """
+        # Also tests using enum members in allowed_values
+        validator = EnumValidator(UnitTestStringEnum, allowed_values=['red apple', UnitTestStringEnum.APPLE_GREEN, 'banana'])
+        assert validator.validate('red apple') is UnitTestStringEnum.APPLE_RED
+        assert validator.validate('green apple') is UnitTestStringEnum.APPLE_GREEN
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['', 'strawberry', 'banana', 'APPLE_GREEN'])
+    def test_string_enum_allowed_values_invalid(input_data):
+        """ Test EnumValidator with string based Enum and explicit allowed_values parameter, with invalid enum values. """
+        # Also tests that values in allowed_values that are NOT valid enum values are ignored
+        validator = EnumValidator(UnitTestStringEnum, allowed_values=['red apple', UnitTestStringEnum.APPLE_GREEN, 'banana'])
+        with pytest.raises(ValueNotAllowedError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+
     # Test EnumValidator with explicit allowed_types parameter
 
     @staticmethod
     @pytest.mark.parametrize(
         'allowed_types, expected_type_str, valid_input, expected_output, invalid_input', [
-            # Single allowed type
             (str, 'str', 'foo', UnitTestMixedEnum.FOO, 42),
             (int, 'int', 42, UnitTestMixedEnum.BAR, 'foo'),
-            # Single allowed type in list
-            ([str], 'str', 'foo', UnitTestMixedEnum.FOO, 42),
-            ([int], 'int', 42, UnitTestMixedEnum.BAR, 'foo'),
         ]
     )
     def test_with_specified_allowed_type(allowed_types, expected_type_str, valid_input, expected_output, invalid_input):
@@ -179,23 +195,17 @@ class EnumValidatorTest:
         """ Check that EnumValidator raises exception when allowed_types is empty. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             EnumValidator(UnitTestMixedEnum, allowed_types=[])
-        assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined)!'
+        assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+
+    # Tests that cause ValueError in EnumValidator.validate()
 
     @staticmethod
-    def test_unsupported_allowed_types_explicit():
-        """ Check that EnumValidator raises exception when allowed_types contains unsupported types. """
-        with pytest.raises(InvalidValidatorOptionException) as exception_info:
-            EnumValidator(UnitTestMixedEnum, allowed_types=[str, float])
-        assert str(exception_info.value) == 'Parameter "allowed_types" contains unsupported type "float".'
+    def test_value_error_in_validate():
+        """ Check that a ValueError in EnumValidator.validate() when converting a value to an Enum member is handled correctly. """
+        # This case should never happen in real life, so to test it we need to manipulate the validator parameters after creation
+        validator = EnumValidator(UnitTestStringEnum)
+        validator.allowed_values.append('bananana')
 
-    @staticmethod
-    def test_unsupported_allowed_types_in_enum():
-        """ Check that EnumValidator raises exception when allowed_types is autodetermined and the enum contains unsupported types. """
-
-        class UnitTestUnsupportedTypeEnum(Enum):
-            FOO = 123
-            BAR = 1.234
-
-        with pytest.raises(InvalidValidatorOptionException) as exception_info:
-            EnumValidator(UnitTestUnsupportedTypeEnum)
-        assert str(exception_info.value) == 'Parameter "allowed_types" contains unsupported type "float".'
+        with pytest.raises(ValueNotAllowedError) as exception_info:
+            validator.validate('bananana')
+        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}

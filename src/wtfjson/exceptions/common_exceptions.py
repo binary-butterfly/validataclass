@@ -82,7 +82,14 @@ class InvalidTypeError(ValidationError):
 
         if type(expected_types) is not list:
             expected_types = [expected_types]
-        self.expected_types = [t if type(t) is str else t.__name__ for t in expected_types]
+        self.expected_types = [self._type_to_string(t) for t in expected_types]
+
+    @staticmethod
+    def _type_to_string(_type: Union[type, str]) -> str:
+        type_str = _type if type(_type) is str else _type.__name__
+        if type_str == 'NoneType':
+            return 'none'
+        return type_str
 
     def to_dict(self):
         base_dict = super().to_dict()
