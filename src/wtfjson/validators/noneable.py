@@ -10,6 +10,7 @@ from copy import deepcopy
 from typing import Any, Optional
 
 from .validator import Validator
+from wtfjson.exceptions import InvalidTypeError
 
 __all__ = [
     'Noneable',
@@ -20,8 +21,10 @@ class Noneable(Validator):
     """
     Helper validator that wraps another validator but allows `None` as input value.
 
-    By default, the wrapper returns `None` for `None` as input value. Optionally a default value can be specified
-    in the constructor that will be returned instead of `None`.
+    By default, the wrapper returns `None` for `None` as input value. Optionally a default value can be specified in the constructor
+    that will be returned instead of `None`.
+
+    If the wrapped validator raises an `InvalidTypeError`, `Noneable` will add 'none' to its 'expected_types' parameter and reraise it.
 
     Examples:
         Noneable(StringValidator())
@@ -44,4 +47,10 @@ class Noneable(Validator):
         if input_data is None:
             return deepcopy(self.default_value)
 
-        return self.wrapped_validator.validate(input_data)
+        try:
+            # Call wrapped validator for all values other than None
+            return self.wrapped_validator.validate(input_data)
+        except InvalidTypeError as error:
+            # If wrapped validator raises an InvalidTypeError, add 'none' to its 'expected_types' list and reraise it
+            error.add_expected_type(type(None))
+            raise error

@@ -34,11 +34,22 @@ class NoneableTest:
 
     @staticmethod
     def test_invalid_not_none_value():
-        """ Test that Noneable correctly wraps a specified validator and leaves exceptions unmodified. """
+        """ Test that Noneable correctly wraps a specified validator and leaves (most) exceptions unmodified. """
         validator = Noneable(DecimalValidator())
         with pytest.raises(ValidationError) as exception_info:
             validator.validate('foobar')
         assert exception_info.value.to_dict() == {'code': 'invalid_decimal'}
+
+    @staticmethod
+    def test_invalid_type_contains_none():
+        """ Test that Noneable adds 'none' to the expected_types parameter if the wrapped validator raises an InvalidTypeError. """
+        validator = Noneable(DecimalValidator())
+        with pytest.raises(ValidationError) as exception_info:
+            validator.validate(123)
+        assert exception_info.value.to_dict() == {
+            'code': 'invalid_type',
+            'expected_types': ['str', 'none'],
+        }
 
     @staticmethod
     def test_default_value_is_deepcopied():

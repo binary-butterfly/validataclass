@@ -91,6 +91,12 @@ class InvalidTypeError(ValidationError):
             return 'none'
         return type_str
 
+    def add_expected_type(self, new_type: Union[type, str]) -> None:
+        """
+        Adds a type to 'expected_types' in an existing InvalidTypeError exception.
+        """
+        self.expected_types.append(self._type_to_string(new_type))
+
     def to_dict(self):
         base_dict = super().to_dict()
         if len(self.expected_types) == 1:
