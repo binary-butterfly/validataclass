@@ -20,9 +20,10 @@ from .noneable import Noneable
 
 # Extended type validators
 from .any_of_validator import AnyOfValidator
+from .enum_validator import EnumValidator
 from .decimal_validator import DecimalValidator
 from .float_to_decimal_validator import FloatToDecimalValidator
-from .enum_validator import EnumValidator
+from .regex_validator import RegexValidator
 
 # Composite type validators
 from .list_validator import ListValidator
