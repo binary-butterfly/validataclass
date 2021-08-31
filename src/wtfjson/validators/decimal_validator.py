@@ -66,8 +66,8 @@ class DecimalValidator(StringValidator):
     # Quantum used in `.quantize()` to set a fixed number of decimal places (from constructor argument output_places)
     output_quantum: Optional[Decimal] = None
 
-    # Precompile regular expression for decimal values
-    decimal_regex: re.Pattern = re.compile(r'^[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)$')
+    # Precompiled regular expression for decimal values
+    decimal_regex: re.Pattern = re.compile(r'[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)')
 
     def __init__(
             self, *,
@@ -128,7 +128,7 @@ class DecimalValidator(StringValidator):
         decimal_string = super().validate(input_data)
 
         # Validate string with a regular expression
-        if not self.decimal_regex.match(decimal_string):
+        if not self.decimal_regex.fullmatch(decimal_string):
             raise InvalidDecimalError()
 
         # Count decimal places
