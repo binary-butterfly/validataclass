@@ -13,7 +13,7 @@ from .meta_exceptions import InvalidValidatorOptionException, DataclassValidator
 from .common_exceptions import ValidationError, InternalValidationError, InvalidTypeError, RequiredValueError
 
 from .dataclass_exceptions import DataclassPostValidationError
-from .datetime_exceptions import InvalidDateError, InvalidTimeError
+from .datetime_exceptions import InvalidDateError, InvalidTimeError, InvalidDateTimeError
 from .dict_exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, DictRequiredFieldError
 from .list_exceptions import ListItemsValidationError, ListLengthError
 from .misc_exceptions import ValueNotAllowedError

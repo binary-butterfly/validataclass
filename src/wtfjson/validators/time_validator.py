@@ -25,7 +25,7 @@ class TimeValidatorFormat(Enum):
     Enum to specify time string format for `TimeValidator`.
 
     Enum members have two properties:
-    - format_str: String representation for format (e.g. "HH:MM[:SS]")
+    - format_str: String representation used in InvalidTimeError (e.g. "HH:MM[:SS]")
     - regex_str: Regular expression pattern as string
     """
 
@@ -48,6 +48,7 @@ class TimeValidator(StringValidator):
     Validator that parses time strings in "HH:MM:SS" or "HH:MM" format (e.g. "13:05:59" / "13:05") to `datetime.time` objects.
 
     The exact format can be specified using the `TimeValidatorFormat` enum, which has the following values:
+
     - NO_SECONDS: Only allows "HH:MM" strings
     - WITH_SECONDS: Only allows "HH:MM:SS" strings
     - OPTIONAL_SECONDS: Allows both "HH:MM:SS" and "HH:MM" strings (where "HH:MM" is equivalent to "HH:MM:00")
@@ -77,14 +78,14 @@ class TimeValidator(StringValidator):
     time_format: TimeValidatorFormat
 
     # Precompiled regular expression for the specified time string format
-    time_format_regex: re.Pattern = None
+    time_format_regex: re.Pattern
 
     def __init__(self, time_format: TimeValidatorFormat = TimeValidatorFormat.WITH_SECONDS):
         """
         Create a `TimeValidator` with a specified time string format.
 
         Parameters:
-            time_format: `TimeValidatorFormat`, specified the accepted string format (default: `TimeValidatorFormat.WITH_SECONDS`)
+            time_format: `TimeValidatorFormat`, specifies the accepted string format (default: `TimeValidatorFormat.WITH_SECONDS`)
         """
         # Initialize StringValidator without any parameters
         super().__init__()

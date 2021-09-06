@@ -64,7 +64,8 @@ setup(
     keywords=[],
     python_requires='>=3.7',
     install_requires=[
-        'email-validator'
+        'email-validator',
+        'python-dateutil'
     ],
     extras_require={},
     setup_requires=[

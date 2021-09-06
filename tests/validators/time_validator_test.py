@@ -5,9 +5,10 @@ binary butterfly validator
 Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
-import re
+
 from datetime import time
 import pytest
+import re
 
 from wtfjson.exceptions import RequiredValueError, InvalidTypeError, InvalidTimeError
 from wtfjson.validators import TimeValidator, TimeValidatorFormat

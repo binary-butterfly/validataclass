@@ -11,6 +11,7 @@ from wtfjson.exceptions import ValidationError
 __all__ = [
     'InvalidDateError',
     'InvalidTimeError',
+    'InvalidDateTimeError',
 ]
 
 
@@ -36,3 +37,22 @@ class InvalidTimeError(ValidationError):
 
     def __init__(self, *, time_format_str: str, **kwargs):
         super().__init__(time_format=time_format_str, **kwargs)
+
+
+class InvalidDateTimeError(ValidationError):
+    """
+    Validation error raised by `DateTimeValidator` when the input string is not a valid datetime in the format specified in the validator.
+
+    The extra field 'datetime_format' contains a string representing the format accepted by the validator with placeholders like "<TIME>"
+    (e.g. "<DATE>T<TIME>[<TIMEZONE>]" (literal T, timezone is optional) or "<DATE>T<TIME>Z" (literal Z meaning UTC, '+00:00' is also
+    allowed).
+
+    The placeholders have the usual formats:
+    - "<TIME>" for a time in the format "HH:MM:SS[.fff[fff]" (optionally with milli-/microseconds)
+    - "<DATE>" for a date in the format "YYYY-MM-DD"
+    - "<TIMEZONE>" for the offset to UTC in the format "+HH:MM", "-HH:MM" or a literal "Z" for UTC (equivalent to "+00:00")
+    """
+    code = 'invalid_datetime'
+
+    def __init__(self, *, datetime_format_str: str, **kwargs):
+        super().__init__(datetime_format=datetime_format_str, **kwargs)
