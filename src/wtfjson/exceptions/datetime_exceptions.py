@@ -12,6 +12,7 @@ __all__ = [
     'InvalidDateError',
     'InvalidTimeError',
     'InvalidDateTimeError',
+    'DateTimeRangeError',
 ]
 
 
@@ -56,3 +57,13 @@ class InvalidDateTimeError(ValidationError):
 
     def __init__(self, *, datetime_format_str: str, **kwargs):
         super().__init__(datetime_format=datetime_format_str, **kwargs)
+
+
+class DateTimeRangeError(ValidationError):
+    """
+    Validation error raised by `DateTimeValidator` when a datetime range (see `BaseDateTimeRange`) is specified and the input datetime
+    is outside of that range.
+
+    TODO: Add extra field with a string representation of the range (if possible)
+    """
+    code = 'datetime_range_error'

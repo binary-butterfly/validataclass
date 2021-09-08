@@ -12,7 +12,8 @@ import re
 from typing import Any, Optional
 
 from .string_validator import StringValidator
-from wtfjson.exceptions import InvalidDateTimeError, InvalidValidatorOptionException
+from wtfjson.exceptions import InvalidDateTimeError, InvalidValidatorOptionException, DateTimeRangeError
+from wtfjson.helpers.datetime_range import BaseDateTimeRange
 
 __all__ = [
     'DateTimeValidator',
@@ -99,6 +100,15 @@ class DateTimeValidator(StringValidator):
 
     See `datetime.timezone` and `dateutil.tz` (https://dateutil.readthedocs.io/en/stable/tz.html) for information on defining timezones.
 
+    Additionally the parameter 'datetime_range' can be used to specify a range of datetime values that are allowed (e.g. a minimum and
+    a maximum datetime, which can be dynamically defined using callables). See the classes `DateTimeRange` and `DateTimeOffsetRange`
+    from `wtfjson.helpers.datetime_range` for further information.
+
+    Note: When using datetime ranges, make sure not to mix datetimes that have timezones with local datetimes because those comparisons
+    will raise `TypeError` exceptions. It's recommended either to use only datetimes with defined timezones (for both input values and
+    the boundaries of the datetime ranges), or to specify the 'local_timezone' parameter (which will also be used to determine the
+    timezone of the range boundary datetimes if they do not specify timezones themselves).
+
     Examples:
 
     ```
@@ -131,6 +141,30 @@ class DateTimeValidator(StringValidator):
     DateTimeValidator(local_timezone=tz.gettz('Europe/Berlin'), target_timezone=timezone.utc)
     ```
 
+    Examples for datetime ranges:
+
+    ```
+    from wtfjson.helpers import DateTimeRange, DateTimeRangeOffset
+
+    # Only allow datetimes within a specified datetime range, e.g. allow all datetimes in the year 2021
+    DateTimeValidator(local_timezone=timezone.utc, datetime_range=DateTimeRange(
+        datetime(2021, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        datetime(2021, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)
+    ))
+
+    # Specify a datetime range using a pivot datetime and two offsets (allows all datetimes "around" some datetime plus/minus offsets),
+    # e.g. all datetimes between pivot_datetime - 5 minutes and pivot_datetime + 10 minutes:
+    DateTimeValidator(local_timezone=timezone.utc, datetime_range=DateTimeOffsetRange(
+        pivot=datetime(2021, 5, 25, 12, 0, 0, tzinfo=timezone.utc),
+        offset_minus=timedelta(minutes=5),
+        offset_plus=timedelta(minutes=10)
+    ))
+
+    # The pivot can also be a callable (which will be evaluated just when the validator is called), or undefined, in which case it
+    # defaults to the current time (in UTC and without milliseconds), e.g. to only allow all datetimes in the next 2 weeks:
+    DateTimeValidator(local_timezone=timezone.utc, datetime_range=DateTimeOffsetRange(offset_plus=timedelta(weeks=2)))
+    ```
+
     See also: `DateValidator`, `TimeValidator`
 
     Valid input: Datetime strings in the format specified above as `str`
@@ -149,20 +183,32 @@ class DateTimeValidator(StringValidator):
     # Target timezone that all datetimes will be converted to (None: no timezone conversion)
     target_timezone: Optional[tzinfo] = None
 
-    # TODO: DateTimeRange
+    # Datetime range that defines which values are allowed
+    datetime_range: Optional[BaseDateTimeRange] = None
 
-    def __init__(self, datetime_format: DateTimeValidatorFormat = DateTimeValidatorFormat.ALLOW_TIMEZONE, *,
-                 local_timezone: Optional[tzinfo] = None, target_timezone: Optional[tzinfo] = None):
+    def __init__(
+        self,
+        datetime_format: DateTimeValidatorFormat = DateTimeValidatorFormat.ALLOW_TIMEZONE,
+        *,
+        local_timezone: Optional[tzinfo] = None,
+        target_timezone: Optional[tzinfo] = None,
+        datetime_range: Optional[BaseDateTimeRange] = None,
+    ):
         """
-        Create a `DateTimeValidator` with a specified datetime string format, optionally a local timezone and/or a target timezone.
+        Create a `DateTimeValidator` with a specified datetime string format, optionally a local timezone, a target timezone and/or
+        a datetime range.
 
         If a target timezone is specified and a format that allows local datetimes is used (ALLOW_TIMEZONE, LOCAL_ONLY or LOCAL_OR_UTC),
         the parameter "local_timezone" is required (otherwise it would be unclear how to interpret and convert local datetimes).
+
+        To define datetime ranges using the "datetime_range" parameter, see the classes `DateTimeRange` and `DateTimeOffsetRange` from
+        `wtfjson.helpers.datetime_range`.
 
         Parameters:
             datetime_format: `DateTimeValidatorFormat`, specifies the accepted string formats (default: `ALLOW_TIMEZONE`)
             local_timezone: `tzinfo`, specifies the default timezone to set for datetime strings without timezone info (default: None)
             target_timezone: `tzinfo`, if specified, all datetimes will be converted to this timezone (default: None)
+            datetime_range: `BaseDateTimeRange` (subclasses), specifies the range of allowed values (default: None)
         """
         # Initialize StringValidator without any parameters
         super().__init__()
@@ -172,11 +218,14 @@ class DateTimeValidator(StringValidator):
             raise InvalidValidatorOptionException('Parameter "local_timezone" is required when a datetime format that allows local '
                                                   'datetimes is used and "target_timezone" is specified.')
 
-        # Save parameters and precompile regular expression
+        # Save parameters
         self.datetime_format = datetime_format
-        self.datetime_format_regex = re.compile(self.datetime_format.regex_str)
         self.local_timezone = local_timezone
         self.target_timezone = target_timezone
+        self.datetime_range = datetime_range
+
+        # Precompile regular expression for datetime format
+        self.datetime_format_regex = re.compile(self.datetime_format.regex_str)
 
     def validate(self, input_data: Any) -> datetime:
         """
@@ -202,6 +251,10 @@ class DateTimeValidator(StringValidator):
         # Set timezone to local_timezone if no timezone is specified
         if datetime_obj.tzinfo is None and self.local_timezone is not None:
             datetime_obj = datetime_obj.replace(tzinfo=self.local_timezone)
+
+        # Check datetime against datetime_range (if defined)
+        if self.datetime_range is not None and not self.datetime_range.contains_datetime(datetime_obj, self.local_timezone):
+            raise DateTimeRangeError()
 
         # Convert datetime to target timezone (if defined)
         if self.target_timezone is not None:

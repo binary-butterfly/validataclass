@@ -10,7 +10,9 @@ from datetime import datetime, timedelta, timezone
 from dateutil import tz
 import pytest
 
-from wtfjson.exceptions import RequiredValueError, InvalidTypeError, InvalidDateTimeError, InvalidValidatorOptionException
+from wtfjson.exceptions import RequiredValueError, InvalidTypeError, InvalidDateTimeError, DateTimeRangeError, \
+    InvalidValidatorOptionException
+from wtfjson.helpers import DateTimeRange
 from wtfjson.validators import DateTimeValidator, DateTimeValidatorFormat
 
 
@@ -290,6 +292,95 @@ class DateTimeValidatorTest:
         validated_datetime = validator.validate(input_string)
         assert validated_datetime == expected_datetime
         assert validated_datetime.tzinfo is target_timezone
+
+    # Test DateTimeValidator with datetime_range parameter
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_string, expected_datetime', [
+            # Input in UTC
+            ('2021-09-08T12:00:00Z', datetime(2021, 9, 8, 12, 0, 0, tzinfo=timezone.utc)),
+            ('2021-09-08T12:59:59.999999Z', datetime(2021, 9, 8, 12, 59, 59, 999999, tzinfo=timezone.utc)),
+            ('2021-09-08T13:00:00Z', datetime(2021, 9, 8, 13, 0, 0, tzinfo=timezone.utc)),
+            # Input in other timezones
+            ('2021-09-08T11:00:00-01:00', datetime(2021, 9, 8, 11, 0, 0, tzinfo=timezone(timedelta(hours=-1)))),
+            ('2021-09-08T15:00:00+02:00', datetime(2021, 9, 8, 15, 0, 0, tzinfo=timezone(timedelta(hours=2)))),
+        ]
+    )
+    def test_datetime_range_valid(input_string, expected_datetime):
+        """ Test DateTimeValidator with datetime_range parameter without local_timezone, with valid input. """
+        dt_range = DateTimeRange(lower_boundary=datetime(2021, 9, 8, 12, 0, 0, tzinfo=timezone.utc),
+                                 upper_boundary=datetime(2021, 9, 8, 13, 0, 0, tzinfo=timezone.utc))
+        validator = DateTimeValidator(DateTimeValidatorFormat.REQUIRE_TIMEZONE, datetime_range=dt_range)
+        assert validator.validate(input_string) == expected_datetime
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_string', [
+            # Input in UTC
+            '2021-09-08T11:59:59.999999Z',
+            '2021-09-08T13:00:00.000001Z',
+            '2021-09-09T12:30:00Z',
+            # Input in other timezones
+            '2021-09-08T10:59:59-01:00',
+            '2021-09-08T15:00:01+02:00',
+        ]
+    )
+    def test_datetime_range_invalid(input_string):
+        """ Test DateTimeValidator with datetime_range parameter without local_timezone, with valid input. """
+        dt_range = DateTimeRange(lower_boundary=datetime(2021, 9, 8, 12, 0, 0, tzinfo=timezone.utc),
+                                 upper_boundary=datetime(2021, 9, 8, 13, 0, 0, tzinfo=timezone.utc))
+        validator = DateTimeValidator(DateTimeValidatorFormat.REQUIRE_TIMEZONE, datetime_range=dt_range)
+        with pytest.raises(DateTimeRangeError) as exception_info:
+            validator.validate(input_string)
+        assert exception_info.value.to_dict() == {
+            'code': 'datetime_range_error',
+        }
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_string, expected_datetime', [
+            # Input in local timezone (Europe/Berlin with DST, UTC+2)
+            ('2021-09-08T14:00:00', datetime(2021, 9, 8, 14, 0, 0, tzinfo=timezone(timedelta(hours=2)))),
+            ('2021-09-08T14:30:00', datetime(2021, 9, 8, 14, 30, 0, tzinfo=timezone(timedelta(hours=2)))),
+            ('2021-09-08T15:00:00', datetime(2021, 9, 8, 15, 0, 0, tzinfo=timezone(timedelta(hours=2)))),
+            # Input in UTC and other timezones
+            ('2021-09-08T12:00:00Z', datetime(2021, 9, 8, 12, 0, 0, tzinfo=timezone.utc)),
+            ('2021-09-08T13:00:00Z', datetime(2021, 9, 8, 13, 0, 0, tzinfo=timezone.utc)),
+            ('2021-09-08T11:00:00-01:00', datetime(2021, 9, 8, 11, 0, 0, tzinfo=timezone(timedelta(hours=-1)))),
+            ('2021-09-08T15:00:00+02:00', datetime(2021, 9, 8, 15, 0, 0, tzinfo=timezone(timedelta(hours=2)))),
+        ]
+    )
+    def test_datetime_range_with_local_timezone_valid(input_string, expected_datetime):
+        """ Test DateTimeValidator with datetime_range parameter without local_timezone, with valid input. """
+        dt_range = DateTimeRange(lower_boundary=datetime(2021, 9, 8, 14, 0, 0),
+                                 upper_boundary=datetime(2021, 9, 8, 15, 0, 0))
+        validator = DateTimeValidator(local_timezone=tz.gettz('Europe/Berlin'), datetime_range=dt_range)
+        assert validator.validate(input_string) == expected_datetime
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_string', [
+            # Input in local timezone (Europe/Berlin with DST, UTC+2)
+            '2021-09-08T13:59:59',
+            '2021-09-08T15:00:01',
+            # Input in UTC and other timezones
+            '2021-09-08T11:59:59Z',
+            '2021-09-08T13:00:01Z',
+            '2021-09-08T10:59:59-01:00',
+            '2021-09-08T15:00:01+02:00',
+        ]
+    )
+    def test_datetime_range_with_local_timezone_invalid(input_string):
+        """ Test DateTimeValidator with datetime_range parameter without local_timezone, with valid input. """
+        dt_range = DateTimeRange(lower_boundary=datetime(2021, 9, 8, 14, 0, 0),
+                                 upper_boundary=datetime(2021, 9, 8, 15, 0, 0))
+        validator = DateTimeValidator(local_timezone=tz.gettz('Europe/Berlin'), datetime_range=dt_range)
+        with pytest.raises(DateTimeRangeError) as exception_info:
+            validator.validate(input_string)
+        assert exception_info.value.to_dict() == {
+            'code': 'datetime_range_error',
+        }
 
     # Invalid validator parameters
 
