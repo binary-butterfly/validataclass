@@ -64,6 +64,6 @@ class DateTimeRangeError(ValidationError):
     Validation error raised by `DateTimeValidator` when a datetime range (see `BaseDateTimeRange`) is specified and the input datetime
     is outside of that range.
 
-    TODO: Add extra field with a string representation of the range (if possible)
+    May contain extra fields like 'lower_boundary' and 'upper_boundary' as returned by the `to_dict()` method of the datetime range.
     """
     code = 'datetime_range_error'

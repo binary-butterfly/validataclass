@@ -41,11 +41,12 @@ class DateTimeRangeTest:
     @staticmethod
     @pytest.mark.parametrize(
         'lower_boundary, upper_boundary', [
-            (None, None),
             # Static datetimes
+            (None, None),
             (datetime(2021, 9, 8, 7, 6, 5), None),
             (None, datetime(2021, 9, 8, 7, 6, 5)),
             (datetime(2021, 9, 8, 7, 6, 5), datetime(2021, 10, 9, 8, 7, 6)),
+
             # Callables
             (datetime.now, lambda: datetime(2021, 9, 8, 7, 6, 5)),
         ]
@@ -54,6 +55,52 @@ class DateTimeRangeTest:
         """ Test DateTimeRange `__repr__()` method. """
         dt_range = DateTimeRange(lower_boundary=lower_boundary, upper_boundary=upper_boundary)
         assert repr(dt_range) == f'DateTimeRange(lower_boundary={repr(lower_boundary)}, upper_boundary={repr(upper_boundary)})'
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'lower_boundary, upper_boundary, expected_dict', [
+            # Static datetimes
+            (
+                None, None, {},
+            ),
+            (
+                datetime(2021, 9, 8, 7, 6, 5, tzinfo=timezone.utc), None,
+                {'lower_boundary': '2021-09-08T07:06:05+00:00'},
+            ),
+            (
+                None, datetime(2021, 9, 8, 7, 6, 5, tzinfo=timezone.utc),
+                {'upper_boundary': '2021-09-08T07:06:05+00:00'},
+            ),
+            (
+                datetime(2021, 9, 8, 7, 6, 5),
+                datetime(2021, 10, 9, 8, 7, 6),
+                {'lower_boundary': '2021-09-08T07:06:05', 'upper_boundary': '2021-10-09T08:07:06'},
+            ),
+
+            # Callables
+            (
+                lambda: datetime(2021, 9, 8, 7, 6, 5),
+                lambda: datetime(2021, 9, 8, 7, 6, 5) + timedelta(hours=3),
+                {'lower_boundary': '2021-09-08T07:06:05', 'upper_boundary': '2021-09-08T10:06:05'}
+            ),
+        ]
+    )
+    def test_range_to_dict(lower_boundary, upper_boundary, expected_dict):
+        """ Test DateTimeRange `to_dict()` method. """
+        dt_range = DateTimeRange(lower_boundary=lower_boundary, upper_boundary=upper_boundary)
+        assert dt_range.to_dict() == expected_dict
+
+    @staticmethod
+    def test_range_to_dict_with_local_timezone():
+        """ Test DateTimeRange `to_dict()` method with local_timezone parameter. """
+        dt_range = DateTimeRange(
+            lower_boundary=datetime(2021, 9, 8, 7, 6, 5),
+            upper_boundary=datetime(2021, 10, 9, 8, 7, 6)
+        )
+        assert dt_range.to_dict(local_timezone=timezone(timedelta(hours=3))) == {
+            'lower_boundary': '2021-09-08T07:06:05+03:00',
+            'upper_boundary': '2021-10-09T08:07:06+03:00'
+        }
 
     # Tests for different boundary options (static/callable) with all datetimes having timezones
 
@@ -235,11 +282,52 @@ class DateTimeOffsetRangeTest:
             (lambda: datetime.now(), timedelta(hours=24), timedelta(hours=24)),
         ]
     )
-    def test_range_repr(pivot, offset_minus, offset_plus):
+    def test_offset_range_repr(pivot, offset_minus, offset_plus):
         """ Test DateTimeOffsetRange `__repr__()` method. """
         dt_range = DateTimeOffsetRange(pivot=pivot, offset_minus=offset_minus, offset_plus=offset_plus)
         assert repr(dt_range) == f'DateTimeOffsetRange(pivot={repr(pivot)}, offset_minus={repr(dt_range.offset_minus)}, ' \
                                  f'offset_plus={repr(dt_range.offset_plus)})'
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'pivot, offset_minus, offset_plus, expected_dict', [
+            # Static datetimes
+            (
+                datetime(2021, 9, 8, 13, 12, 0, tzinfo=timezone.utc), timedelta(hours=1), None,
+                {'lower_boundary': '2021-09-08T12:12:00+00:00', 'upper_boundary': '2021-09-08T13:12:00+00:00'},
+            ),
+            (
+                datetime(2021, 9, 8, 13, 12, 0, tzinfo=timezone.utc), None, timedelta(hours=1),
+                {'lower_boundary': '2021-09-08T13:12:00+00:00', 'upper_boundary': '2021-09-08T14:12:00+00:00'},
+            ),
+            (
+                datetime(2021, 9, 8, 13, 12, 0, tzinfo=timezone.utc), timedelta(minutes=10), timedelta(minutes=30),
+                {'lower_boundary': '2021-09-08T13:02:00+00:00', 'upper_boundary': '2021-09-08T13:42:00+00:00'},
+            ),
+
+            # Callables
+            (
+                lambda: datetime(2021, 9, 8, 13, 12, 0), None, timedelta(hours=2),
+                {'lower_boundary': '2021-09-08T13:12:00', 'upper_boundary': '2021-09-08T15:12:00'}
+            ),
+        ]
+    )
+    def test_offset_range_to_dict(pivot, offset_minus, offset_plus, expected_dict):
+        """ Test DateTimeOffsetRange `to_dict()` method. """
+        dt_range = DateTimeOffsetRange(pivot=pivot, offset_minus=offset_minus, offset_plus=offset_plus)
+        assert dt_range.to_dict() == expected_dict
+
+    @staticmethod
+    def test_offset_range_to_dict_with_local_timezone():
+        """ Test DateTimeOffsetRange `to_dict()` method with local_timezone parameter. """
+        dt_range = DateTimeOffsetRange(
+            pivot=datetime(2021, 9, 8, 10, 12, 0),
+            offset_plus=timedelta(hours=1),
+        )
+        assert dt_range.to_dict(local_timezone=timezone(timedelta(hours=-3))) == {
+            'lower_boundary': '2021-09-08T10:12:00-03:00',
+            'upper_boundary': '2021-09-08T11:12:00-03:00',
+        }
 
     # Tests with all datetimes having timezones
 

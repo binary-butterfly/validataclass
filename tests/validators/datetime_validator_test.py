@@ -335,6 +335,8 @@ class DateTimeValidatorTest:
             validator.validate(input_string)
         assert exception_info.value.to_dict() == {
             'code': 'datetime_range_error',
+            'lower_boundary': '2021-09-08T12:00:00+00:00',
+            'upper_boundary': '2021-09-08T13:00:00+00:00',
         }
 
     @staticmethod
@@ -380,6 +382,8 @@ class DateTimeValidatorTest:
             validator.validate(input_string)
         assert exception_info.value.to_dict() == {
             'code': 'datetime_range_error',
+            'lower_boundary': '2021-09-08T14:00:00+02:00',
+            'upper_boundary': '2021-09-08T15:00:00+02:00',
         }
 
     # Invalid validator parameters

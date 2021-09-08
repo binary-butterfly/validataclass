@@ -40,7 +40,7 @@ class ValidationError(Exception):
             self.code = code
         if reason is not None:
             self.reason = reason
-        self.extra_data = kwargs
+        self.extra_data = {key: value for key, value in kwargs.items() if value is not None}
 
     def to_dict(self) -> dict:
         """

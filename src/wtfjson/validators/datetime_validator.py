@@ -254,7 +254,8 @@ class DateTimeValidator(StringValidator):
 
         # Check datetime against datetime_range (if defined)
         if self.datetime_range is not None and not self.datetime_range.contains_datetime(datetime_obj, self.local_timezone):
-            raise DateTimeRangeError()
+            # Add extra fields (lower_boundary, upper_boundary) to the validation error
+            raise DateTimeRangeError(**self.datetime_range.to_dict(self.local_timezone))
 
         # Convert datetime to target timezone (if defined)
         if self.target_timezone is not None:

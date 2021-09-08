@@ -33,6 +33,16 @@ class BaseDateTimeRange(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod  # pragma: nocover
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+        """
+        Abstract method to be implemented by subclasses. Should return a dictionary with string representations of the range boundaries,
+        suitable for the `DateTimeRangeError` exception to generate JSON error responses.
+        """
+        raise NotImplementedError()
+
+    # Helper methods
+
     @staticmethod
     def _get_datetime(boundary: _DateTimeBoundary, local_timezone: Optional[tzinfo] = None) -> Optional[datetime]:
         """
@@ -95,6 +105,19 @@ class DateTimeRange(BaseDateTimeRange):
         if (lower_datetime is not None and dt < lower_datetime) or (upper_datetime is not None and dt > upper_datetime):
             return False
         return True
+
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+        """
+        Returns a dictionary with string representations of the range boundaries, suitable for the `DateTimeRangeError` exception
+        to generate JSON error responses.
+        """
+        lower_datetime = self._get_lower_datetime(local_timezone)
+        upper_datetime = self._get_upper_datetime(local_timezone)
+
+        return {
+            **({'lower_boundary': lower_datetime.isoformat()} if lower_datetime is not None else {}),
+            **({'upper_boundary': upper_datetime.isoformat()} if upper_datetime is not None else {}),
+        }
 
     def _get_lower_datetime(self, local_timezone: Optional[tzinfo] = None) -> Optional[datetime]:
         """
@@ -171,6 +194,18 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         if dt < lower_datetime or dt > upper_datetime:
             return False
         return True
+
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+        """
+        Returns a dictionary with string representations of the range boundaries (calculating lower_datetime and upper_datetime from the
+        pivot minus/plus the offsets), suitable for the `DateTimeRangeError` exception to generate JSON error responses.
+        """
+        pivot_datetime = self._get_pivot_datetime(local_timezone)
+
+        return {
+            'lower_boundary': (pivot_datetime - self.offset_minus).isoformat(),
+            'upper_boundary': (pivot_datetime + self.offset_plus).isoformat(),
+        }
 
     # Helper methods to resolve callables to datetimes and apply local_timezone
 
