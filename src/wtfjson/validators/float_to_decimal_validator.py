@@ -53,10 +53,10 @@ class FloatToDecimalValidator(FloatValidator):
     output_quantum: Optional[Decimal] = None
 
     def __init__(
-            self, *,
-            min_value: Optional[Union[float, int]] = None,
-            max_value: Optional[Union[float, int]] = None,
-            output_places: Optional[int] = None,
+        self, *,
+        min_value: Optional[Union[float, int]] = None,
+        max_value: Optional[Union[float, int]] = None,
+        output_places: Optional[int] = None,
     ):
         """
         Create a FloatToDecimalValidator with optional value range and optional number of decimal places in output value.

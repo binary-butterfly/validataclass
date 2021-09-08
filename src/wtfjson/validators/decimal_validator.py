@@ -70,12 +70,12 @@ class DecimalValidator(StringValidator):
     decimal_regex: re.Pattern = re.compile(r'[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)')
 
     def __init__(
-            self, *,
-            min_value: Optional[Union[Decimal, str]] = None,
-            max_value: Optional[Union[Decimal, str]] = None,
-            min_places: Optional[int] = None,
-            max_places: Optional[int] = None,
-            output_places: Optional[int] = None,
+        self, *,
+        min_value: Optional[Union[Decimal, str]] = None,
+        max_value: Optional[Union[Decimal, str]] = None,
+        min_places: Optional[int] = None,
+        max_places: Optional[int] = None,
+        output_places: Optional[int] = None,
     ):
         """
         Create a DecimalValidator with optional value range, optional minimum/maximum number of decimal places and optional number

@@ -43,11 +43,11 @@ class DictValidator(Validator):
     required_fields: set[str]
 
     def __init__(
-            self, *,
-            field_validators: Optional[dict[str, Validator]] = None,
-            default_validator: Optional[Validator] = None,
-            required_fields: Optional[list[str]] = None,
-            optional_fields: Optional[list[str]] = None
+        self, *,
+        field_validators: Optional[dict[str, Validator]] = None,
+        default_validator: Optional[Validator] = None,
+        required_fields: Optional[list[str]] = None,
+        optional_fields: Optional[list[str]] = None
     ):
         """
         Creates a DictValidator.

@@ -18,6 +18,7 @@ class UnsetValueType:
     There can only be one instance of this class. Attempting to create a new instance of UnsetValueType or to create a copy of UnsetValue
     will always result in the same instance.
     """
+
     def __call__(self):
         return self
 
