@@ -27,6 +27,8 @@ from .regex_validator import RegexValidator
 from .date_validator import DateValidator
 from .time_validator import TimeValidator, TimeFormat
 from .datetime_validator import DateTimeValidator, DateTimeFormat
+from .email_validator import EmailValidator
+from .url_validator import UrlValidator
 
 # Composite type validators
 from .list_validator import ListValidator
