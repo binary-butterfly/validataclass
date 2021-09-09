@@ -25,8 +25,8 @@ from .decimal_validator import DecimalValidator
 from .float_to_decimal_validator import FloatToDecimalValidator
 from .regex_validator import RegexValidator
 from .date_validator import DateValidator
-from .time_validator import TimeValidator, TimeValidatorFormat
-from .datetime_validator import DateTimeValidator, DateTimeValidatorFormat
+from .time_validator import TimeValidator, TimeFormat
+from .datetime_validator import DateTimeValidator, DateTimeFormat
 
 # Composite type validators
 from .list_validator import ListValidator

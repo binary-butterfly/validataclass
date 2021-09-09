@@ -11,7 +11,7 @@ import pytest
 import re
 
 from wtfjson.exceptions import RequiredValueError, InvalidTypeError, InvalidTimeError
-from wtfjson.validators import TimeValidator, TimeValidatorFormat
+from wtfjson.validators import TimeValidator, TimeFormat
 
 
 class TimeValidatorTest:
@@ -52,9 +52,9 @@ class TimeValidatorTest:
             # Default format (no format specified in constructor)
             (None, 'HH:MM:SS'),
             # Explicit format
-            (TimeValidatorFormat.NO_SECONDS, 'HH:MM'),
-            (TimeValidatorFormat.WITH_SECONDS, 'HH:MM:SS'),
-            (TimeValidatorFormat.OPTIONAL_SECONDS, 'HH:MM[:SS]'),
+            (TimeFormat.NO_SECONDS, 'HH:MM'),
+            (TimeFormat.WITH_SECONDS, 'HH:MM:SS'),
+            (TimeFormat.OPTIONAL_SECONDS, 'HH:MM[:SS]'),
         ]
     )
     def test_all_formats_invalid(input_string, time_format, time_format_str):
@@ -79,7 +79,7 @@ class TimeValidatorTest:
             ('23:59', time(23, 59, 0)),
         ]
     )
-    @pytest.mark.parametrize('time_format', [TimeValidatorFormat.NO_SECONDS, TimeValidatorFormat.OPTIONAL_SECONDS])
+    @pytest.mark.parametrize('time_format', [TimeFormat.NO_SECONDS, TimeFormat.OPTIONAL_SECONDS])
     def test_time_format_hh_mm_valid(input_string, expected_time, time_format):
         """ Test TimeValidator with "HH:MM" strings with formats that allow this (NO_SECONDS and OPTIONAL_SECONDS). """
         validator = TimeValidator(time_format=time_format)
@@ -97,7 +97,7 @@ class TimeValidatorTest:
             ('23:59:59', time(23, 59, 59)),
         ]
     )
-    @pytest.mark.parametrize('time_format', [None, TimeValidatorFormat.WITH_SECONDS, TimeValidatorFormat.OPTIONAL_SECONDS])
+    @pytest.mark.parametrize('time_format', [None, TimeFormat.WITH_SECONDS, TimeFormat.OPTIONAL_SECONDS])
     def test_time_format_hh_mm_ss_valid(input_string, expected_time, time_format):
         """ Test TimeValidator with "HH:MM:SS" strings with formats that allow this (default, WITH_SECONDS and OPTIONAL_SECONDS). """
         validator = TimeValidator() if time_format is None else TimeValidator(time_format=time_format)
@@ -113,13 +113,13 @@ class TimeValidatorTest:
             ('13:37', None, 'HH:MM:SS'),
             ('23:59', None, 'HH:MM:SS'),
             # WITH_SECONDS (explicit) with HH:MM strings
-            ('00:00', TimeValidatorFormat.WITH_SECONDS, 'HH:MM:SS'),
-            ('13:37', TimeValidatorFormat.WITH_SECONDS, 'HH:MM:SS'),
-            ('23:59', TimeValidatorFormat.WITH_SECONDS, 'HH:MM:SS'),
+            ('00:00', TimeFormat.WITH_SECONDS, 'HH:MM:SS'),
+            ('13:37', TimeFormat.WITH_SECONDS, 'HH:MM:SS'),
+            ('23:59', TimeFormat.WITH_SECONDS, 'HH:MM:SS'),
             # NO_SECONDS with HH:MM:SS strings
-            ('00:00:00', TimeValidatorFormat.NO_SECONDS, 'HH:MM'),
-            ('12:34:56', TimeValidatorFormat.NO_SECONDS, 'HH:MM'),
-            ('13:37:00', TimeValidatorFormat.NO_SECONDS, 'HH:MM'),
+            ('00:00:00', TimeFormat.NO_SECONDS, 'HH:MM'),
+            ('12:34:56', TimeFormat.NO_SECONDS, 'HH:MM'),
+            ('13:37:00', TimeFormat.NO_SECONDS, 'HH:MM'),
         ]
     )
     def test_with_time_format_invalid(input_string, time_format, time_format_str):

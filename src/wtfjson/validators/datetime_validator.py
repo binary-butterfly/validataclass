@@ -16,8 +16,8 @@ from wtfjson.exceptions import InvalidDateTimeError, InvalidValidatorOptionExcep
 from wtfjson.helpers.datetime_range import BaseDateTimeRange
 
 __all__ = [
+    'DateTimeFormat',
     'DateTimeValidator',
-    'DateTimeValidatorFormat',
 ]
 
 # Helper variables to construct more complex regex patterns
@@ -28,7 +28,7 @@ _REGEX_UTC_ONLY = r'(Z|[+-]00:00)'
 _REGEX_DATE_AND_TIME = f'{_REGEX_DATE}T{_REGEX_TIME}'
 
 
-class DateTimeValidatorFormat(Enum):
+class DateTimeFormat(Enum):
     """
     Enum to specify allowed datetime format (e.g. with/without timezone info).
 
@@ -72,7 +72,7 @@ class DateTimeValidator(StringValidator):
     interpreted as local time (see also the parameter 'local_timezone').
 
     By default the validator allows datetimes with and without timezones. To restrict this to specific formats you can use the
-    `DateTimeValidatorFormat` enum, which has the following values:
+    `DateTimeFormat` enum, which has the following values:
 
     - ALLOW_TIMEZONE: Default behavior, allows datetimes with any timezone or without a timezone (local time)
     - REQUIRE_TIMEZONE: Only allows datetimes that specify a timezone (but any timezone is allowed)
@@ -122,17 +122,17 @@ class DateTimeValidator(StringValidator):
 
     # Only allow datetimes with specified timezone
     # "2021-12-31T12:34:56+02:00" -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone(timedelta(hours=2)))
-    DateTimeValidator(DateTimeValidatorFormat.REQUIRE_TIMEZONE)
+    DateTimeValidator(DateTimeFormat.REQUIRE_TIMEZONE)
 
     # Only allow datetimes either without timezone (local time) or with UTC explicitly specified ('Z' or '+00:00' suffix)
     # "2021-12-31T12:34:56" -> datetime(2021, 12, 31, 12, 34, 56)
     # "2021-12-31T12:34:56Z" -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
-    DateTimeValidator(DateTimeValidatorFormat.LOCAL_OR_UTC)
+    DateTimeValidator(DateTimeFormat.LOCAL_OR_UTC)
 
     # As above (local time or UTC), but set a local_timezone as the default value for the datetime's tzinfo
     # "2021-12-31T12:34:56" -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=tz.gettz('Europe/Berlin'))
     # "2021-12-31T12:34:56Z" -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
-    DateTimeValidator(DateTimeValidatorFormat.LOCAL_OR_UTC, local_timezone=tz.gettz('Europe/Berlin'))
+    DateTimeValidator(DateTimeFormat.LOCAL_OR_UTC, local_timezone=tz.gettz('Europe/Berlin'))
 
     # Allow datetime strings with and without timezone (using CET/CEST (+01:00/+02:00) as default), but convert all datetimes to UTC
     # "2021-12-31T12:34:56" -> datetime(2021, 12, 31, 11, 34, 56, tzinfo=timezone.utc) (input interpreted as UTC+01:00)
@@ -172,7 +172,7 @@ class DateTimeValidator(StringValidator):
     """
 
     # Datetime string format (enum)
-    datetime_format: DateTimeValidatorFormat
+    datetime_format: DateTimeFormat
 
     # Precompiled regular expression for the specified datetime string format
     datetime_format_regex: re.Pattern
@@ -188,7 +188,7 @@ class DateTimeValidator(StringValidator):
 
     def __init__(
         self,
-        datetime_format: DateTimeValidatorFormat = DateTimeValidatorFormat.ALLOW_TIMEZONE,
+        datetime_format: DateTimeFormat = DateTimeFormat.ALLOW_TIMEZONE,
         *,
         local_timezone: Optional[tzinfo] = None,
         target_timezone: Optional[tzinfo] = None,
@@ -205,7 +205,7 @@ class DateTimeValidator(StringValidator):
         `wtfjson.helpers.datetime_range`.
 
         Parameters:
-            datetime_format: `DateTimeValidatorFormat`, specifies the accepted string formats (default: `ALLOW_TIMEZONE`)
+            datetime_format: `DateTimeFormat`, specifies the accepted string formats (default: `ALLOW_TIMEZONE`)
             local_timezone: `tzinfo`, specifies the default timezone to set for datetime strings without timezone info (default: None)
             target_timezone: `tzinfo`, if specified, all datetimes will be converted to this timezone (default: None)
             datetime_range: `BaseDateTimeRange` (subclasses), specifies the range of allowed values (default: None)

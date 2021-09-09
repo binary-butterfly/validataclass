@@ -13,7 +13,7 @@ import pytest
 from wtfjson.exceptions import RequiredValueError, InvalidTypeError, InvalidDateTimeError, DateTimeRangeError, \
     InvalidValidatorOptionException
 from wtfjson.helpers import DateTimeRange
-from wtfjson.validators import DateTimeValidator, DateTimeValidatorFormat
+from wtfjson.validators import DateTimeValidator, DateTimeFormat
 
 
 class DateTimeValidatorTest:
@@ -51,7 +51,7 @@ class DateTimeValidatorTest:
             '2021-01-01T00:00:00+01:02:03', '2021-01-01T00:00:00+01:02:03.123456',
         ]
     )
-    @pytest.mark.parametrize('datetime_format', list(DateTimeValidatorFormat))
+    @pytest.mark.parametrize('datetime_format', list(DateTimeFormat))
     def test_all_formats_invalid(input_string, datetime_format):
         """ Test DateTimeValidator with all datetime formats with input that is always invalid. """
         validator = DateTimeValidator(datetime_format=datetime_format)
@@ -66,8 +66,8 @@ class DateTimeValidatorTest:
     def test_default_format_correct():
         """ Check that DateTimeValidator uses the correct default format when none is specified. """
         validator = DateTimeValidator()
-        assert validator.datetime_format is DateTimeValidatorFormat.ALLOW_TIMEZONE
-        assert validator.datetime_format_regex.pattern == DateTimeValidatorFormat.ALLOW_TIMEZONE.regex_str
+        assert validator.datetime_format is DateTimeFormat.ALLOW_TIMEZONE
+        assert validator.datetime_format_regex.pattern == DateTimeFormat.ALLOW_TIMEZONE.regex_str
 
     # Test DateTimeValidator with valid data in different formats
 
@@ -86,8 +86,8 @@ class DateTimeValidatorTest:
     )
     @pytest.mark.parametrize(
         'datetime_format', [
-            DateTimeValidatorFormat.ALLOW_TIMEZONE,
-            DateTimeValidatorFormat.REQUIRE_TIMEZONE,
+            DateTimeFormat.ALLOW_TIMEZONE,
+            DateTimeFormat.REQUIRE_TIMEZONE,
         ]
     )
     def test_datetime_with_timezone_valid(input_string, expected_datetime, datetime_format):
@@ -112,10 +112,10 @@ class DateTimeValidatorTest:
     )
     @pytest.mark.parametrize(
         'datetime_format', [
-            DateTimeValidatorFormat.ALLOW_TIMEZONE,
-            DateTimeValidatorFormat.REQUIRE_TIMEZONE,
-            DateTimeValidatorFormat.REQUIRE_UTC,
-            DateTimeValidatorFormat.LOCAL_OR_UTC,
+            DateTimeFormat.ALLOW_TIMEZONE,
+            DateTimeFormat.REQUIRE_TIMEZONE,
+            DateTimeFormat.REQUIRE_UTC,
+            DateTimeFormat.LOCAL_OR_UTC,
         ]
     )
     def test_datetime_with_explicit_utc_valid(input_string, expected_datetime, datetime_format):
@@ -139,9 +139,9 @@ class DateTimeValidatorTest:
     )
     @pytest.mark.parametrize(
         'datetime_format', [
-            DateTimeValidatorFormat.ALLOW_TIMEZONE,
-            DateTimeValidatorFormat.LOCAL_ONLY,
-            DateTimeValidatorFormat.LOCAL_OR_UTC,
+            DateTimeFormat.ALLOW_TIMEZONE,
+            DateTimeFormat.LOCAL_ONLY,
+            DateTimeFormat.LOCAL_OR_UTC,
         ]
     )
     def test_datetime_without_timezone_valid(input_string, expected_datetime, datetime_format):
@@ -165,9 +165,9 @@ class DateTimeValidatorTest:
     )
     @pytest.mark.parametrize(
         'datetime_format, datetime_format_str', [
-            (DateTimeValidatorFormat.REQUIRE_UTC, '<DATE>T<TIME>Z'),
-            (DateTimeValidatorFormat.LOCAL_ONLY, '<DATE>T<TIME>'),
-            (DateTimeValidatorFormat.LOCAL_OR_UTC, '<DATE>T<TIME>[Z]'),
+            (DateTimeFormat.REQUIRE_UTC, '<DATE>T<TIME>Z'),
+            (DateTimeFormat.LOCAL_ONLY, '<DATE>T<TIME>'),
+            (DateTimeFormat.LOCAL_OR_UTC, '<DATE>T<TIME>[Z]'),
         ]
     )
     def test_datetime_with_timezone_invalid(input_string, datetime_format, datetime_format_str):
@@ -192,7 +192,7 @@ class DateTimeValidatorTest:
     )
     @pytest.mark.parametrize(
         'datetime_format, datetime_format_str', [
-            (DateTimeValidatorFormat.LOCAL_ONLY, '<DATE>T<TIME>'),
+            (DateTimeFormat.LOCAL_ONLY, '<DATE>T<TIME>'),
         ]
     )
     def test_datetime_with_explicit_utc_invalid(input_string, datetime_format, datetime_format_str):
@@ -215,8 +215,8 @@ class DateTimeValidatorTest:
     )
     @pytest.mark.parametrize(
         'datetime_format, datetime_format_str', [
-            (DateTimeValidatorFormat.REQUIRE_TIMEZONE, '<DATE>T<TIME><TIMEZONE>'),
-            (DateTimeValidatorFormat.REQUIRE_UTC, '<DATE>T<TIME>Z'),
+            (DateTimeFormat.REQUIRE_TIMEZONE, '<DATE>T<TIME><TIMEZONE>'),
+            (DateTimeFormat.REQUIRE_UTC, '<DATE>T<TIME>Z'),
         ]
     )
     def test_datetime_without_timezone_invalid(input_string, datetime_format, datetime_format_str):
@@ -311,7 +311,7 @@ class DateTimeValidatorTest:
         """ Test DateTimeValidator with datetime_range parameter without local_timezone, with valid input. """
         dt_range = DateTimeRange(lower_boundary=datetime(2021, 9, 8, 12, 0, 0, tzinfo=timezone.utc),
                                  upper_boundary=datetime(2021, 9, 8, 13, 0, 0, tzinfo=timezone.utc))
-        validator = DateTimeValidator(DateTimeValidatorFormat.REQUIRE_TIMEZONE, datetime_range=dt_range)
+        validator = DateTimeValidator(DateTimeFormat.REQUIRE_TIMEZONE, datetime_range=dt_range)
         assert validator.validate(input_string) == expected_datetime
 
     @staticmethod
@@ -330,7 +330,7 @@ class DateTimeValidatorTest:
         """ Test DateTimeValidator with datetime_range parameter without local_timezone, with valid input. """
         dt_range = DateTimeRange(lower_boundary=datetime(2021, 9, 8, 12, 0, 0, tzinfo=timezone.utc),
                                  upper_boundary=datetime(2021, 9, 8, 13, 0, 0, tzinfo=timezone.utc))
-        validator = DateTimeValidator(DateTimeValidatorFormat.REQUIRE_TIMEZONE, datetime_range=dt_range)
+        validator = DateTimeValidator(DateTimeFormat.REQUIRE_TIMEZONE, datetime_range=dt_range)
         with pytest.raises(DateTimeRangeError) as exception_info:
             validator.validate(input_string)
         assert exception_info.value.to_dict() == {
@@ -391,9 +391,9 @@ class DateTimeValidatorTest:
     @staticmethod
     @pytest.mark.parametrize(
         'datetime_format', [
-            DateTimeValidatorFormat.ALLOW_TIMEZONE,
-            DateTimeValidatorFormat.LOCAL_OR_UTC,
-            DateTimeValidatorFormat.LOCAL_ONLY,
+            DateTimeFormat.ALLOW_TIMEZONE,
+            DateTimeFormat.LOCAL_OR_UTC,
+            DateTimeFormat.LOCAL_ONLY,
         ]
     )
     def test_invalid_parameter_target_timezone_without_local_timezone(datetime_format):
