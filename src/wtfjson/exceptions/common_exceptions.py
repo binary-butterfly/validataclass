@@ -6,7 +6,7 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 __all__ = [
     'ValidationError',
@@ -75,9 +75,9 @@ class InvalidTypeError(ValidationError):
     not to 'Decimal' or similar. If the input is a string but not a valid decimal value, a different ValidationError will be raised.
     """
     code = 'invalid_type'
-    expected_types: list[str] = None
+    expected_types: List[str]
 
-    def __init__(self, *, expected_types: Union[type, str, list[Union[type, str]]], **kwargs):
+    def __init__(self, *, expected_types: Union[type, str, List[Union[type, str]]], **kwargs):
         super().__init__(**kwargs)
 
         if type(expected_types) is not list:
@@ -99,6 +99,7 @@ class InvalidTypeError(ValidationError):
 
     def to_dict(self):
         base_dict = super().to_dict()
+        self.expected_types.sort()
         if len(self.expected_types) == 1:
             base_dict.update({'expected_type': self.expected_types[0]})
         else:

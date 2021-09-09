@@ -48,7 +48,7 @@ class NoneableTest:
             validator.validate(123)
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
-            'expected_types': ['str', 'none'],
+            'expected_types': ['none', 'str'],
         }
 
     @staticmethod

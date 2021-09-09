@@ -134,7 +134,7 @@ class EnumValidatorTest:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
-            'expected_types': ['str', 'int'],
+            'expected_types': ['int', 'str'],
         }
 
     # Test EnumValidator with explicit allowed_values parameter

@@ -6,8 +6,10 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
+from typing import List
 
-def unpack_params(*args) -> list[tuple]:
+
+def unpack_params(*args) -> List[tuple]:
     """
     Returns a list containing tuples build from the arguments. Arguments that are lists are "unpacked" by combining the other elements
     of the tuples with all elements in this list. Useful for constructing datasets for test parametrization.

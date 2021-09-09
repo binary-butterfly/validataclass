@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from enum import Enum, EnumMeta
-from typing import Any, Type, Union
+from typing import Any, Type, Union, List
 
 from .any_of_validator import AnyOfValidator
 from wtfjson.exceptions import InvalidValidatorOptionException, ValueNotAllowedError
@@ -53,7 +53,7 @@ class EnumValidator(AnyOfValidator):
     # Enum class used to determine the list of allowed values
     enum_cls: Type[Enum]
 
-    def __init__(self, enum_cls: Type[Enum], *, allowed_values: list[Any] = None, allowed_types: Union[type, list[type]] = None):
+    def __init__(self, enum_cls: Type[Enum], *, allowed_values: List[Any] = None, allowed_types: Union[type, List[type]] = None):
         """
         Create a EnumValidator for a specified Enum class, optionally with a restricted list of allowed values.
 

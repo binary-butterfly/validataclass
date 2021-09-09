@@ -6,7 +6,7 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Optional
+from typing import Optional, Dict
 
 from wtfjson.exceptions import ValidationError
 
@@ -53,9 +53,9 @@ class DataclassPostValidationError(ValidationError):
     """
     code = 'post_validation_errors'
     wrapped_error: Optional[ValidationError] = None
-    field_errors: Optional[dict[str, ValidationError]] = None
+    field_errors: Optional[Dict[str, ValidationError]] = None
 
-    def __init__(self, *, error: Optional[ValidationError] = None, field_errors: Optional[dict[str, ValidationError]] = None, **kwargs):
+    def __init__(self, *, error: Optional[ValidationError] = None, field_errors: Optional[Dict[str, ValidationError]] = None, **kwargs):
         super().__init__(**kwargs)
 
         # Wrap single validation error

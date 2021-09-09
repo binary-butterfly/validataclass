@@ -34,7 +34,7 @@ def _prepare_dataclass_metadata(cls: type) -> None:
         arguments = []
 
         # InitVars currently do not work, so better raise an Exception right here to avoid confusing error messages
-        if type(field_type) is dataclasses.InitVar:
+        if field_type is dataclasses.InitVar or type(field_type) is dataclasses.InitVar:
             raise DataclassValidatorFieldException(f'Dataclass field "{name}": InitVars currently not supported by DataclassValidator.')
 
         # Skip field if it is already a dataclass Field object (created by field() or validator_field())
@@ -63,7 +63,7 @@ def _prepare_dataclass_metadata(cls: type) -> None:
 
 # Extend Python dataclass functions for usage with DataclassValidator
 
-def validator_dataclass(cls=None, /, **kwargs):
+def validator_dataclass(cls=None, **kwargs):
     """
     Decorator that turns a normal class into a DataclassValidator-compatible dataclass.
 
@@ -85,6 +85,9 @@ def validator_dataclass(cls=None, /, **kwargs):
         # Implicit field creation:
         another_field: str = StringValidator()
         field_with_default: str = StringValidator(), Default('not set')
+
+        # Compatibility note: In Python 3.7 parentheses are required when setting a Default using the tuple notation:
+        # field_with_default: str = (StringValidator(), Default('not set'))
     ```
 
     Note: As of now, InitVars are not supported because they are not recognized as proper fields. This might change in a future version.

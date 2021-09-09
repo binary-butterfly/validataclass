@@ -6,7 +6,7 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Optional
+from typing import Optional, Dict
 
 from wtfjson.exceptions import ValidationError
 
@@ -27,9 +27,9 @@ class ListItemsValidationError(ValidationError):
     The implementation of `to_dict()` recursively converts the item validation errors to dictionaries.
     """
     code = 'list_item_errors'
-    item_errors: dict[int, ValidationError]
+    item_errors: Dict[int, ValidationError]
 
-    def __init__(self, *, item_errors: dict[int, ValidationError], **kwargs):
+    def __init__(self, *, item_errors: Dict[int, ValidationError], **kwargs):
         super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in item_errors.values())
         self.item_errors = item_errors

@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Any, Optional, TypeVar, Generic
+from typing import Any, Optional, TypeVar, Generic, Dict
 
 from . import Validator, DictValidator
 from wtfjson.exceptions import InvalidValidatorOptionException, DataclassValidatorFieldException, ValidationError, \
@@ -55,6 +55,9 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
         example_field: str = StringValidator()
         optional_field: str = StringValidator(), Default('')
 
+        # Compatibility note: In Python 3.7 parentheses are required when setting a Default using the tuple notation:
+        # optional_field: str = (StringValidator(), Default(''))
+
         # Also equivalent:
         # example_field: str = validator_field(StringValidator())
         # optional_field: str = validator_field(StringValidator(), default='')
@@ -76,7 +79,7 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
     dataclass_cls: type = None
 
     # Field default values
-    field_defaults: dict[str, Default] = None
+    field_defaults: Dict[str, Default] = None
 
     def __init__(self, dataclass_cls: Optional[type] = None):
         # For easier subclassing: If 'self.dataclass_cls' is already set (e.g. as class member in a subclass), use this as the default.

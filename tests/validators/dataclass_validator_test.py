@@ -25,7 +25,7 @@ class UnitTestDataclass:
     Simple dataclass for testing DataclassValidator.
     """
     name: str = StringValidator()
-    color: str = StringValidator(), Default('unknown color')
+    color: str = (StringValidator(), Default('unknown color'))
     amount: int = IntegerValidator()
     weight: Decimal = DecimalValidator()
 
@@ -158,9 +158,9 @@ class DataclassValidatorTest:
 
         @validator_dataclass
         class DataclassWithDefaults:
-            foo: str = StringValidator(), Default('example default')
-            bar: int = IntegerValidator(), DefaultFactory(counter)
-            baz: Union[UnsetValueType, str] = StringValidator(), DefaultUnset()
+            foo: str = (StringValidator(), Default('example default'))
+            bar: int = (IntegerValidator(), DefaultFactory(counter))
+            baz: Union[UnsetValueType, str] = (StringValidator(), DefaultUnset())
 
         validator: DataclassValidator[DataclassWithDefaults] = DataclassValidator(DataclassWithDefaults)
 

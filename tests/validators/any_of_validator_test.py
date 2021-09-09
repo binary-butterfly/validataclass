@@ -114,7 +114,7 @@ class AnyOfValidatorTest:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
-            'expected_types': ['none', 'str', 'int'],
+            'expected_types': ['int', 'none', 'str'],
         }
 
     # Test AnyOfValidator with explicit allowed_types parameter
@@ -128,7 +128,7 @@ class AnyOfValidatorTest:
             (float, {'expected_type': 'float'}, [1.234], ['foo', 42, True]),
             # List of types
             ([int], {'expected_type': 'int'}, [42], ['foo', 1.234, True]),
-            ([int, float], {'expected_types': ['int', 'float']}, [42, 1.234], ['foo', True]),
+            ([int, float], {'expected_types': ['float', 'int']}, [42, 1.234], ['foo', True]),
         ]
     )
     def test_with_specified_allowed_type(allowed_types, expected_type_dict, valid_input_list, invalid_input_list):

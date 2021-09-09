@@ -8,7 +8,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, tzinfo, timezone
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Union, Dict
 
 __all__ = [
     'BaseDateTimeRange',
@@ -34,7 +34,7 @@ class BaseDateTimeRange(ABC):
         raise NotImplementedError()
 
     @abstractmethod  # pragma: nocover
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> Dict[str, str]:
         """
         Abstract method to be implemented by subclasses. Should return a dictionary with string representations of the range boundaries,
         suitable for the `DateTimeRangeError` exception to generate JSON error responses.
@@ -106,7 +106,7 @@ class DateTimeRange(BaseDateTimeRange):
             return False
         return True
 
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> Dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries, suitable for the `DateTimeRangeError` exception
         to generate JSON error responses.
@@ -195,7 +195,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
             return False
         return True
 
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> Dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries (calculating lower_datetime and upper_datetime from the
         pivot minus/plus the offsets), suitable for the `DateTimeRangeError` exception to generate JSON error responses.

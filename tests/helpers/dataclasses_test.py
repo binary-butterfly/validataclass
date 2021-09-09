@@ -136,9 +136,9 @@ class ValidatorDataclassTest:
 
         @validator_dataclass
         class UnitTestValidatorDataclass:
-            foo: int = IntegerValidator(), NoDefault
-            bar: int = IntegerValidator(), Default(42)
-            baz: Optional[int] = IntegerValidator(), Default(None)
+            foo: int = (IntegerValidator(), NoDefault)
+            bar: int = (IntegerValidator(), Default(42))
+            baz: Optional[int] = (IntegerValidator(), Default(None))
 
         # Get fields from dataclass
         fields = dataclasses.fields(UnitTestValidatorDataclass)  # noqa
@@ -198,7 +198,7 @@ class ValidatorDataclassTest:
 
         class InvalidDataclassC:
             # Wrong order, first element of tuple must be validator
-            foo: int = Default(5), IntegerValidator()
+            foo: int = (Default(5), IntegerValidator())
 
         for cls in [InvalidDataclassA, InvalidDataclassB, InvalidDataclassC]:
             with pytest.raises(DataclassValidatorFieldException) as exception_info:
@@ -211,7 +211,7 @@ class ValidatorDataclassTest:
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validator_dataclass
             class InvalidDataclass:
-                foo: int = IntegerValidator(), Default(5), Default(3)
+                foo: int = (IntegerValidator(), Default(5), Default(3))
 
         assert str(exception_info.value) == 'Dataclass field "foo": Unexpected number of arguments.'
 
@@ -221,7 +221,7 @@ class ValidatorDataclassTest:
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validator_dataclass
             class InvalidDataclass:
-                foo: int = IntegerValidator(), 5
+                foo: int = (IntegerValidator(), 5)
 
         assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument (expected Default).'
 

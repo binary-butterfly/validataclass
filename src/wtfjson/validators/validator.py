@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any, Union, List
 
 from wtfjson.exceptions import RequiredValueError, InvalidTypeError
 
@@ -38,7 +38,7 @@ class Validator(ABC):
         if input_data is None:
             raise RequiredValueError()
 
-    def _ensure_type(self, input_data: Any, expected_types: Union[type, list[type]]) -> None:
+    def _ensure_type(self, input_data: Any, expected_types: Union[type, List[type]]) -> None:
         """
         Checks if input data is not None and has the expected type (or one of multiple expected types).
 

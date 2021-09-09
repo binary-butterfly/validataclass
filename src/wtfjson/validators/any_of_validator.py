@@ -6,7 +6,7 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Any, Union
+from typing import Any, Union, List
 
 from .validator import Validator
 from wtfjson.exceptions import ValueNotAllowedError, InvalidValidatorOptionException
@@ -37,12 +37,12 @@ class AnyOfValidator(Validator):
     """
 
     # Values allowed as input
-    allowed_values: list[Any] = None
+    allowed_values: List[Any] = None
 
     # Types allowed for input data (set by parameter or autodetermined from allowed_values)
-    allowed_types: list[type] = None
+    allowed_types: List[type] = None
 
-    def __init__(self, allowed_values: list[Any], *, allowed_types: Union[type, list[type]] = None):
+    def __init__(self, allowed_values: List[Any], *, allowed_types: Union[type, List[type]] = None):
         """
         Create an AnyOfValidator with a specified list of allowed values.
 

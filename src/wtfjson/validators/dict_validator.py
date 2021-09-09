@@ -6,7 +6,7 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Any, Optional
+from typing import Any, Optional, Dict, List, Set
 
 from .validator import Validator
 from wtfjson.exceptions import ValidationError, InvalidValidatorOptionException, DictFieldsValidationError, \
@@ -34,20 +34,20 @@ class DictValidator(Validator):
     """
 
     # Dictionary to specify which validators are applied to which fields of the input dictionary
-    field_validators: dict[str, Validator]
+    field_validators: Dict[str, Validator]
 
     # Validator that is applied to all fields not specified in field_validators
     default_validator: Optional[Validator]
 
     # Set of required fields
-    required_fields: set[str]
+    required_fields: Set[str]
 
     def __init__(
         self, *,
-        field_validators: Optional[dict[str, Validator]] = None,
+        field_validators: Optional[Dict[str, Validator]] = None,
         default_validator: Optional[Validator] = None,
-        required_fields: Optional[list[str]] = None,
-        optional_fields: Optional[list[str]] = None
+        required_fields: Optional[List[str]] = None,
+        optional_fields: Optional[List[str]] = None
     ):
         """
         Creates a DictValidator.

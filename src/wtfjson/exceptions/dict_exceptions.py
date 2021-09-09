@@ -5,6 +5,7 @@ binary butterfly validator
 Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
+from typing import Dict
 
 from wtfjson.exceptions import ValidationError
 
@@ -26,9 +27,9 @@ class DictFieldsValidationError(ValidationError):
     The implementation of `to_dict()` recursively converts the field validation errors to dictionaries.
     """
     code = 'field_errors'
-    field_errors: dict[str, ValidationError]
+    field_errors: Dict[str, ValidationError]
 
-    def __init__(self, *, field_errors: dict[str, ValidationError], **kwargs):
+    def __init__(self, *, field_errors: Dict[str, ValidationError], **kwargs):
         super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in field_errors.values())
         self.field_errors = field_errors
