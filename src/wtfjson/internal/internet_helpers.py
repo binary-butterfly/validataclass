@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 # Helper variables to construct regular expressions
-_REGEX_DOMAIN_LABEL = r'([a-z0-9]([a-z0-9-]*[a-z0-9])?)'
+_REGEX_DOMAIN_LABEL = r'([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)'
 
 # Precompiled regular expressions
 _ip_charset_regex: re.Pattern = re.compile(r'[0-9a-f.:\[\]]+', re.IGNORECASE)
@@ -74,5 +74,10 @@ def validate_domain_name(domain_name: str, *, require_tld: bool = False) -> bool
         domain_name: `str`, input string to be validated
         require_tld: `bool`, specifies whether a domain name must have a top level domain (default: False)
     """
+    # Check total length of domain name
+    if len(domain_name) > 253:
+        return False
+
+    # Check domain name with regex (also checks that each label is 1 to 63 characters long)
     domain_regex = _domain_required_tld_regex if require_tld else _domain_optional_tld_regex
     return bool(domain_regex.fullmatch(domain_name))

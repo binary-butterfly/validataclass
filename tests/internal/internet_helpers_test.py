@@ -115,6 +115,10 @@ class InternetHelpersTest:
             (True, 'example.com'),
             (True, '123.sub.sub.sub.domain.Example.COM'),
             (True, 'xn--hxajbheg2az3al.xn--qxam'),
+            # Domain labels may be up to 63 characters long
+            (False, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'),  # 63x 'a'
+            # Total domain name may be up to 253 characters long
+            (False, ('a.' * 126) + 'a'),
         ]
     )
     def test_validate_domain_name_valid(require_tld, input_string):
@@ -134,6 +138,10 @@ class InternetHelpersTest:
             (False, 'foo-.com'),
             # TLD required
             (True, 'foo-bar'),
+            # Domain labels may not be longer than 63 characters
+            (False, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'),  # 64x 'a'
+            # Total domain name may not be longer than 253 characters
+            (False, ('a.' * 126) + 'aa'),
         ]
     )
     def test_validate_domain_name_invalid(require_tld, input_string):
