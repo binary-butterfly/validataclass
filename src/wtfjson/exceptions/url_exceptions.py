@@ -9,12 +9,12 @@ Use of this source code is governed by an MIT-style license that can be found in
 from wtfjson.exceptions import ValidationError
 
 __all__ = [
-    'RegexMatchError',
+    'InvalidUrlError',
 ]
 
 
-class RegexMatchError(ValidationError):
+class InvalidUrlError(ValidationError):
     """
-    Validation error raised by `RegexValidator` when the input string does not match the regular expression.
+    Validation error raised by `UrlValidator` when the input string is not a valid URL (as defined by the validator options).
     """
-    code = 'invalid_string_format'
+    code = 'invalid_url'

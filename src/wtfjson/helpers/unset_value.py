@@ -9,7 +9,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 __all__ = ['UnsetValue', 'UnsetValueType']
 
 
-# Class for  class to create the UnsetValue sentinel object, class will be deleted afterwards
+# Class to create the UnsetValue sentinel object
 class UnsetValueType:
     """
     Class to represent an unset value (e.g. a field in a dataclass that has no value at all because it did not exist in the input data).
@@ -32,6 +32,6 @@ class UnsetValueType:
         return False
 
 
-# Create sentinel object, redefine __new__ so that the object cannot be cloned, and delete temporary class
+# Create sentinel object and redefine __new__ so that the object cannot be cloned
 UnsetValue = UnsetValueType()
 UnsetValueType.__new__ = lambda cls: UnsetValue
