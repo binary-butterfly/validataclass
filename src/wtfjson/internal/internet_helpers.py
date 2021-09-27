@@ -19,9 +19,9 @@ __all__ = [
 _REGEX_DOMAIN_LABEL = r'([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)'
 
 # Precompiled regular expressions
-_ip_charset_regex: re.Pattern = re.compile(r'[0-9a-f.:\[\]]+', re.IGNORECASE)
-_domain_optional_tld_regex: re.Pattern = re.compile(f'{_REGEX_DOMAIN_LABEL}(\\.{_REGEX_DOMAIN_LABEL})*', re.IGNORECASE)
-_domain_required_tld_regex: re.Pattern = re.compile(f'{_REGEX_DOMAIN_LABEL}(\\.{_REGEX_DOMAIN_LABEL})+', re.IGNORECASE)
+_ip_charset_regex: re.Pattern = re.compile(r'(\d+\.){3}\d+|\[[0-9a-f:]+]', re.ASCII | re.IGNORECASE)
+_domain_optional_tld_regex: re.Pattern = re.compile(f'({_REGEX_DOMAIN_LABEL}\\.)*{_REGEX_DOMAIN_LABEL}', re.IGNORECASE)
+_domain_required_tld_regex: re.Pattern = re.compile(f'({_REGEX_DOMAIN_LABEL}\\.)+{_REGEX_DOMAIN_LABEL}', re.IGNORECASE)
 
 
 # Internal helper functions intended to be used by `UrlValidator`, `EmailValidator` and potentially other validators that work with
@@ -80,4 +80,13 @@ def validate_domain_name(domain_name: str, *, require_tld: bool = False) -> bool
 
     # Check domain name with regex (also checks that each label is 1 to 63 characters long)
     domain_regex = _domain_required_tld_regex if require_tld else _domain_optional_tld_regex
-    return bool(domain_regex.fullmatch(domain_name))
+    if not domain_regex.fullmatch(domain_name):
+        return False
+
+    # Check that top-level domain is not consisting of numbers only
+    tld = domain_name.rsplit('.', 1)[-1]
+    if tld.isdigit():
+        return False
+
+    # Domain is valid
+    return True

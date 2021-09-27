@@ -19,6 +19,8 @@ class InternetHelpersTest:
     @pytest.mark.parametrize(
         'require_tld, allow_ip, input_string', [
             # Hostnames without TLD
+            (False, True, 'a'),
+            (False, False, 'a'),
             (False, True, 'example'),
             (False, False, '123-foobar'),
 
@@ -28,7 +30,7 @@ class InternetHelpersTest:
 
             # IP addresses
             (True, True, '123.45.67.89'),
-            (True, True, '2001:0123:4567:89ab:cdef:ABCD:EFAB:CDEF'),
+            (True, True, '[2001:0123:4567:89ab:cdef:ABCD:EFAB:CDEF]'),
             (True, True, '[2001:abc::1234]'),
         ]
     )
@@ -47,6 +49,9 @@ class InternetHelpersTest:
 
             # TLD required
             (True, True, 'example'),
+
+            # TLD must not be numeric only
+            (True, True, 'foobar.123'),
 
             # IP addresses not allowed
             (True, False, '123.45.67.78'),
@@ -136,6 +141,10 @@ class InternetHelpersTest:
             (False, 'foo.-'),
             (False, '-foo.com'),
             (False, 'foo-.com'),
+            # TLD must not be numeric only
+            (True, 'foobar.123'),
+            (False, 'foobar.123'),
+            (False, '123'),
             # TLD required
             (True, 'foo-bar'),
             # Domain labels may not be longer than 63 characters
