@@ -33,6 +33,9 @@ class RegexValidator(StringValidator):
     If the input string does not match the regex, a `RegexMatchError` validation error with the error code 'invalid_string_format' is
     raised. The error code can be overridden with the 'custom_error_code' parameter to get more explicit error messages.
 
+    By default only "safe" singleline strings are allowed (i.e. no non-printable characters). See the `StringValidator` options 'unsafe'
+    and 'multiline' for more details.
+
     Examples:
 
     ```
@@ -69,7 +72,8 @@ class RegexValidator(StringValidator):
         """
         Create a RegexValidator with a specified regex pattern (as string or precompiled `re.Pattern` object).
 
-        Optionally with a custom error code. Other keyword arguments (e.g. 'min_length'/'max_length') will be passed to `StringValidator`.
+        Optionally with a custom error code. Other keyword arguments (e.g. 'min_length', 'max_length', 'multiline' and 'unsafe') will be
+        passed to `StringValidator`.
         """
         # Initialize base StringValidator (may set min_length/max_length via kwargs)
         super().__init__(**kwargs)

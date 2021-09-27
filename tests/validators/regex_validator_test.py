@@ -72,7 +72,7 @@ class RegexValidatorTest:
     def test_precompiled_pattern_invalid(regex_pattern, invalid_input_list):
         """ Test RegexValidator with precompiled patterns and invalid input. """
         precompiled_pattern = re.compile(regex_pattern)
-        validator = RegexValidator(precompiled_pattern)
+        validator = RegexValidator(precompiled_pattern, multiline=True)
 
         for invalid_input in invalid_input_list:
             with pytest.raises(RegexMatchError) as exception_info:
@@ -99,7 +99,7 @@ class RegexValidatorTest:
     def test_pattern_with_flags_valid(regex_pattern, regex_flags, valid_input_list):
         """ Test RegexValidator with precompiled patterns and flags, with valid input. """
         precompiled_pattern = re.compile(regex_pattern, regex_flags)
-        validator = RegexValidator(precompiled_pattern)
+        validator = RegexValidator(precompiled_pattern, multiline=True)
 
         for valid_input in valid_input_list:
             assert validator.validate(valid_input) == valid_input
@@ -121,7 +121,7 @@ class RegexValidatorTest:
     def test_pattern_with_flags_invalid(regex_pattern, regex_flags, invalid_input_list):
         """ Test RegexValidator with precompiled patterns and flags, with invalid input. """
         precompiled_pattern = re.compile(regex_pattern, regex_flags)
-        validator = RegexValidator(precompiled_pattern)
+        validator = RegexValidator(precompiled_pattern, multiline=True)
 
         for invalid_input in invalid_input_list:
             with pytest.raises(RegexMatchError) as exception_info:

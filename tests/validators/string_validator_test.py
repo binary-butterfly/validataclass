@@ -9,17 +9,12 @@ Use of this source code is governed by an MIT-style license that can be found in
 import pytest
 
 from wtfjson.exceptions import RequiredValueError, InvalidTypeError, StringTooShortError, StringTooLongError, StringInvalidLengthError, \
-    InvalidValidatorOptionException
+    StringInvalidCharactersError, InvalidValidatorOptionException
 from wtfjson.validators import StringValidator
 
 
 class StringValidatorTest:
-    @staticmethod
-    def test_valid_string():
-        """ Test StringValidator with valid strings. """
-        validator = StringValidator()
-        assert validator.validate('') == ''
-        assert validator.validate('unit test banana') == 'unit test banana'
+    # General tests
 
     @staticmethod
     def test_invalid_none():
@@ -39,6 +34,20 @@ class StringValidatorTest:
             'code': 'invalid_type',
             'expected_type': 'str',
         }
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_data', [
+            '',
+            'unit test banana',
+            '1234567890',
+            '!@#$%^&*()_+-={}[]<>|\\',
+        ]
+    )
+    def test_valid_string(input_data):
+        """ Test StringValidator with valid strings. """
+        validator = StringValidator()
+        assert validator.validate(input_data) == input_data
 
     # Test length requirement checks: Only min_length specified
 
@@ -122,11 +131,13 @@ class StringValidatorTest:
         assert validator.validate(input_data) == input_data
 
     @staticmethod
-    @pytest.mark.parametrize('input_data, error_code', [
-        ('', 'string_too_short'),
-        ('banan', 'string_too_short'),
-        ('bananana', 'string_too_long'),
-    ])
+    @pytest.mark.parametrize(
+        'input_data, error_code', [
+            ('', 'string_too_short'),
+            ('banan', 'string_too_short'),
+            ('bananana', 'string_too_long'),
+        ]
+    )
     def test_string_exact_length_invalid(input_data, error_code):
         """ Test StringValidator with exact length requirement (minimum = maximum) with strings that are too short or too long. """
         validator = StringValidator(min_length=6, max_length=6)
@@ -136,6 +147,59 @@ class StringValidatorTest:
             'code': error_code,
             'min_length': 6,
             'max_length': 6,
+        }
+
+    # Tests for unsafe and multiline strings
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'multiline, unsafe, input_string, expected_result', [
+            # Safe multiline strings
+            (True, False, 'singleline', 'singleline'),
+            (True, False, 'foo\nbar', 'foo\nbar'),
+            (True, False, 'foo\rbar\r\nbaz\n', 'foo\nbar\nbaz\n'),
+
+            # Unsafe multiline strings (no normalization of line separators)
+            (True, True, 'foo\nbar\0baz', 'foo\nbar\0baz'),
+            (True, True, 'foo\rbar\r\nbaz\n', 'foo\rbar\r\nbaz\n'),
+
+            # Unsafe singleline strings
+            (False, True, '\0', '\0'),
+            (False, True, 'foo\tbar\x1fbaz\0', 'foo\tbar\x1fbaz\0'),
+        ]
+    )
+    def test_unsafe_and_multiline_strings_valid(multiline, unsafe, input_string, expected_result):
+        """ Test StringValidator with different multiline and unsafe settings with valid strings. """
+        validator = StringValidator(multiline=multiline, unsafe=unsafe)
+        assert validator.validate(input_string) == expected_result
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'multiline, unsafe, input_string, error_reason', [
+            # Default: Safe singleline strings (no non-printable characters including newlines)
+            (False, False, 'foo\nbar', 'No multiline strings allowed.'),
+            (False, False, 'foo\rbar', 'No multiline strings allowed.'),
+            (False, False, 'foo\0bar', 'String contains non-printable characters.'),
+            (False, False, '\x1f', 'String contains non-printable characters.'),
+
+            # Safe multiline strings (no non-printable characters except newlines)
+            (True, False, '\0', 'String contains non-printable characters.'),
+            (True, False, 'foo\nbar\tbaz', 'String contains non-printable characters.'),
+            (True, False, '\x1f', 'String contains non-printable characters.'),
+
+            # Unsafe singleline strings (non-printable characters allowed, except for newlines)
+            (False, True, 'foo\nbar', 'No multiline strings allowed.'),
+            (False, True, 'foo\rbar', 'No multiline strings allowed.'),
+        ]
+    )
+    def test_unsafe_and_multiline_strings_invalid(multiline, unsafe, input_string, error_reason):
+        """ Test StringValidator with different multiline and unsafe settings with invalid strings. """
+        validator = StringValidator(multiline=multiline, unsafe=unsafe)
+        with pytest.raises(StringInvalidCharactersError) as exception_info:
+            validator.validate(input_string)
+        assert exception_info.value.to_dict() == {
+            'code': 'string_invalid_characters',
+            'reason': error_reason,
         }
 
     # Invalid validator parameters

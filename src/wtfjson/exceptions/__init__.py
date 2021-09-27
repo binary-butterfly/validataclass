@@ -21,5 +21,5 @@ from .list_exceptions import ListItemsValidationError, ListLengthError
 from .misc_exceptions import ValueNotAllowedError
 from .number_exceptions import NumberRangeError, DecimalPlacesError, InvalidDecimalError, NonFiniteNumberError
 from .regex_exceptions import RegexMatchError
-from .string_exceptions import StringInvalidLengthError, StringTooShortError, StringTooLongError
+from .string_exceptions import StringInvalidLengthError, StringTooShortError, StringTooLongError, StringInvalidCharactersError
 from .url_exceptions import InvalidUrlError
