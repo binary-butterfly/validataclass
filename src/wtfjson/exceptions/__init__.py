@@ -16,6 +16,7 @@ from .common_exceptions import ValidationError, InternalValidationError, Invalid
 from .dataclass_exceptions import DataclassPostValidationError
 from .datetime_exceptions import InvalidDateError, InvalidTimeError, InvalidDateTimeError, DateTimeRangeError
 from .dict_exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, DictRequiredFieldError
+from .email_exceptions import InvalidEmailError
 from .list_exceptions import ListItemsValidationError, ListLengthError
 from .misc_exceptions import ValueNotAllowedError
 from .number_exceptions import NumberRangeError, DecimalPlacesError, InvalidDecimalError, NonFiniteNumberError
