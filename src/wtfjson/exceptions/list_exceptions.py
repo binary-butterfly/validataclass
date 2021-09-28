@@ -34,6 +34,13 @@ class ListItemsValidationError(ValidationError):
         assert all(isinstance(error, ValidationError) for error in item_errors.values())
         self.item_errors = item_errors
 
+    def _get_repr_dict(self) -> Dict[str, str]:
+        base_dict = super()._get_repr_dict()
+        return {
+            **base_dict,
+            'item_errors': repr(self.item_errors),
+        }
+
     def to_dict(self):
         base_dict = super().to_dict()
         return {

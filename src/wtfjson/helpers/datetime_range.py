@@ -8,7 +8,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, tzinfo, timezone
-from typing import Callable, Optional, Union, Dict
+from typing import Callable, Optional, Union, Dict, Tuple
 
 __all__ = [
     'BaseDateTimeRange',
@@ -89,8 +89,7 @@ class DateTimeRange(BaseDateTimeRange):
         self.upper_boundary = upper_boundary
 
     def __repr__(self):
-        cls_name = type(self).__name__
-        return f'{cls_name}(lower_boundary={repr(self.lower_boundary)}, upper_boundary={repr(self.upper_boundary)})'
+        return f'{type(self).__name__}(lower_boundary={self.lower_boundary!r}, upper_boundary={self.upper_boundary!r})'
 
     def contains_datetime(self, dt: datetime, local_timezone: Optional[tzinfo] = None) -> bool:
         """
@@ -151,10 +150,10 @@ class DateTimeOffsetRange(BaseDateTimeRange):
     pivot: _DateTimeBoundary = None
 
     # Offset timedeltas
-    offset_minus: timedelta = None
-    offset_plus: timedelta = None
+    offset_minus: Optional[timedelta] = None
+    offset_plus: Optional[timedelta] = None
 
-    def __init__(self, pivot: _DateTimeBoundary = None, offset_minus: timedelta = None, offset_plus: timedelta = None):
+    def __init__(self, pivot: _DateTimeBoundary = None, offset_minus: Optional[timedelta] = None, offset_plus: Optional[timedelta] = None):
         """
         Create a DateTimeOffsetRange with a pivot datetime (static datetime or callable that returns datetime objects), and one or two
         offset. The pivot datetime defaults to the current time in UTC (dynamically generated and without milli-/microseconds).
@@ -170,12 +169,11 @@ class DateTimeOffsetRange(BaseDateTimeRange):
 
         # Save parameters
         self.pivot = pivot
-        self.offset_minus = offset_minus if offset_minus is not None else timedelta()
-        self.offset_plus = offset_plus if offset_plus is not None else timedelta()
+        self.offset_minus = offset_minus
+        self.offset_plus = offset_plus
 
     def __repr__(self):
-        cls_name = type(self).__name__
-        return f'{cls_name}(pivot={repr(self.pivot)}, offset_minus={repr(self.offset_minus)}, offset_plus={repr(self.offset_plus)})'
+        return f'{type(self).__name__}(pivot={self.pivot!r}, offset_minus={self.offset_minus!r}, offset_plus={self.offset_plus!r})'
 
     def contains_datetime(self, dt: datetime, local_timezone: Optional[tzinfo] = None) -> bool:
         """
@@ -183,12 +181,8 @@ class DateTimeOffsetRange(BaseDateTimeRange):
 
         Optionally a timezone can be specified that will be applied to the boundary datetimes if they don't have specified timezones.
         """
-        # Get pivot datetime, resolving callables if necessary
-        pivot_datetime = self._get_pivot_datetime(local_timezone)
-
         # Calculate lower and upper boundaries
-        lower_datetime = pivot_datetime - self.offset_minus
-        upper_datetime = pivot_datetime + self.offset_plus
+        lower_datetime, upper_datetime = self._get_boundaries(local_timezone)
 
         # Note: These comparisons will raise TypeErrors when mixing datetimes with and without timezones
         if dt < lower_datetime or dt > upper_datetime:
@@ -200,11 +194,12 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         Returns a dictionary with string representations of the range boundaries (calculating lower_datetime and upper_datetime from the
         pivot minus/plus the offsets), suitable for the `DateTimeRangeError` exception to generate JSON error responses.
         """
-        pivot_datetime = self._get_pivot_datetime(local_timezone)
+        # Calculate lower and upper boundaries
+        lower_datetime, upper_datetime = self._get_boundaries(local_timezone)
 
         return {
-            'lower_boundary': (pivot_datetime - self.offset_minus).isoformat(),
-            'upper_boundary': (pivot_datetime + self.offset_plus).isoformat(),
+            'lower_boundary': lower_datetime.isoformat(),
+            'upper_boundary': upper_datetime.isoformat(),
         }
 
     # Helper methods to resolve callables to datetimes and apply local_timezone
@@ -218,3 +213,15 @@ class DateTimeOffsetRange(BaseDateTimeRange):
             return self._get_datetime(self.pivot, local_timezone)
         else:
             return datetime.now(timezone.utc).replace(microsecond=0)
+
+    def _get_boundaries(self, local_timezone: Optional[tzinfo] = None) -> Tuple[datetime, datetime]:
+        """
+        Helper method to get the lower and upper boundaries as datetimes, resolving callables and applying local_timezone if necessary.
+        """
+        # Get pivot datetime, resolving callables if necessary
+        pivot_datetime = self._get_pivot_datetime(local_timezone)
+
+        # Calculate lower and upper boundaries
+        lower_datetime = pivot_datetime - self.offset_minus if self.offset_minus is not None else pivot_datetime
+        upper_datetime = pivot_datetime + self.offset_plus if self.offset_plus is not None else pivot_datetime
+        return lower_datetime, upper_datetime

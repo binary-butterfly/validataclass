@@ -6,7 +6,7 @@ Copyright (c) 2021, binary butterfly GmbH
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
 """
 
-from typing import Union, Optional, List
+from typing import Union, Optional, Dict, List
 
 __all__ = [
     'ValidationError',
@@ -42,13 +42,30 @@ class ValidationError(Exception):
             self.reason = reason
         self.extra_data = {key: value for key, value in kwargs.items() if value is not None}
 
+    def __repr__(self):
+        params_string = ', '.join(f'{key}={value}' for key, value in self._get_repr_dict().items() if value is not None)
+        return f'{type(self).__name__}({params_string})'
+
+    def __str__(self):
+        return self.__repr__()
+
+    def _get_repr_dict(self) -> Dict[str, str]:
+        """
+        Returns a dictionary representing the error fields as strings (e.g. by applying `repr()` on the values).
+        Used by `__repr__` to generate a string representation of the form "ExampleValidationError(code='foo', reason='foo', ...)".
+        The default implementation calls `to_dict()` and applies `repr()` on all values.
+        """
+        return {
+            key: repr(value) for key, value in self.to_dict().items() if value is not None
+        }
+
     def to_dict(self) -> dict:
         """
         Generate a dictionary containing error information, suitable as response to the user.
         May be overridden by subclasses to extend the dictionary.
         """
-        extra_data = self.extra_data if self.extra_data is not None else {}
         reason = {'reason': self.reason} if self.reason is not None else {}
+        extra_data = self.extra_data if self.extra_data is not None else {}
         return {
             'code': self.code,
             **reason,
@@ -112,7 +129,7 @@ class InternalValidationError(ValidationError):
     Validation error raised when an unhandled exception (that is not a `ValidationError` subclass) occurs, e.g. in post validation.
 
     The unhandled exception can be wrapped inside the 'internal_error' argument, which will NOT be included in `to_dict()` but will
-    be accessible for debugging purposes.
+    be accessible via `error.internal_error` or `repr(error)` for debugging purposes.
     """
     code = 'internal_error'
     internal_error: Exception = None
@@ -120,3 +137,9 @@ class InternalValidationError(ValidationError):
     def __init__(self, *, internal_error: Optional[Exception] = None, **kwargs):
         super().__init__(**kwargs)
         self.internal_error = internal_error
+
+    def _get_repr_dict(self) -> Dict[str, str]:
+        base_dict = super()._get_repr_dict()
+        if self.internal_error is not None:
+            base_dict['internal_error'] = repr(self.internal_error)
+        return base_dict

@@ -54,7 +54,7 @@ class DateTimeRangeTest:
     def test_range_repr(lower_boundary, upper_boundary):
         """ Test DateTimeRange `__repr__()` method. """
         dt_range = DateTimeRange(lower_boundary=lower_boundary, upper_boundary=upper_boundary)
-        assert repr(dt_range) == f'DateTimeRange(lower_boundary={repr(lower_boundary)}, upper_boundary={repr(upper_boundary)})'
+        assert repr(dt_range) == f'DateTimeRange(lower_boundary={lower_boundary!r}, upper_boundary={upper_boundary!r})'
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -285,8 +285,7 @@ class DateTimeOffsetRangeTest:
     def test_offset_range_repr(pivot, offset_minus, offset_plus):
         """ Test DateTimeOffsetRange `__repr__()` method. """
         dt_range = DateTimeOffsetRange(pivot=pivot, offset_minus=offset_minus, offset_plus=offset_plus)
-        assert repr(dt_range) == f'DateTimeOffsetRange(pivot={repr(pivot)}, offset_minus={repr(dt_range.offset_minus)}, ' \
-                                 f'offset_plus={repr(dt_range.offset_plus)})'
+        assert repr(dt_range) == f'DateTimeOffsetRange(pivot={pivot!r}, offset_minus={offset_minus!r}, offset_plus={offset_plus!r})'
 
     @staticmethod
     @pytest.mark.parametrize(

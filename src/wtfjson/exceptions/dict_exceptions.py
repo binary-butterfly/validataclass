@@ -34,6 +34,13 @@ class DictFieldsValidationError(ValidationError):
         assert all(isinstance(error, ValidationError) for error in field_errors.values())
         self.field_errors = field_errors
 
+    def _get_repr_dict(self) -> Dict[str, str]:
+        base_dict = super()._get_repr_dict()
+        return {
+            **base_dict,
+            'field_errors': repr(self.field_errors),
+        }
+
     def to_dict(self):
         base_dict = super().to_dict()
         return {

@@ -36,7 +36,7 @@ class Default:
         self.value = deepcopy(value)
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, repr(self.value))
+        return f'{type(self).__name__}({self.value!r})'
 
     def get_value(self) -> Any:
         return self.value
@@ -58,7 +58,7 @@ class DefaultFactory(Default):
         self.factory = factory
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, repr(self.factory))
+        return f'{type(self).__name__}({self.factory!r})'
 
     def get_value(self) -> Any:
         return self.factory()
