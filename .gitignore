@@ -1,5 +1,6 @@
 /.idea/
 /.vscode/
+/_tmp
 
 __pycache__/
 *.py[cod]
@@ -15,3 +16,4 @@ __pycache__/
 /dist
 /reports
 /src/*.egg-info
+/src/*/_version.py

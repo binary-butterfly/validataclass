@@ -1,7 +1,12 @@
 [build-system]
 requires = [
     "setuptools>=42",
+    "setuptools_scm>=6.2",
     "wheel",
     "python-dateutil"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/validataclass/_version.py"
+version_scheme = "post-release"
