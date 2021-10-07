@@ -2,7 +2,6 @@
 requires = [
     "setuptools>=42",
     "wheel",
-    "email-validator",
     "python-dateutil"
 ]
 build-backend = "setuptools.build_meta"

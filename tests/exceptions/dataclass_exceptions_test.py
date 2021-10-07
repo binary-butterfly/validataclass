@@ -1,12 +1,10 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from wtfjson.exceptions import DataclassPostValidationError, ValidationError, DictRequiredFieldError, InvalidTypeError
+from validataclass.exceptions import DataclassPostValidationError, ValidationError, DictRequiredFieldError, InvalidTypeError
 
 
 class DataclassPostValidationErrorTest:

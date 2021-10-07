@@ -1,5 +1,5 @@
-# WTFjson
+# validataclass
 
-This package is an approach to use some of WTForms great ideas for JSON API validation. 
+Python library for input validation designed for (but not restricted to) JSON-based APIs, neatly integrating with dataclasses. 
 
-Status: development / alpha.
+Status: In development / alpha.

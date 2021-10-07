@@ -1,9 +1,7 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 from __future__ import absolute_import
@@ -30,13 +28,13 @@ def read(*names, **kwargs):
 
 
 setup(
-    name='wtfjson',
-    version='0.4.0-alpha',
+    name='validataclass',
+    version='0.1.0-alpha',
     license='MIT',
     description='',
     author='binary butterfly GmbH',
-    author_email='ernesto.ruge@binary-butterfly.de',
-    url='https://github.com/binary-butterfly/wtfjson',
+    author_email='lexi.stelter@binary-butterfly.de',
+    url='https://github.com/binary-butterfly/validataclass',
     packages=find_packages('src'),
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
@@ -59,7 +57,7 @@ setup(
         'Topic :: Utilities',
     ],
     project_urls={
-        'Issue Tracker': 'https://github.com/binary-butterfly/wtfjson/issues',
+        'Issue Tracker': 'https://github.com/binary-butterfly/validataclass/issues',
     },
     keywords=[],
     python_requires='>=3.7',

@@ -1,18 +1,15 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 from decimal import Decimal
 import pytest
 
-from wtfjson.exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, InvalidTypeError, RequiredValueError, \
+from validataclass.exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, InvalidTypeError, RequiredValueError, \
     InvalidValidatorOptionException, ListItemsValidationError
-
-from wtfjson.validators import DictValidator, DecimalValidator, IntegerValidator, StringValidator, Noneable, ListValidator
+from validataclass.validators import DictValidator, DecimalValidator, IntegerValidator, StringValidator, Noneable, ListValidator
 
 
 class DictValidatorTest:

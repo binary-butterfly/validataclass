@@ -1,16 +1,16 @@
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 import dataclasses
 from typing import Optional, Any
 import pytest
 
-from wtfjson.exceptions import DataclassValidatorFieldException
-from wtfjson.helpers import validator_dataclass, validator_field, Default, NoDefault
-from wtfjson.validators import IntegerValidator, StringValidator, Noneable
+from validataclass.exceptions import DataclassValidatorFieldException
+from validataclass.helpers import validator_dataclass, validator_field, Default, NoDefault
+from validataclass.validators import IntegerValidator, StringValidator, Noneable
 
 
 # Test helpers

@@ -1,17 +1,15 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 from datetime import time
 import pytest
 import re
 
-from wtfjson.exceptions import RequiredValueError, InvalidTypeError, InvalidTimeError
-from wtfjson.validators import TimeValidator, TimeFormat
+from validataclass.exceptions import RequiredValueError, InvalidTypeError, InvalidTimeError
+from validataclass.validators import TimeValidator, TimeFormat
 
 
 class TimeValidatorTest:

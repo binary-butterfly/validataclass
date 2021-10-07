@@ -1,15 +1,13 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 from copy import copy
 import pytest
 
-from wtfjson.helpers import Default, DefaultFactory, DefaultUnset, NoDefault, UnsetValue
+from validataclass.helpers import Default, DefaultFactory, DefaultUnset, NoDefault, UnsetValue
 
 
 class DefaultTest:

@@ -1,9 +1,7 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -11,7 +9,7 @@ from dateutil import tz
 import pytest
 
 from tests.test_utils import unpack_params
-from wtfjson.helpers import DateTimeRange, DateTimeOffsetRange
+from validataclass.helpers import DateTimeRange, DateTimeOffsetRange
 
 
 class TestDatetimeCallable:

@@ -5,7 +5,7 @@ source =
 
 [run]
 branch = True
-source = wtfjson
+source = validataclass
 
 [report]
 show_missing = True

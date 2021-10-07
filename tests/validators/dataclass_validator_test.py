@@ -1,9 +1,7 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 from dataclasses import dataclass, field
@@ -11,10 +9,10 @@ from decimal import Decimal
 from typing import Optional, Union
 import pytest
 
-from wtfjson.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
+from validataclass.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
     InternalValidationError, InvalidValidatorOptionException, DataclassValidatorFieldException
-from wtfjson.helpers import validator_dataclass, validator_field, Default, DefaultFactory, DefaultUnset, UnsetValue, UnsetValueType
-from wtfjson.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
+from validataclass.helpers import validator_dataclass, validator_field, Default, DefaultFactory, DefaultUnset, UnsetValue, UnsetValueType
+from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
 
 # Simple example dataclass

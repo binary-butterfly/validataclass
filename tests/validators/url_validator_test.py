@@ -1,15 +1,13 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 import pytest
 
-from wtfjson.exceptions import RequiredValueError, InvalidTypeError, StringInvalidLengthError, InvalidUrlError
-from wtfjson.validators import UrlValidator
+from validataclass.exceptions import RequiredValueError, InvalidTypeError, StringInvalidLengthError, InvalidUrlError
+from validataclass.validators import UrlValidator
 
 
 class UrlValidatorTest:
@@ -75,8 +73,8 @@ class UrlValidatorTest:
             'http://123.45.67.89:8080/?foo=bar',
             'http://user:password@[2001:abc::1234]:8080?foo=bar#baz@bloop',
             'ftp://user@examplehost/file/path',
-            'git://github.com/binary-butterfly/wtfjson.git',
-            'git+https://github.com/binary-butterfly/wtfjson@0.3.0#egg=wtfjson',
+            'git://github.com/binary-butterfly/validataclass.git',
+            'git+https://github.com/binary-butterfly/validataclass@0.1.0#egg=validataclass',
         ]
     )
     def test_url_regex_valid(input_string):

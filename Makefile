@@ -55,4 +55,4 @@ clean:
 	rm -rf .coverage .pytest_cache reports
 
 clean-all: clean
-	rm -rf .tox .tox_docker .eggs venv
+	rm -rf .tox .tox_docker .eggs src/*.egg-info venv

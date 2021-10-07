@@ -1,14 +1,12 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 import pytest
 
-from wtfjson.exceptions import ValidationError, InvalidTypeError, InternalValidationError
+from validataclass.exceptions import ValidationError, InvalidTypeError, InternalValidationError
 
 
 class ValidationErrorTest:

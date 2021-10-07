@@ -1,16 +1,14 @@
-# encoding: utf-8
-
 """
-binary butterfly validator
-Copyright (c) 2021, binary butterfly GmbH
-Use of this source code is governed by an MIT-style license that can be found in the LICENSE.txt.
+validataclass
+Copyright (c) 2021, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
 from decimal import Decimal
 import pytest
 
-from wtfjson.exceptions import ValidationError
-from wtfjson.validators import Noneable, DecimalValidator, IntegerValidator
+from validataclass.exceptions import ValidationError
+from validataclass.validators import Noneable, DecimalValidator, IntegerValidator
 
 
 class NoneableTest:

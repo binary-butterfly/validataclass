@@ -14,4 +14,4 @@ __pycache__/
 /build
 /dist
 /reports
-/src/wtfjson.egg-info
+/src/*.egg-info
