@@ -11,13 +11,13 @@ import pytest
 
 from validataclass.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
     InternalValidationError, InvalidValidatorOptionException, DataclassValidatorFieldException
-from validataclass.helpers import validator_dataclass, validator_field, Default, DefaultFactory, DefaultUnset, UnsetValue, UnsetValueType
+from validataclass.helpers import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset, UnsetValue, UnsetValueType
 from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
 
 # Simple example dataclass
 
-@validator_dataclass
+@validataclass
 class UnitTestDataclass:
     """
     Simple dataclass for testing DataclassValidator.
@@ -30,19 +30,19 @@ class UnitTestDataclass:
 
 # More complex / nested dataclass
 
-@validator_dataclass
+@validataclass
 class UnitTestNestedDataclass:
     """
     Complex dataclass that contains other dataclasses, used for testing nested DataclassValidators.
     """
     name: str = StringValidator()
     test_fruit: UnitTestDataclass = DataclassValidator(UnitTestDataclass)
-    test_vegetable: Optional[UnitTestDataclass] = validator_field(DataclassValidator(UnitTestDataclass), default=None)
+    test_vegetable: Optional[UnitTestDataclass] = validataclass_field(DataclassValidator(UnitTestDataclass), default=None)
 
 
 # Dataclass with non-init field and __post_init__() method
 
-@validator_dataclass
+@validataclass
 class UnitTestPostInitDataclass:
     # Normal validated fields
     base: str = StringValidator()
@@ -154,7 +154,7 @@ class DataclassValidatorTest:
             setattr(counter, 'current', current)
             return current
 
-        @validator_dataclass
+        @validataclass
         class DataclassWithDefaults:
             foo: str = (StringValidator(), Default('example default'))
             bar: int = (IntegerValidator(), DefaultFactory(counter))
@@ -270,7 +270,7 @@ class DataclassValidatorTest:
     def test_dataclass_with_post_init_wrapped_error():
         """ Validate dataclasses with non-init fields and a __post_init__() method that raises an arbitrary ValidationError. """
 
-        @validator_dataclass
+        @validataclass
         class PostInitDataclass:
             a: int = IntegerValidator()
             b: int = IntegerValidator()
@@ -301,7 +301,7 @@ class DataclassValidatorTest:
     def test_dataclass_with_post_init_internal_error():
         """ Validate dataclasses with non-init fields and a __post_init__() method that raises non-ValidationError exception. """
 
-        @validator_dataclass
+        @validataclass
         class PostInitDataclass:
             a: int = IntegerValidator()
             b: int = IntegerValidator()

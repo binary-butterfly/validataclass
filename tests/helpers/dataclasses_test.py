@@ -9,7 +9,7 @@ from typing import Optional, Any
 import pytest
 
 from validataclass.exceptions import DataclassValidatorFieldException
-from validataclass.helpers import validator_dataclass, validator_field, Default, NoDefault
+from validataclass.helpers import validataclass, validataclass_field, Default, NoDefault
 from validataclass.validators import IntegerValidator, StringValidator, Noneable
 
 
@@ -20,18 +20,18 @@ def assert_field_default(field: dataclasses.Field, default_value: Any, default_t
     assert metadata_default.value == default_value
 
 
-class ValidatorFieldTest:
-    """ Tests for the validator_field() helper method. """
+class ValidataclassFieldTest:
+    """ Tests for the validataclass_field() helper method. """
 
     @staticmethod
-    def test_validator_fields_in_dataclass():
-        """ Create a dataclass with validator_field() and check that the fields are created correctly. """
+    def test_validataclass_fields_in_dataclass():
+        """ Create a dataclass with validataclass_field() and check that the fields are created correctly. """
 
         @dataclasses.dataclass
         class UnitTestDataclass:
-            foo: int = validator_field(IntegerValidator())
-            bar: int = validator_field(IntegerValidator(), default=Default(1))
-            baz: int = validator_field(IntegerValidator(), default=42, metadata={'unittest': 123, 'validator': 'this gets overwritten'})
+            foo: int = validataclass_field(IntegerValidator())
+            bar: int = validataclass_field(IntegerValidator(), default=Default(1))
+            baz: int = validataclass_field(IntegerValidator(), default=42, metadata={'unittest': 123, 'validator': 'gets overwritten'})
 
         # Get fields from dataclass
         fields = dataclasses.fields(UnitTestDataclass)
@@ -55,37 +55,37 @@ class ValidatorFieldTest:
         assert fields[2].metadata.get('unittest') == 123
 
     @staticmethod
-    def test_validator_field_with_init_kwarg_raises_exception():
-        """ Test that validator_field() does not allow the 'init' keyword argument. """
+    def test_validataclass_field_with_init_kwarg_raises_exception():
+        """ Test that validataclass_field() does not allow the 'init' keyword argument. """
         with pytest.raises(ValueError) as exception_info:
-            validator_field(IntegerValidator(), init=False)
+            validataclass_field(IntegerValidator(), init=False)
 
         assert str(exception_info.value) == 'Keyword argument "init" is not allowed in validator field.'
 
     @staticmethod
-    def test_validator_field_with_default_factory_kwarg_raises_exception():
-        """ Test that validator_field() does not allow the 'default_factory' keyword argument. """
+    def test_validataclass_field_with_default_factory_kwarg_raises_exception():
+        """ Test that validataclass_field() does not allow the 'default_factory' keyword argument. """
         with pytest.raises(ValueError) as exception_info:
-            validator_field(IntegerValidator(), default_factory=list)
+            validataclass_field(IntegerValidator(), default_factory=list)
 
         assert str(exception_info.value) == \
                'Keyword argument "default_factory" is not allowed in validator field (use default=DefaultFactory(...) instead).'
 
 
 class ValidatorDataclassTest:
-    """ Tests for the @validator_dataclass decorator. """
+    """ Tests for the @validataclass decorator. """
 
     @staticmethod
-    def test_validator_dataclass_without_kwargs():
-        """ Create a dataclass using @validator_dataclass and check that all fields with metadata are created correctly. """
+    def test_validataclass_without_kwargs():
+        """ Create a dataclass using @validataclass and check that all fields with metadata are created correctly. """
 
-        @validator_dataclass
+        @validataclass
         class UnitTestValidatorDataclass:
             foo: int = IntegerValidator()
             bar: Optional[int] = Noneable(IntegerValidator())
-            baz: Optional[str] = validator_field(StringValidator(), default=None)
+            baz: Optional[str] = validataclass_field(StringValidator(), default=None)
 
-        # Check that validator_dataclass actually created a dataclass (i.e. used @dataclass on the class)
+        # Check that @validataclass actually created a dataclass (i.e. used @dataclass on the class)
         assert dataclasses.is_dataclass(UnitTestValidatorDataclass)
 
         # Get fields from dataclass
@@ -108,21 +108,21 @@ class ValidatorDataclassTest:
         assert [type(f.metadata.get('validator')) for f in fields] == [IntegerValidator, Noneable, StringValidator]
 
     @staticmethod
-    def test_validator_dataclass_with_kwargs():
-        """ Create a dataclass using @validator_dataclass(...) with arguments and check that they are passed to @dataclass(). """
+    def test_validataclass_with_kwargs():
+        """ Create a dataclass using @validataclass(...) with arguments and check that they are passed to @dataclass(). """
 
         # Create two dataclasses, one without any arguments and one with unsafe_hash=True. The first won't have a __hash__ function,
         # but the latter will have one. We can use this to check that the argument was really passed to @dataclass.
 
-        @validator_dataclass()
+        @validataclass()
         class FooDataclass:
             foo: int = IntegerValidator()
 
-        @validator_dataclass(unsafe_hash=True)
+        @validataclass(unsafe_hash=True)
         class BarDataclass:
             foo: int = IntegerValidator()
 
-        # Check that validator_dataclass actually created a dataclass (i.e. used @dataclass on the class)
+        # Check that @validataclass actually created a dataclass (i.e. used @dataclass on the class)
         assert dataclasses.is_dataclass(FooDataclass)
         assert dataclasses.is_dataclass(BarDataclass)
 
@@ -131,10 +131,10 @@ class ValidatorDataclassTest:
         assert BarDataclass.__hash__ is not None
 
     @staticmethod
-    def test_validator_dataclass_with_tuples():
-        """ Create a dataclass using @validator_dataclass with tuple syntax for setting Defaults. """
+    def test_validataclass_with_tuples():
+        """ Create a dataclass using @validataclass with tuple syntax for setting Defaults. """
 
-        @validator_dataclass
+        @validataclass
         class UnitTestValidatorDataclass:
             foo: int = (IntegerValidator(), NoDefault)
             bar: int = (IntegerValidator(), Default(42))
@@ -159,10 +159,10 @@ class ValidatorDataclassTest:
         assert all(type(f.metadata.get('validator')) is IntegerValidator for f in fields)
 
     @staticmethod
-    def test_validator_dataclass_with_non_init_fields():
-        """ Create a dataclass using @validator_dataclass with fields that have init=False. """
+    def test_validataclass_with_non_init_fields():
+        """ Create a dataclass using @validataclass with fields that have init=False. """
 
-        @validator_dataclass
+        @validataclass
         class UnitTestValidatorDataclass:
             foo: int = IntegerValidator()
             bar: int = dataclasses.field(init=False, default=1)
@@ -187,8 +187,8 @@ class ValidatorDataclassTest:
         assert 'validator' not in fields[1].metadata
 
     @staticmethod
-    def test_validator_dataclass_with_invalid_values():
-        """ Test that @validator_dataclass raises exceptions when a field is not predefined (e.g. with field()) and has no Validator. """
+    def test_validataclass_with_invalid_values():
+        """ Test that @validataclass raises exceptions when a field is not predefined (e.g. with field()) and has no Validator. """
 
         class InvalidDataclassA:
             foo: int
@@ -202,34 +202,34 @@ class ValidatorDataclassTest:
 
         for cls in [InvalidDataclassA, InvalidDataclassB, InvalidDataclassC]:
             with pytest.raises(DataclassValidatorFieldException) as exception_info:
-                validator_dataclass(cls)
+                validataclass(cls)
             assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
 
     @staticmethod
-    def test_validator_dataclass_with_invalid_tuple_length():
-        """ Test that @validator_dataclass raises exceptions when a field has a tuple with invalid length. """
+    def test_validataclass_with_invalid_tuple_length():
+        """ Test that @validataclass raises exceptions when a field has a tuple with invalid length. """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
-            @validator_dataclass
+            @validataclass
             class InvalidDataclass:
                 foo: int = (IntegerValidator(), Default(5), Default(3))
 
         assert str(exception_info.value) == 'Dataclass field "foo": Unexpected number of arguments.'
 
     @staticmethod
-    def test_validator_dataclass_with_invalid_tuple_arguments():
-        """ Test that @validator_dataclass raises exceptions when a field has a tuple with invalid arguments. """
+    def test_validataclass_with_invalid_tuple_arguments():
+        """ Test that @validataclass raises exceptions when a field has a tuple with invalid arguments. """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
-            @validator_dataclass
+            @validataclass
             class InvalidDataclass:
                 foo: int = (IntegerValidator(), 5)
 
         assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument (expected Default).'
 
     @staticmethod
-    def test_validator_dataclass_with_init_vars_exception():
-        """ Test that @validator_dataclass raises an exception when it detects InitVars (because they don't work currently). """
+    def test_validataclass_with_init_vars_exception():
+        """ Test that @validataclass raises an exception when it detects InitVars (because they don't work currently). """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
-            @validator_dataclass
+            @validataclass
             class InvalidDataclass:
                 foo: dataclasses.InitVar[int] = IntegerValidator()
 

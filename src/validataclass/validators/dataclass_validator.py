@@ -41,14 +41,16 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
         optional_field: str = field(metadata={'validator': StringValidator(), 'default': Default('')})
     ```
 
-    To simplify (and prettify) your dataclasses, there are also some helper functions in `validataclass.helpers.dataclasses` that generate
-    this metadata for you, e.g. the decorator `@validator_dataclass` and the function `validator_field()`. It is highly recommended
+    To simplify (and prettify) your dataclasses, there are also some helper functions in `validataclass.helpers` that generate
+    this metadata for you, e.g. the decorator `@validataclass` and the function `validataclass_field()`. It is highly recommended
     to use these helpers instead of defining the metadata manually as it improves code readability.
 
     Equivalent example using the helper functions:
 
     ```
-    @validator_dataclass
+    from validataclass.helpers import validataclass, validataclass_field
+
+    @validataclass
     class ExampleDataclass:
         example_field: str = StringValidator()
         optional_field: str = StringValidator(), Default('')
@@ -57,8 +59,8 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
         # optional_field: str = (StringValidator(), Default(''))
 
         # Also equivalent:
-        # example_field: str = validator_field(StringValidator())
-        # optional_field: str = validator_field(StringValidator(), default='')
+        # example_field: str = validataclass_field(StringValidator())
+        # optional_field: str = validataclass_field(StringValidator(), default='')
     ```
 
     It is important to note that DataclassValidator implements its own mechanism for setting default values in optional fields instead

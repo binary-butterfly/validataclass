@@ -13,8 +13,8 @@ from .dataclass_defaults import Default, NoDefault
 
 # Specify which functions/symbols are imported with `from module import *`
 __all__ = [
-    'validator_dataclass',
-    'validator_field',
+    'validataclass',
+    'validataclass_field',
 ]
 
 
@@ -25,7 +25,7 @@ def _prepare_dataclass_metadata(cls: type) -> None:
     Prepares a soon-to-be dataclass (before it is decorated with @dataclass) to be usable with DataclassValidator by checking it
     for Validator objects and setting dataclass metadata.
 
-    (Used internally by the @validator_dataclass decorator.)
+    (Used internally by the @validataclass decorator.)
     """
     for name, field_type in cls.__annotations__.items():
         value = getattr(cls, name, None)
@@ -35,7 +35,7 @@ def _prepare_dataclass_metadata(cls: type) -> None:
         if field_type is dataclasses.InitVar or type(field_type) is dataclasses.InitVar:
             raise DataclassValidatorFieldException(f'Dataclass field "{name}": InitVars currently not supported by DataclassValidator.')
 
-        # Skip field if it is already a dataclass Field object (created by field() or validator_field())
+        # Skip field if it is already a dataclass Field object (created by field() or validataclass_field())
         if isinstance(value, dataclasses.Field):
             continue
 
@@ -56,28 +56,28 @@ def _prepare_dataclass_metadata(cls: type) -> None:
             raise DataclassValidatorFieldException(f'Dataclass field "{name}": Unexpected type of argument (expected Default).')
 
         # Create dataclass field
-        setattr(cls, name, validator_field(validator=value, default=default))
+        setattr(cls, name, validataclass_field(validator=value, default=default))
 
 
 # Extend Python dataclass functions for usage with DataclassValidator
 
-def validator_dataclass(cls=None, **kwargs):
+def validataclass(cls=None, **kwargs):
     """
     Decorator that turns a normal class into a DataclassValidator-compatible dataclass.
 
     Prepares the class by generating dataclass metadata that is needed by the DataclassValidator, then turns the class into a dataclass
     using the regular @dataclass decorator.
 
-    Dataclass fields can be created either explicitly using `validator_field()` or `dataclasses.field()`, or implicitly by specifying
+    Dataclass fields can be created either explicitly using `validataclass_field()` or `dataclasses.field()`, or implicitly by specifying
     a `Validator` object and optionally a `Default` object (comma-separated as a tuple).
 
     Example:
 
     ```
-    @validator_dataclass
+    @validataclass
     class ExampleDataclass:
         # Explicit field creation:
-        example_field: str = validator_field(StringValidator(), default='not set')
+        example_field: str = validataclass_field(StringValidator(), default='not set')
         post_init_field: int = field(init=False, default=0)
 
         # Implicit field creation:
@@ -99,16 +99,16 @@ def validator_dataclass(cls=None, **kwargs):
         _prepare_dataclass_metadata(_cls)
         return dataclasses.dataclass(_cls, **kwargs)
 
-    # Check if decorator is called as @validator_dataclass or @validator_dataclass(**kwargs)
+    # Check if decorator is called as @validataclass or @validataclass(**kwargs)
     if cls is None:
         # With parenthesis (and optional keyword arguments)
         return wrap
 
-    # Called as @validator_dataclass without arguments
+    # Called as @validataclass without arguments
     return wrap(cls)
 
 
-def validator_field(validator: Validator, default: Any = NoDefault, *, metadata: dict = None, **kwargs):
+def validataclass_field(validator: Validator, default: Any = NoDefault, *, metadata: dict = None, **kwargs):
     """
     Define a dataclass field compatible with DataclassValidator.
 

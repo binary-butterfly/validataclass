@@ -18,7 +18,7 @@ Features or feature ideas that might be added someday:
 - Dataclass inheritance/patching: Reduce code duplication when having multiple dataclasses that are mostly identical (e.g.
   a `UserCreateInput` dataclass where all/most fields are required, and a `UserPatchInput` dataclass which is an extended version of
   the first dataclass, making fields from the first one optional and adding additional fields), e.g. using dataclass inheritance and a
-  new `validator_patch_dataclass` decorator
+  new decorator `validator_patch_dataclass` / `validataclass_patch`
 - Multi-validators:
   - Validator chains (pipe result of validator A to validator B (filters) or use the first non-exception result (fallback chain)) 
   - Multi-type validators (use validator A for integer input, validator B for string input, ...)
@@ -35,6 +35,6 @@ Things to improve when raising the minimum required version of Python:
 
 - (3.8+) Dataclass defaults: Assigning tuples without parentheses to fields with type annotations (in examples and unit tests),
   e.g. `foo: int = (IntegerValidator(), Default(0))` to `foo: int = IntegerValidator(), Default(0)`
-- (3.8+) `validator_dataclass` decorator: positional-arguments-only operator: `def validator_dataclass(cls=None, /, **kwargs):`
+- (3.8+) `@validataclass` decorator: positional-arguments-only operator: `def validataclass(cls=None, /, **kwargs):`
 - (3.9+) Collection type hints with built-in types (list, dict, set), e.g. replace `typing.List[str]` with `list[str]`
 - (3.9+) DateTimeValidator timezones: Use new module [zoneinfo](https://docs.python.org/3/library/zoneinfo.html) (in examples and tests)
