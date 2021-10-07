@@ -1,0 +1,87 @@
+# GitHub Actions workflow to build, test and publish Python packages to PyPI everytime a new release is created.
+
+name: Publish release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    name: Build package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # We use Python 3.7 here because it's the minimum Python version supported by this library.
+      - name: Setup Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: pip install --upgrade pip build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist_packages
+          path: dist/
+
+  test:
+    # This job tests the built package by installing it via pip and running unit tests (without tox).
+    name: Test package
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: dist_packages
+          path: dist/
+
+      - name: Install test dependencies
+        run: pip install pytest pytest-cov
+
+      - name: Install built package
+        run: pip install dist/validataclass-*.whl
+
+      - name: Run unit tests
+        run: python -m pytest
+
+  publish:
+    name: Publish package
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: dist_packages
+          path: dist/
+
+      - name: Upload package to GitHub release assets
+        uses: AButler/upload-release-assets@v2.0
+        with:
+          files: dist/*
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

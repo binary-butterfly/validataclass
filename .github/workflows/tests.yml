@@ -1,0 +1,48 @@
+# GitHub Actions workflow for running unit tests (using tox, pytest and flake8) on each push or pull request to main.
+
+name: Unit tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run unit tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.7'
+          - '3.8'
+          - '3.9'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install --upgrade pip tox
+
+      - name: Run unit tests with tox
+        # Run tox using the version of Python in `PATH`
+        run: tox -e clean,py,flake8 -- --junit-xml=reports/pytest_junit.xml
+
+      - name: Publish unit test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Pytest Report (Python ${{ matrix.python-version }})
+          path: reports/pytest_junit.xml
+          reporter: java-junit
+          fail-on-error: false

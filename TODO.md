@@ -6,8 +6,6 @@ Things that are required before releasing the version 1.0.0.
 
 - Write documentation
 - Code polishing, e.g. unify docstring formatting (when to use which types of quotes, etc.)
-- Better packaging, release on PyPI, automatically updating version numbers
-- Automated unit testing via CI pipelines
 
 
 ## New features
