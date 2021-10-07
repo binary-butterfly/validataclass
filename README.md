@@ -9,7 +9,11 @@ Python library for input validation designed for (but not restricted to) JSON-ba
 
 ## Installation
 
-(TODO...)
+To install validataclass using [pip](https://pip.pypa.io/en/stable/getting-started/), just run:
+
+```shell
+pip install validataclass
+```
 
 
 ## Usage
