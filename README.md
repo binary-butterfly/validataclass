@@ -1,5 +1,7 @@
 # validataclass
 
+[![Unit tests](https://github.com/binary-butterfly/validataclass/actions/workflows/tests.yml/badge.svg)](https://github.com/binary-butterfly/validataclass/actions/workflows/tests.yml)
+
 Python library for input validation designed for (but not restricted to) JSON-based APIs, neatly integrating with dataclasses. 
 
 **Status:** In development / alpha.
