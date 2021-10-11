@@ -18,7 +18,7 @@ class BooleanValidator(Validator):
     """
     Validator for boolean values (`True` and `False`).
 
-    By default, input data must be of tyoe 'bool'. Optionally allows "boolean strings" (i.e. "true" and "false", case-insensitive),
+    By default, input data must be of type `bool`. Optionally allows "boolean strings" (i.e. "true" and "false", case-insensitive),
     which will be converted to real booleans.
 
     Examples:

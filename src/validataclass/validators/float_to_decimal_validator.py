@@ -17,7 +17,7 @@ __all__ = [
 
 class FloatToDecimalValidator(FloatValidator):
     """
-    Validator that converts float values (IEEE 754) to `decimal.Decimal` objects. Superclass of `FloatValidator`.
+    Validator that converts float values (IEEE 754) to `decimal.Decimal` objects. Sub class of `FloatValidator`.
 
     Optionally a number range (minimum/maximum float value) can be specified, which will be handled by the underlying FloatValidator.
 

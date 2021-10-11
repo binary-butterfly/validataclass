@@ -44,7 +44,7 @@ class UrlValidator(StringValidator):
     # Set allowed_schemes to allow only "ftp" and "sftp", also allow userinfo
     #   Valid: "ftp://example.com/foo/bar", "sftp://username:password@example.com/foo/bar"
     #   Invalid: any URL with a different scheme
-    UrlValidator(allowed_schemes=['ftp', 'sftp], allow_userinfo=True)
+    UrlValidator(allowed_schemes=['ftp', 'sftp'], allow_userinfo=True)
 
     # Allow arbitrary schemes (as long as they are valid, i.e. only consist of the characters a-z, 0-9, ".+-" and start with a letter)
     #   Valid: "https://example.com", "foo+bar-baz://example.com"

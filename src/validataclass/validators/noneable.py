@@ -25,8 +25,11 @@ class Noneable(Validator):
     If the wrapped validator raises an `InvalidTypeError`, `Noneable` will add 'none' to its 'expected_types' parameter and reraise it.
 
     Examples:
-        Noneable(StringValidator())
-        Noneable(StringValidator(), default='no value given!')
+
+    ```
+    Noneable(StringValidator())
+    Noneable(StringValidator(), default='no value given!')
+    ```
 
     Valid input: `None` or any data accepted by the wrapped validator
     Output: `None` (or default value specified in constructor) or the output of the wrapped validator
@@ -34,6 +37,7 @@ class Noneable(Validator):
 
     # Default value returned in case the input is None
     default_value: Any
+
     # Validator used in case the input is not None
     wrapped_validator: Validator
 

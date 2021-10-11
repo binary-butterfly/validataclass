@@ -9,20 +9,27 @@ Python library for input validation designed for (but not restricted to) JSON-ba
 
 ## Installation
 
-To install validataclass using [pip](https://pip.pypa.io/en/stable/getting-started/), just run:
+validataclass is available on [PyPI](https://pypi.org/project/validataclass/).
+
+To install it using [pip](https://pip.pypa.io/en/stable/getting-started/), just run:
 
 ```shell
 pip install validataclass
 ```
 
+If you add the package to your `requirements.txt`, it is recommended to use [compatible release](https://www.python.org/dev/peps/pep-0440/#compatible-release)
+version specifiers to make sure you always get the latest version of the library but without running into breaking changes:
+
+```shell
+pip install validataclass~=0.1
+```
+
 
 ## Usage
 
-~~See `docs/` for documentation on how to use this library and for examples.~~
+See [`docs/`](docs/index.md) for documentation on how to use this library and for examples.
 
-The documentation is a work in progress and will be part of version 0.2.0.
-
-Until then, take a look at the code. It's well documented using docstrings, including lots of examples.
+(**Note:** The documentation is mostly done now, but still a work in progress.)
 
 
 ## Development
