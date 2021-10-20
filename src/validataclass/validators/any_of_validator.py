@@ -74,7 +74,18 @@ class AnyOfValidator(Validator):
         self._ensure_type(input_data, self.allowed_types)
 
         # Check if input is in the list of allowed values
-        if input_data not in self.allowed_values:
+        if not self._is_allowed_value(input_data):
             raise ValueNotAllowedError()
 
         return input_data
+
+    def _is_allowed_value(self, input_value: Any):
+        """
+        Checks if an input value is in the list of allowed values.
+        """
+        # Note: We cannot simply use the "in" operator here because it's not fully typesafe for integers and booleans. (See issue #1.)
+        # (E.g. all of the following expressions are True according to Python: 1 in [True], 0 in [False], True in [1], False in [0])
+        for value in self.allowed_values:
+            if type(input_value) is type(value) and input_value == value:
+                return True
+        return False

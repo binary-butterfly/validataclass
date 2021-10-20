@@ -115,6 +115,28 @@ class AnyOfValidatorTest:
             'expected_types': ['int', 'none', 'str'],
         }
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'value_list, invalid_input', [
+            ([123, True], 1),
+            ([123, False], 0),
+            ([0, True], False),
+            ([1, False], True),
+        ]
+    )
+    def test_mixed_values_typesafety(value_list, invalid_input):
+        """ Check that AnyOfValidator with mixed value lists containing booleans and integers are typesafe. """
+        validator = AnyOfValidator(value_list)
+
+        # Ensure that all values in the value list are accepted by the validator
+        for valid_input in value_list:
+            assert validator.validate(valid_input) == valid_input
+
+        # Check against "false positives" (e.g. don't confuse integer 1 with boolean True, or 0 with False)
+        with pytest.raises(ValueNotAllowedError) as exception_info:
+            validator.validate(invalid_input)
+        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+
     # Test AnyOfValidator with explicit allowed_types parameter
 
     @staticmethod
