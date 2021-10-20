@@ -158,7 +158,7 @@ class DataclassValidatorTest:
         class DataclassWithDefaults:
             foo: str = (StringValidator(), Default('example default'))
             bar: int = (IntegerValidator(), DefaultFactory(counter))
-            baz: Union[UnsetValueType, str] = (StringValidator(), DefaultUnset())
+            baz: Union[UnsetValueType, str] = (StringValidator(), DefaultUnset)
 
         validator: DataclassValidator[DataclassWithDefaults] = DataclassValidator(DataclassWithDefaults)
 
