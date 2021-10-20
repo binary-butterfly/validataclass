@@ -22,7 +22,7 @@ __all__ = [
 
 class Default:
     """
-    (Base) class for specifying default values for dataclass validator fields. Values are deepcopied on initialization.
+    (Base) class for specifying default values for dataclass validator fields. Values are deepcopied on initialization and on retrieval.
 
     Examples: `Default(None)`, `Default(42)`, `Default('empty')`, `Default([])`
 
@@ -37,7 +37,7 @@ class Default:
         return f'{type(self).__name__}({self.value!r})'
 
     def get_value(self) -> Any:
-        return self.value
+        return deepcopy(self.value)
 
 
 class DefaultFactory(Default):

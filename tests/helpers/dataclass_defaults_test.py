@@ -40,6 +40,13 @@ class DefaultTest:
         assert repr(default) == 'Default([])'
         assert default.get_value() == []
 
+        # Make sure list is copied every time the default value is used
+        value1 = default.get_value()
+        value2 = default.get_value()
+        value1.append(3)
+        assert value1 == [3]
+        assert value2 == []
+
 
 class DefaultFactoryTest:
     """ Tests for the DefaultFactory class. """
