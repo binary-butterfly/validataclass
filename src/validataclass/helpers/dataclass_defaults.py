@@ -26,7 +26,7 @@ class Default:
 
     Examples: `Default(None)`, `Default(42)`, `Default('empty')`, `Default([])`
 
-    See also: `DefaultFactory()`, `DefaultUnset()`, `NoDefault`
+    See also: `DefaultFactory()`, `DefaultUnset`, `NoDefault`
     """
     value: Any = None
 
@@ -62,19 +62,30 @@ class DefaultFactory(Default):
         return self.factory()
 
 
-class DefaultUnset(Default):
+# Temporary class to create the DefaultUnset sentinel, class will be deleted afterwards
+class _DefaultUnset(Default):
     """
-    Class for specifying the default value of a dataclass validator field to be the special value `UnsetValue`.
+    Class for creating the sentinel object `DefaultUnset`, which is a shortcut for `Default(UnsetValue)`.
     """
 
     def __init__(self):
         super().__init__(UnsetValue)
 
     def __repr__(self):
-        return 'DefaultUnset()'
+        return 'DefaultUnset'
 
     def get_value(self) -> UnsetValueType:
         return UnsetValue
+
+    # For convenience: Allow DefaultUnset to be used as `DefaultUnset()`, returning the sentinel itself.
+    def __call__(self):
+        return self
+
+
+# Create sentinel object DefaultUnset, redefine __new__ to always return the same instance, and delete temporary class
+DefaultUnset = _DefaultUnset()
+_DefaultUnset.__new__ = lambda cls: DefaultUnset
+del _DefaultUnset
 
 
 # Temporary class to create the NoDefault sentinel, class will be deleted afterwards
@@ -97,7 +108,7 @@ class _NoDefault(Default):
         return self
 
 
-# Create sentinel object, redefine __new__ so that there can always be only one NoDefault object, and delete temporary class
+# Create sentinel object NoDefault, redefine __new__ to always return the same instance, and delete temporary class
 NoDefault = _NoDefault()
 _NoDefault.__new__ = lambda cls: NoDefault
 del _NoDefault

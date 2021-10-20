@@ -93,18 +93,30 @@ class DefaultFactoryTest:
 
 
 class DefaultUnsetTest:
-    """ Tests for the DefaultUnset class. """
+    """ Tests for the DefaultUnset sentinel object. """
 
     @staticmethod
     def test_default_unset():
-        """ Test the DefaultUnset class. """
-        default = DefaultUnset()
-        assert repr(default) == 'DefaultUnset()'
+        """ Test the DefaultUnset sentinel object. """
+        default = DefaultUnset
+        assert repr(default) == 'DefaultUnset'
         assert default.get_value() is UnsetValue
+
+    @staticmethod
+    def test_default_unset_is_unique():
+        """ Test that DefaultUnset cannot be cloned. """
+        default1 = DefaultUnset
+        default2 = copy(DefaultUnset)
+        assert default1 is default2 is DefaultUnset
+
+    @staticmethod
+    def test_default_unset_call():
+        """ Test that calling DefaultUnset returns the sentinel object itself. """
+        assert DefaultUnset() is DefaultUnset
 
 
 class NoDefaultTest:
-    """ Tests for the NoDefault sentinel. """
+    """ Tests for the NoDefault sentinel object. """
 
     @staticmethod
     def test_no_default():
