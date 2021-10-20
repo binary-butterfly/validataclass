@@ -1,11 +1,13 @@
 [paths]
 source =
-   src
-   */site-packages
+    src
+    */site-packages
 
 [run]
 branch = True
 source = validataclass
+omit =
+    */_version.py
 
 [report]
 show_missing = True
