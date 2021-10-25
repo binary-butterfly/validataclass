@@ -29,6 +29,35 @@ class DictValidator(Validator):
     given input dictionary. You can override this by setting `required_fields` to a list of field names that should be
     required. Alternatively you can set `optional_fields` to only specify the fields that are NOT required.
     (Setting both `required_fields` and `optional_fields` will result in an error.)
+
+    Examples:
+
+    ```
+    # Validator for a dict with three fields: "id" (integer), "name" (string), "price" (non-negative Decimal)
+    # All three fields are required; fields with keys other than "id", "name" and "price" will be discarded.
+    DictValidator(field_validators={
+        'id': IntegerValidator(),
+        'name': StringValidator(),
+        'price': DecimalValidator(min_value='0'),
+    })
+
+    # Same as above, but this time only "id" and "name" are required, "price" is an optional field.
+    # The output dict will only have the optional "price" field, if the input dict has it too.
+    DictValidator(field_validators={
+        'id': IntegerValidator(),
+        'name': StringValidator(),
+        'price': DecimalValidator(min_value='0'),
+    }, required_fields=['id', 'name'])
+
+    # Note: In the validator above, you could also specify optional_fields=['price'] instead of required_fields.
+
+    # Validator for a dict with arbitrary fields (as long as the keys are strings), all values are validated as integers
+    # No fields are required; output dict will have the same keys as the input dict (as long as all values are valid integers)
+    DictValidator(default_validator=IntegerValidator())
+    ```
+
+    Valid input: `{"field1": field1_value, "field2": field2_value, ...}`
+    Output: `{"field1": validated_field1_value, "field2": validated_field2_value, ...}`
     """
 
     # Dictionary to specify which validators are applied to which fields of the input dictionary

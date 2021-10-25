@@ -25,7 +25,7 @@ class DecimalValidator(StringValidator):
 
     Optionally a number range (minimum/maximum decimal value), minimum/maximum number of decimal places and a fixed number of decimal
     places in the output value can be specified. A fixed number of output places will result in rounding according to the current decimal
-    context (see `decimal.getcontext()`, should be `ROUND_HALF_EVEN` by default, meaning '1.49' will be rounded to '1' and '1.50' to '2').
+    context (see `decimal.getcontext()`), by default this means that "1.49" will be rounded to "1" and "1.50" to "2".
 
     Examples:
 

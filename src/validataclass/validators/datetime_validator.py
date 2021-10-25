@@ -142,7 +142,7 @@ class DateTimeValidator(StringValidator):
     Examples for datetime ranges:
 
     ```
-    from validataclass.helpers import DateTimeRange, DateTimeRangeOffset
+    from validataclass.helpers import DateTimeRange, DateTimeOffsetRange
 
     # Only allow datetimes within a specified datetime range, e.g. allow all datetimes in the year 2021
     DateTimeValidator(local_timezone=timezone.utc, datetime_range=DateTimeRange(
