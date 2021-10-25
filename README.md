@@ -27,7 +27,8 @@ pip install validataclass~=0.2
 
 ## Usage
 
-See [`docs/`](docs/index.md) for documentation on how to use this library and for examples.
+See [`docs/`](https://github.com/binary-butterfly/validataclass/blob/main/docs/index.md) for documentation on how to use this library and
+for examples.
 
 (**Note:** The documentation is mostly done now, but still a work in progress.)
 
