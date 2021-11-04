@@ -5,11 +5,11 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Optional, Any
+from typing import Optional, Any, Union
 import pytest
 
 from validataclass.exceptions import DataclassValidatorFieldException
-from validataclass.helpers import validataclass, validataclass_field, Default, NoDefault
+from validataclass.helpers import validataclass, validataclass_field, Default, NoDefault, DefaultUnset, UnsetValueType
 from validataclass.validators import IntegerValidator, StringValidator, Noneable
 
 
@@ -187,23 +187,133 @@ class ValidatorDataclassTest:
         assert 'validator' not in fields[1].metadata
 
     @staticmethod
+    def test_validataclass_subclassing_defaults():
+        """ Test the @validataclass decorator with a subclassed validataclass with different defaults. """
+
+        @validataclass
+        class BaseClass:
+            # Required fields
+            required1: int = IntegerValidator()
+            required2: int = IntegerValidator()
+            required3: int = IntegerValidator()
+            required4: int = IntegerValidator()
+
+            # Optional fields
+            optional1: Optional[int] = IntegerValidator(), Default(None)
+            optional2: Optional[int] = IntegerValidator(), Default(None)
+            optional3: int = IntegerValidator(), Default(3)
+            optional4: Union[UnsetValueType, int] = IntegerValidator(), DefaultUnset
+
+        @validataclass
+        class SubClass(BaseClass):
+            # Skipped fields must be still present and unchanged in subclass
+            # required1: Unchanged
+            # optional1: Unchanged
+
+            # Required fields that are optional now
+            required2: int = Default(42)
+            required3: Optional[int] = Default(None)
+            required4: Union[UnsetValueType, int] = DefaultUnset
+
+            # Optional fields that are required now or have new defaults
+            optional2: int = NoDefault
+            optional3: Union[UnsetValueType, int] = DefaultUnset
+            optional4: int = Default(42)
+
+        # Get fields from dataclass
+        fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
+
+        # Check that all fields exist
+        assert set(fields.keys()) == \
+               {'required1', 'required2', 'required3', 'required4', 'optional1', 'optional2', 'optional3', 'optional4'}
+
+        # Check type annotations
+        assert all(fields[field].type is int for field in ['required1', 'required2', 'optional2', 'optional4'])
+        assert all(fields[field].type is Optional[int] for field in ['required3', 'optional1'])
+        assert all(fields[field].type is Union[UnsetValueType, int] for field in ['required4', 'optional3'])
+
+        # Check validators
+        assert all(type(field.metadata.get('validator')) is IntegerValidator for field in fields.values())
+
+        # Check defaults for fields that are (now) required
+        assert 'validator_default' not in fields['required1'].metadata
+        assert 'validator_default' not in fields['optional2'].metadata
+
+        # Check defaults for (now) optional fields
+        assert_field_default(fields['required2'], default_value=42)
+        assert_field_default(fields['required3'], default_value=None)
+        assert_field_default(fields['optional1'], default_value=None)
+        assert_field_default(fields['optional4'], default_value=42)
+        assert fields['required4'].metadata.get('validator_default') is DefaultUnset
+        assert fields['optional3'].metadata.get('validator_default') is DefaultUnset
+
+    @staticmethod
+    def test_validataclass_subclassing_validators():
+        """ Test the @validataclass decorator with a subclassed validataclass with different validators and new fields. """
+
+        @validataclass
+        class BaseClass:
+            # Required fields
+            required1: int = IntegerValidator()
+            required2: int = IntegerValidator()
+
+            # Optional fields
+            optional1: int = IntegerValidator(), Default(3)
+            optional2: int = IntegerValidator(), Default(3)
+
+        @validataclass
+        class SubClass(BaseClass):
+            # Required fields
+            required1: str = StringValidator()
+            required2: Optional[str] = StringValidator(), Default(None)
+
+            # Optional fields
+            optional1: str = StringValidator()
+            optional2: Optional[str] = StringValidator(), Default(None)
+
+            # New fields
+            new1: str = StringValidator()
+            new2: Optional[str] = StringValidator(), Default(None)
+
+        # Get fields from dataclass
+        fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
+
+        # Check that all fields exist
+        assert set(fields.keys()) == {'required1', 'required2', 'optional1', 'optional2', 'new1', 'new2'}
+
+        # Check type annotations
+        assert all(fields[field].type is str for field in ['required1', 'optional1', 'new1'])
+        assert all(fields[field].type is Optional[str] for field in ['required2', 'optional2', 'new2'])
+
+        # Check validators
+        assert all(type(field.metadata.get('validator')) is StringValidator for field in fields.values())
+
+        # Check defaults for fields that are (now) required
+        assert ('validator_default' not in fields[field].metadata for field in ['required1', 'optional1', 'new1'])
+
+        # Check defaults for (now) optional fields
+        assert_field_default(fields['required2'], default_value=None)
+        assert_field_default(fields['optional2'], default_value=None)
+        assert_field_default(fields['new2'], default_value=None)
+
+    @staticmethod
     def test_validataclass_with_invalid_values():
         """ Test that @validataclass raises exceptions when a field is not predefined (e.g. with field()) and has no Validator. """
 
-        class InvalidDataclassA:
-            foo: int
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
+            @validataclass
+            class InvalidDataclassA:
+                foo: int
 
-        class InvalidDataclassB:
-            foo: int = 3
+        assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
 
-        class InvalidDataclassC:
-            # Wrong order, first element of tuple must be validator
-            foo: int = (Default(5), IntegerValidator())
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
+            @validataclass
+            class InvalidDataclassB:
+                # Default only
+                foo: int = Default(3)
 
-        for cls in [InvalidDataclassA, InvalidDataclassB, InvalidDataclassC]:
-            with pytest.raises(DataclassValidatorFieldException) as exception_info:
-                validataclass(cls)
-            assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
+        assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
 
     @staticmethod
     def test_validataclass_with_invalid_tuple_length():
@@ -220,10 +330,17 @@ class ValidatorDataclassTest:
         """ Test that @validataclass raises exceptions when a field has a tuple with invalid arguments. """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
-            class InvalidDataclass:
+            class InvalidDataclassA:
                 foo: int = (IntegerValidator(), 5)
 
-        assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument (expected Default).'
+        assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument: int'
+
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
+            @validataclass
+            class InvalidDataclassB:
+                foo: int = 3
+
+        assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument: int'
 
     @staticmethod
     def test_validataclass_with_init_vars_exception():

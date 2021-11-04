@@ -6,11 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## Unreleased
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.2.0...HEAD)
+
+### Added
+
+- Support for class inheritance of validataclasses, e.g. extend an existing validataclass by adding new fields or setting a
+  different default value for an existing field. ([#10](https://github.com/binary-butterfly/validataclass/issues/10))
+
+### Changed
+
+- Tuples for specifying field validators and defaults in a validataclass can now be in any order, so `(default, validator)` instead
+  of `(validator, default)` is allowed now. (Side effect of [#10](https://github.com/binary-butterfly/validataclass/issues/10))
 
 ### Fixed
 
-- Fix link to docs in README.md to make link work on PyPI ([#8](https://github.com/binary-butterfly/validataclass/pull/8))
+- Fix link to docs in README.md to make link work on PyPI. ([#8](https://github.com/binary-butterfly/validataclass/pull/8))
 
 
 ## [0.2.0] - 2021-10-25
@@ -64,6 +76,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No documentation yet (will follow in 0.2.0)
 
 
-[Unreleased]: https://github.com/binary-butterfly/validataclass/compare/0.1.0...HEAD
 [0.2.0]: https://github.com/binary-butterfly/validataclass/releases/tag/0.2.0
 [0.1.0]: https://github.com/binary-butterfly/validataclass/releases/tag/0.1.0

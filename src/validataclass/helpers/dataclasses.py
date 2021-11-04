@@ -5,7 +5,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Any
+from collections import namedtuple
+from typing import Any, Union, Dict
 
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.validators import Validator
@@ -17,19 +18,24 @@ __all__ = [
     'validataclass_field',
 ]
 
+# Internal types
+_ValidatorField = namedtuple('_ValidatorField', ['validator', 'default'])
+
 
 # Internal functions
 
-def _prepare_dataclass_metadata(cls: type) -> None:
+def _prepare_dataclass_metadata(cls) -> None:
     """
     Prepares a soon-to-be dataclass (before it is decorated with @dataclass) to be usable with DataclassValidator by checking it
     for Validator objects and setting dataclass metadata.
 
     (Used internally by the @validataclass decorator.)
     """
+    # In case of a subclassed validataclass, get the already existing fields
+    existing_validator_fields = _get_existing_validator_fields(cls)
+
     for name, field_type in cls.__annotations__.items():
         value = getattr(cls, name, None)
-        arguments = []
 
         # InitVars currently do not work, so better raise an Exception right here to avoid confusing error messages
         if field_type is dataclasses.InitVar or type(field_type) is dataclasses.InitVar:
@@ -39,24 +45,86 @@ def _prepare_dataclass_metadata(cls: type) -> None:
         if isinstance(value, dataclasses.Field):
             continue
 
-        # In case of tuples, extract the first element
-        if isinstance(value, tuple):
-            value, *arguments = value
+        # Parse field value to a named tuple with a validator and a default object
+        try:
+            (field_validator, field_default) = _parse_validator_tuple(value)
+        except Exception as e:
+            raise DataclassValidatorFieldException(f'Dataclass field "{name}": {e}')
 
-        # Every field that was not already defined using field() must have a Validator
-        if not isinstance(value, Validator):
+        # If the field is already existing in a superclass and has a validator and/or default, overwrite them with new values
+        if name in existing_validator_fields:
+            existing_field = existing_validator_fields.get(name)
+            if field_validator is None:
+                field_validator = existing_field.validator
+            if field_default is None:
+                field_default = existing_field.default
+
+        # Ensure that a validator is set, as well as a default (defaulting to NoDefault)
+        if not isinstance(field_validator, Validator):
             raise DataclassValidatorFieldException(f'Dataclass field "{name}" must specify a Validator.')
-
-        # Currently a field can only have one extra argument (an optional Default object)
-        if len(arguments) > 1:
-            raise DataclassValidatorFieldException(f'Dataclass field "{name}": Unexpected number of arguments.')
-
-        default = arguments[0] if arguments else NoDefault
-        if not isinstance(default, Default):
-            raise DataclassValidatorFieldException(f'Dataclass field "{name}": Unexpected type of argument (expected Default).')
+        if not isinstance(field_default, Default):
+            field_default = NoDefault
 
         # Create dataclass field
-        setattr(cls, name, validataclass_field(validator=value, default=default))
+        setattr(cls, name, validataclass_field(validator=field_validator, default=field_default))
+
+
+def _get_existing_validator_fields(cls) -> Dict[str, _ValidatorField]:
+    """
+    Returns a dictionary containing all fields (as `_ValidatorField` objects) of an existing validataclass that have a validator set in
+    their metadata, or an empty dictionary if the class is not a dataclass (yet).
+
+    (Internal helper function.)
+    """
+    if not dataclasses.is_dataclass(cls):
+        return {}
+
+    validator_fields = {}
+
+    for field in dataclasses.fields(cls):
+        # Ignore fields that don't have a validator in their metadata
+        if field.metadata and 'validator' in field.metadata:
+            validator_fields[field.name] = _ValidatorField(
+                validator=field.metadata.get('validator'),
+                default=field.metadata.get('validator_default', NoDefault),
+            )
+
+    return validator_fields
+
+
+def _parse_validator_tuple(args: Union[tuple, None, Validator, Default]) -> _ValidatorField:
+    """
+    Parses field arguments (the value of a field in not yet decorated dataclass) to a tuple of a Validator and a Default object.
+
+    (Internal helper function.)
+    """
+    # Ensure args is a tuple
+    if args is None:
+        args = ()
+    elif not isinstance(args, tuple):
+        args = (args,)
+
+    # Currently a field can only have two arguments (a validator and/or a Default object)
+    if len(args) > 2:
+        raise ValueError('Unexpected number of arguments.')
+
+    # Find validator and default objects in argument tuple and create a named tuple from it
+    arg_validator = None
+    arg_default = None
+
+    for arg in args:
+        if isinstance(arg, Validator):
+            if arg_validator is not None:
+                raise ValueError('Only one Validator can be specified.')
+            arg_validator = arg
+        elif isinstance(arg, Default):
+            if arg_default is not None:
+                raise ValueError('Only one Default can be specified.')
+            arg_default = arg
+        else:
+            raise TypeError('Unexpected type of argument: ' + type(arg).__name__)
+
+    return _ValidatorField(validator=arg_validator, default=arg_default)
 
 
 # Extend Python dataclass functions for usage with DataclassValidator
