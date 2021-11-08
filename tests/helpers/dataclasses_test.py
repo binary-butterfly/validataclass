@@ -164,14 +164,17 @@ class ValidatorDataclassTest:
 
         @validataclass
         class UnitTestValidatorDataclass:
-            foo: int = IntegerValidator()
-            bar: int = dataclasses.field(init=False, default=1)
+            # Some validated field
+            validated: int = IntegerValidator()
+
+            # Non-init field
+            non_init: int = dataclasses.field(init=False, default=1)
 
         # Get fields from dataclass
         fields = dataclasses.fields(UnitTestValidatorDataclass)  # noqa
 
         # Check names and types of all fields
-        assert [f.name for f in fields] == ['foo', 'bar']
+        assert [f.name for f in fields] == ['validated', 'non_init']
         assert all(f.type is int for f in fields)
 
         # Check 'init' value
@@ -185,6 +188,8 @@ class ValidatorDataclassTest:
         # Check that non-init field has no validator metadata
         assert type(fields[0].metadata.get('validator')) is IntegerValidator
         assert 'validator' not in fields[1].metadata
+
+    # Subclassing / inheritance
 
     @staticmethod
     def test_validataclass_subclassing_defaults():
@@ -297,50 +302,105 @@ class ValidatorDataclassTest:
         assert_field_default(fields['new2'], default_value=None)
 
     @staticmethod
+    def test_validataclass_subclassing_with_non_init_fields():
+        """ Test the @validataclass decorator with a subclass of a validataclass with fields that have init=False. """
+
+        @validataclass
+        class BaseClass:
+            # Some validated field
+            validated: int = IntegerValidator()
+
+            # Non-init field
+            non_init: int = dataclasses.field(init=False, default=1)
+
+        @validataclass
+        class SubClass(BaseClass):
+            # Modify the validated field
+            validated: int = IntegerValidator(), Default(42)
+
+        # Get fields from dataclass
+        fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
+
+        # Check names and types of all fields
+        assert set(fields.keys()) == {'validated', 'non_init'}
+        assert all(f.type is int for f in fields.values())
+
+        # Check 'init' value
+        assert fields['validated'].init is True
+        assert fields['non_init'].init is False
+
+        # Check that non-init field has regular default value
+        assert fields['validated'].default is dataclasses.MISSING
+        assert fields['non_init'].default == 1
+
+        # Check that non-init field has no validator metadata
+        assert type(fields['validated'].metadata.get('validator')) is IntegerValidator
+        assert 'validator' not in fields['non_init'].metadata
+
+        # Check default for modified field
+        assert_field_default(fields['validated'], default_value=42)
+
+    # Error cases
+
+    @staticmethod
     def test_validataclass_with_invalid_values():
         """ Test that @validataclass raises exceptions when a field is not predefined (e.g. with field()) and has no Validator. """
 
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
-            class InvalidDataclassA:
+            class InvalidDataclass:
                 foo: int
 
         assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
 
-        with pytest.raises(DataclassValidatorFieldException) as exception_info:
-            @validataclass
-            class InvalidDataclassB:
-                # Default only
-                foo: int = Default(3)
-
-        assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
-
     @staticmethod
-    def test_validataclass_with_invalid_tuple_length():
-        """ Test that @validataclass raises exceptions when a field has a tuple with invalid length. """
+    @pytest.mark.parametrize(
+        'field_tuple, expected_exception_msg', [
+            (
+                # None, missing validator
+                None,
+                'Dataclass field "foo" must specify a Validator.',
+            ),
+            (
+                # Default only, missing validator
+                (Default(3)),
+                'Dataclass field "foo" must specify a Validator.',
+            ),
+            (
+                # Tuple with invalid length
+                (IntegerValidator(), Default(5), Default(3)),
+                'Dataclass field "foo": Unexpected number of arguments.',
+            ),
+            (
+                # Invalid argument type (without validator)
+                3,
+                'Dataclass field "foo": Unexpected type of argument: int',
+            ),
+            (
+                # Invalid argument type (with validator)
+                (IntegerValidator(), 5),
+                'Dataclass field "foo": Unexpected type of argument: int',
+            ),
+            (
+                # Two validators in a tuple
+                (IntegerValidator(), StringValidator()),
+                'Dataclass field "foo": Only one Validator can be specified.',
+            ),
+            (
+                # Two defaults in a tuple
+                (Default(3), Default(None)),
+                'Dataclass field "foo": Only one Default can be specified.',
+            ),
+        ]
+    )
+    def test_validataclass_with_invalid_field_tuples(field_tuple, expected_exception_msg):
+        """ Test that @validataclass raises exceptions for with various invalid tuples. """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
             class InvalidDataclass:
-                foo: int = (IntegerValidator(), Default(5), Default(3))
+                foo: int = field_tuple
 
-        assert str(exception_info.value) == 'Dataclass field "foo": Unexpected number of arguments.'
-
-    @staticmethod
-    def test_validataclass_with_invalid_tuple_arguments():
-        """ Test that @validataclass raises exceptions when a field has a tuple with invalid arguments. """
-        with pytest.raises(DataclassValidatorFieldException) as exception_info:
-            @validataclass
-            class InvalidDataclassA:
-                foo: int = (IntegerValidator(), 5)
-
-        assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument: int'
-
-        with pytest.raises(DataclassValidatorFieldException) as exception_info:
-            @validataclass
-            class InvalidDataclassB:
-                foo: int = 3
-
-        assert str(exception_info.value) == 'Dataclass field "foo": Unexpected type of argument: int'
+        assert str(exception_info.value) == expected_exception_msg
 
     @staticmethod
     def test_validataclass_with_init_vars_exception():
