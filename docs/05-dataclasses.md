@@ -439,7 +439,8 @@ Remember to adjust the type hints in your dataclass though. For example: `some_v
 Specifying the `NoDefault` object for a field default literally means that the field does not have any default value. This is equivalent
 to **not specifying a default value at all**, meaning the field will be **required** and not optional.
 
-You will probably never need to specify this value explicitly.
+In most cases you won't need this value, but it can be useful to overwrite an existing default in a subclass (see the "Subclassing"
+section below).
 
 
 #### Examples for the various Default classes
@@ -495,6 +496,75 @@ For example: `some_var: Optional[int] = Noneable(IntegerValidator()), Default(No
 You can also configure the `Noneable` meta validator to use a different default value than `None`. For example, to always use `0` as the
 default value, regardless of whether the field is missing in the input dictionary or whether the field has the input value `None`: \
 `some_var: int = Noneable(IntegerValidator(), default=0), Default(0)`.
+
+
+## Subclassing
+
+The `@validataclass` decorator also supports class inheritance to extend or modify dataclasses. For example, you can add new fields to
+a dataclass, set different default values for fields and even change the field validators.
+
+This is useful if you have multiple similar dataclasses. Instead of repeating all field validators in all dataclasses, you can define
+a base dataclass and multiple subclasses derived from it.
+
+For example, if your dataclasses all share a certain set of fields, you can define a base class with these common fields:
+
+```python
+from decimal import Decimal
+
+from validataclass.helpers import validataclass
+from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator
+
+@validataclass
+class BaseClass:
+    # Common fields used in all requests
+    name: str = StringValidator()
+    some_value: int = IntegerValidator()
+
+@validataclass
+class SubClass(BaseClass):
+    # Fields only used in a specific request
+    some_decimal: Decimal = DecimalValidator()
+```
+
+With the `BaseClass` from this example you could validate dictionaries that consist only of the two keys `name` and `some_value`, while
+the `SubClass` has the same `name` and `some_value` fields but an additional field `some_decimal`.
+
+You can also overwrite the validators and/or default values for existing fields. To do this, simply specify the new validator and/or
+default value. Not specifying a new validator or default value will keep the existing one, so you can for example set a new default value
+for a field without repeating the validator.
+
+For example, imagine you have two dataclasses for two different API requests, one for creating some resource and one for modifying an
+existing one. When creating a resource, you might want to make all fields mandatory (or define certain default values for them),
+because you need to set the values of the resource to something. But when modifying a resource, you might want to make all fields
+optional (using `UnsetValue` as the default) and only change the values that are present in the request. You could do this by deriving
+the "modify" dataclass from the "create" dataclass and change all field defaults to `DefaultUnset`:
+
+```python
+from decimal import Decimal
+from typing import Optional, Union
+
+from validataclass.helpers import validataclass, Default, DefaultUnset, UnsetValueType
+from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator
+
+@validataclass
+class CreateStuffRequest:
+    name: str = StringValidator()
+    some_value: int = IntegerValidator()
+    some_decimal: Optional[Decimal] = DecimalValidator(), Default(None)
+
+@validataclass
+class ModifyStuffRequest(CreateStuffRequest):
+    # Set all field defaults to DefaultUnset
+    name: Union[str, UnsetValueType] = DefaultUnset
+    some_value: Union[int, UnsetValueType] = DefaultUnset
+    some_decimal: Union[Optional[Decimal], UnsetValueType] = DefaultUnset
+```
+
+As you can see here, no validators are specified in the subclass, so the `DataclassValidator` will use the same validators as for the
+base class.
+
+Conversely, you can specify a new validator for a field without changing an existing default value. To remove an existing default value
+and make an optional field required, you can simply specify `NoDefault` (e.g. `some_decimal: Decimal = NoDefault`).
 
 
 ## Post-validation
