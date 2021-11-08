@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for class inheritance of validataclasses, e.g. extend an existing validataclass by adding new fields or setting a
   different default value for an existing field. ([#10](https://github.com/binary-butterfly/validataclass/issues/10))
+- Type alias `OptionalUnset[T]` as a shortcut for `Union[T, UnsetValueType]`
+- Type alias `OptionalUnsetNone[T]` as a shortcut for `OptionalUnset[Optional[T]]` (or `Union[T, NoneType, UnsetValueType]`)
 
 ### Changed
 

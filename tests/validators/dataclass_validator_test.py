@@ -6,12 +6,12 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Optional, Union
+from typing import Optional
 import pytest
 
 from validataclass.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
     InternalValidationError, InvalidValidatorOptionException, DataclassValidatorFieldException
-from validataclass.helpers import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset, UnsetValue, UnsetValueType
+from validataclass.helpers import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset, UnsetValue, OptionalUnset
 from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
 
@@ -158,7 +158,7 @@ class DataclassValidatorTest:
         class DataclassWithDefaults:
             foo: str = (StringValidator(), Default('example default'))
             bar: int = (IntegerValidator(), DefaultFactory(counter))
-            baz: Union[UnsetValueType, str] = (StringValidator(), DefaultUnset)
+            baz: OptionalUnset[str] = (StringValidator(), DefaultUnset)
 
         validator: DataclassValidator[DataclassWithDefaults] = DataclassValidator(DataclassWithDefaults)
 

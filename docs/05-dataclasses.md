@@ -431,7 +431,9 @@ in your code to distinguish it from other values like `None`.
 
 For this you can use the `DefaultUnset` object, which is a shortcut for `Default(UnsetValue)`.
 
-Remember to adjust the type hints in your dataclass though. For example: `some_var: Union[int, UnsetValueType]`.
+Remember to adjust the type hints in your dataclass though. There is a type alias `OptionalUnset[T]` which you can use for this, for
+example: `some_var: OptionalUnset[int]`, which is equivalent to `Union[int, UnsetValueType]`. For fields that can be both `None` and
+`UnsetValue`, there is also the type alias `OptionalUnsetNone[T]` as a shortcut for `OptionalUnset[Optional[T]]`.
 
 
 #### NoDefault
@@ -449,17 +451,17 @@ The following code contains examples for all the various `Default` classes that 
 
 ```python
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional
 
-from validataclass.helpers import validataclass, Default, DefaultUnset, DefaultFactory, UnsetValueType, NoDefault
+from validataclass.helpers import validataclass, Default, DefaultUnset, DefaultFactory, NoDefault, OptionalUnset
 from validataclass.validators import IntegerValidator, ListValidator, DateTimeValidator
 
 @validataclass
 class ExampleClass:
     # Simple defaults for integer fields
-    field_a: int = IntegerValidator(), Default(42)                          # Default value is 42
-    field_b: Optional[int] = IntegerValidator(), Default(None)              # Default value is None
-    field_c: Union[int, UnsetValueType] = IntegerValidator(), DefaultUnset  # Default value is UnsetValue
+    field_a: int = IntegerValidator(), Default(42)                  # Default value is 42
+    field_b: Optional[int] = IntegerValidator(), Default(None)      # Default value is None
+    field_c: OptionalUnset[int] = IntegerValidator(), DefaultUnset  # Default value is UnsetValue
     
     # Defaults for lists
     field_d: list = ListValidator(IntegerValidator()), Default([])  # Default value is an empty list
@@ -543,7 +545,7 @@ the "modify" dataclass from the "create" dataclass and change all field defaults
 from decimal import Decimal
 from typing import Optional, Union
 
-from validataclass.helpers import validataclass, Default, DefaultUnset, UnsetValueType
+from validataclass.helpers import validataclass, Default, DefaultUnset, OptionalUnset, OptionalUnsetNone
 from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator
 
 @validataclass
@@ -555,9 +557,9 @@ class CreateStuffRequest:
 @validataclass
 class ModifyStuffRequest(CreateStuffRequest):
     # Set all field defaults to DefaultUnset
-    name: Union[str, UnsetValueType] = DefaultUnset
-    some_value: Union[int, UnsetValueType] = DefaultUnset
-    some_decimal: Union[Optional[Decimal], UnsetValueType] = DefaultUnset
+    name: OptionalUnset[str] = DefaultUnset
+    some_value: OptionalUnset[int] = DefaultUnset
+    some_decimal: OptionalUnsetNone[Decimal] = DefaultUnset
 ```
 
 As you can see here, no validators are specified in the subclass, so the `DataclassValidator` will use the same validators as for the
