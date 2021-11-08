@@ -4,7 +4,14 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-__all__ = ['UnsetValue', 'UnsetValueType']
+from typing import TypeVar, Union, Optional
+
+__all__ = [
+    'UnsetValue',
+    'UnsetValueType',
+    'OptionalUnset',
+    'OptionalUnsetNone',
+]
 
 
 # Class to create the UnsetValue sentinel object
@@ -33,3 +40,11 @@ class UnsetValueType:
 # Create sentinel object and redefine __new__ so that the object cannot be cloned
 UnsetValue = UnsetValueType()
 UnsetValueType.__new__ = lambda cls: UnsetValue
+
+
+# Type alias OptionalUnset[T] for fields with DefaultUnset (similar to Optional[T] but using UnsetValueType instead of NoneType)
+T = TypeVar('T')
+OptionalUnset = Union[T, UnsetValueType]
+
+# Type alias OptionalUnsetNone[T] for fields that can be None or UnsetValue (equivalent to OptionalUnset[Optional[T]])
+OptionalUnsetNone = OptionalUnset[Optional[T]]

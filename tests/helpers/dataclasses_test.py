@@ -5,11 +5,11 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Optional, Any, Union
+from typing import Optional, Any
 import pytest
 
 from validataclass.exceptions import DataclassValidatorFieldException
-from validataclass.helpers import validataclass, validataclass_field, Default, NoDefault, DefaultUnset, UnsetValueType
+from validataclass.helpers import validataclass, validataclass_field, Default, NoDefault, DefaultUnset, OptionalUnset
 from validataclass.validators import IntegerValidator, StringValidator, Noneable
 
 
@@ -207,7 +207,7 @@ class ValidatorDataclassTest:
             optional1: Optional[int] = (IntegerValidator(), Default(None))
             optional2: Optional[int] = (IntegerValidator(), Default(None))
             optional3: int = (IntegerValidator(), Default(3))
-            optional4: Union[UnsetValueType, int] = (IntegerValidator(), DefaultUnset)
+            optional4: OptionalUnset[int] = (IntegerValidator(), DefaultUnset)
 
         @validataclass
         class SubClass(BaseClass):
@@ -218,11 +218,11 @@ class ValidatorDataclassTest:
             # Required fields that are optional now
             required2: int = Default(42)
             required3: Optional[int] = Default(None)
-            required4: Union[UnsetValueType, int] = DefaultUnset
+            required4: OptionalUnset[int] = DefaultUnset
 
             # Optional fields that are required now or have new defaults
             optional2: int = NoDefault
-            optional3: Union[UnsetValueType, int] = DefaultUnset
+            optional3: OptionalUnset[int] = DefaultUnset
             optional4: int = Default(42)
 
         # Get fields from dataclass
@@ -235,7 +235,7 @@ class ValidatorDataclassTest:
         # Check type annotations
         assert all(fields[field].type is int for field in ['required1', 'required2', 'optional2', 'optional4'])
         assert all(fields[field].type is Optional[int] for field in ['required3', 'optional1'])
-        assert all(fields[field].type is Union[UnsetValueType, int] for field in ['required4', 'optional3'])
+        assert all(fields[field].type is OptionalUnset[int] for field in ['required4', 'optional3'])
 
         # Check validators
         assert all(type(field.metadata.get('validator')) is IntegerValidator for field in fields.values())
