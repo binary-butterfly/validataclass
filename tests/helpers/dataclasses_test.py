@@ -204,10 +204,10 @@ class ValidatorDataclassTest:
             required4: int = IntegerValidator()
 
             # Optional fields
-            optional1: Optional[int] = IntegerValidator(), Default(None)
-            optional2: Optional[int] = IntegerValidator(), Default(None)
-            optional3: int = IntegerValidator(), Default(3)
-            optional4: Union[UnsetValueType, int] = IntegerValidator(), DefaultUnset
+            optional1: Optional[int] = (IntegerValidator(), Default(None))
+            optional2: Optional[int] = (IntegerValidator(), Default(None))
+            optional3: int = (IntegerValidator(), Default(3))
+            optional4: Union[UnsetValueType, int] = (IntegerValidator(), DefaultUnset)
 
         @validataclass
         class SubClass(BaseClass):
@@ -263,22 +263,22 @@ class ValidatorDataclassTest:
             required2: int = IntegerValidator()
 
             # Optional fields
-            optional1: int = IntegerValidator(), Default(3)
-            optional2: int = IntegerValidator(), Default(3)
+            optional1: int = (IntegerValidator(), Default(3))
+            optional2: int = (IntegerValidator(), Default(3))
 
         @validataclass
         class SubClass(BaseClass):
             # Required fields
             required1: str = StringValidator()
-            required2: Optional[str] = StringValidator(), Default(None)
+            required2: Optional[str] = (StringValidator(), Default(None))
 
             # Optional fields
             optional1: str = StringValidator()
-            optional2: Optional[str] = StringValidator(), Default(None)
+            optional2: Optional[str] = (StringValidator(), Default(None))
 
             # New fields
             new1: str = StringValidator()
-            new2: Optional[str] = StringValidator(), Default(None)
+            new2: Optional[str] = (StringValidator(), Default(None))
 
         # Get fields from dataclass
         fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
@@ -316,7 +316,7 @@ class ValidatorDataclassTest:
         @validataclass
         class SubClass(BaseClass):
             # Modify the validated field
-            validated: int = IntegerValidator(), Default(42)
+            validated: int = (IntegerValidator(), Default(42))
 
         # Get fields from dataclass
         fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
