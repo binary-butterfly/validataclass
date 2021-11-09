@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   different default value for an existing field. ([#10](https://github.com/binary-butterfly/validataclass/issues/10))
 - Type alias `OptionalUnset[T]` as a shortcut for `Union[T, UnsetValueType]`
 - Type alias `OptionalUnsetNone[T]` as a shortcut for `OptionalUnset[Optional[T]]` (or `Union[T, NoneType, UnsetValueType]`)
+- Mixin class `ValidataclassMixin` with convenience methods `to_dict()` and `create_with_defaults()`
 
 ### Changed
 
