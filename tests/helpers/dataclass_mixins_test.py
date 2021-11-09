@@ -18,8 +18,8 @@ from validataclass.validators import IntegerValidator, StringValidator, DecimalV
 @validataclass
 class UnitTestDataclass(ValidataclassMixin):
     foo: int = IntegerValidator()  # required field
-    bar: str = StringValidator(), Default('bloop')
-    baz: OptionalUnset[Decimal] = DecimalValidator(), DefaultUnset
+    bar: str = (StringValidator(), Default('bloop'))
+    baz: OptionalUnset[Decimal] = (DecimalValidator(), DefaultUnset)
 
 
 class ValidataclassMixinTest:
