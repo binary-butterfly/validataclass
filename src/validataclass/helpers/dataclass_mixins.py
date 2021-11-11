@@ -9,7 +9,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 from typing import Dict
 
-from validataclass.helpers import Default, NoDefault
+from .dataclass_defaults import Default, NoDefault
+from .unset_value import UnsetValue
 
 __all__ = [
     'ValidataclassMixin',
@@ -40,11 +41,22 @@ class ValidataclassMixin:
     ```
     """
 
-    def to_dict(self) -> dict:
+    def to_dict(self, *, keep_unset_values: bool = False) -> dict:
         """
         Returns the data of the object as a dictionary (recursively resolving inner dataclasses as well).
+
+        Filters out all fields with `UnsetValue`, unless the optional parameter `keep_unset_values` is True.
+
+        Parameters:
+            keep_unset_values: If true, fields with value `UnsetValue` are NOT removed from the dictionary (default: False)
         """
-        return dataclasses.asdict(self)  # noqa
+        data = dataclasses.asdict(self)  # noqa
+
+        # Filter out all UnsetValues (unless said otherwise)
+        if not keep_unset_values:
+            data = {key: value for key, value in data.items() if value is not UnsetValue}
+
+        return data
 
     @classmethod
     def create_with_defaults(cls, **kwargs):
