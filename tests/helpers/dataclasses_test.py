@@ -20,6 +20,12 @@ def assert_field_default(field: dataclasses.Field, default_value: Any, default_t
     assert metadata_default.value == default_value
 
 
+def get_dataclass_fields(cls) -> dict:
+    # Note: "noqa" because Pycharm complains about validataclasses not being dataclasses
+    fields_tuple = dataclasses.fields(cls)  # noqa
+    return {field.name: field for field in fields_tuple}
+
+
 class ValidataclassFieldTest:
     """ Tests for the validataclass_field() helper method. """
 
@@ -34,25 +40,25 @@ class ValidataclassFieldTest:
             baz: int = validataclass_field(IntegerValidator(), default=42, metadata={'unittest': 123, 'validator': 'gets overwritten'})
 
         # Get fields from dataclass
-        fields = dataclasses.fields(UnitTestDataclass)
+        fields = get_dataclass_fields(UnitTestDataclass)
 
         # Check names and types of all fields
-        assert [f.name for f in fields] == ['foo', 'bar', 'baz']
-        assert all(f.type is int for f in fields)
+        assert list(fields.keys()) == ['foo', 'bar', 'baz']
+        assert all(f.type is int for f in fields.values())
 
         # Check that all fields have an IntegerValidator object as validator
-        assert all(type(f.metadata.get('validator')) is IntegerValidator for f in fields)
+        assert all(type(f.metadata.get('validator')) is IntegerValidator for f in fields.values())
 
         # Check that dataclass fields do *not* have regular default values
-        assert all(f.default is dataclasses.MISSING for f in fields)
+        assert all(f.default is dataclasses.MISSING for f in fields.values())
 
         # Check metadata for Default objects (first field should not have one, others should)
-        assert 'validator_default' not in fields[0].metadata
-        assert_field_default(fields[1], default_value=1)
-        assert_field_default(fields[2], default_value=42)
+        assert 'validator_default' not in fields['foo'].metadata
+        assert_field_default(fields['bar'], default_value=1)
+        assert_field_default(fields['baz'], default_value=42)
 
         # Check that addition metadata is preserved if specified (only for field 'baz')
-        assert fields[2].metadata.get('unittest') == 123
+        assert fields['baz'].metadata.get('unittest') == 123
 
     @staticmethod
     def test_validataclass_field_with_init_kwarg_raises_exception():
@@ -76,6 +82,16 @@ class ValidatorDataclassTest:
     """ Tests for the @validataclass decorator. """
 
     @staticmethod
+    def test_validataclass_with_empty_class():
+        """ Create an empty dataclass using @validataclass. """
+
+        @validataclass
+        class EmptyDataclass:
+            pass
+
+        assert len(get_dataclass_fields(EmptyDataclass)) == 0
+
+    @staticmethod
     def test_validataclass_without_kwargs():
         """ Create a dataclass using @validataclass and check that all fields with metadata are created correctly. """
 
@@ -89,23 +105,26 @@ class ValidatorDataclassTest:
         assert dataclasses.is_dataclass(UnitTestValidatorDataclass)
 
         # Get fields from dataclass
-        # Note: Pycharm complains again about dataclasses not being dataclasses...
-        fields = dataclasses.fields(UnitTestValidatorDataclass)  # noqa
+        fields = get_dataclass_fields(UnitTestValidatorDataclass)  # noqa
 
         # Check names and types of all fields
-        assert [f.name for f in fields] == ['foo', 'bar', 'baz']
-        assert [f.type for f in fields] == [int, Optional[int], Optional[str]]
+        assert list(fields.keys()) == ['foo', 'bar', 'baz']
+        assert fields['foo'].type is int
+        assert fields['bar'].type is Optional[int]
+        assert fields['baz'].type is Optional[str]
 
         # Check that dataclass fields have NOT set regular default values
-        assert all(f.default is dataclasses.MISSING for f in fields)
+        assert all(f.default is dataclasses.MISSING for f in fields.values())
 
         # Check for defaults in metadata (only the last one should have a default value, which is None)
-        assert 'validator_default' not in fields[0].metadata
-        assert 'validator_default' not in fields[1].metadata
-        assert_field_default(fields[2], default_value=None)
+        assert 'validator_default' not in fields['foo'].metadata
+        assert 'validator_default' not in fields['bar'].metadata
+        assert_field_default(fields['baz'], default_value=None)
 
         # Check that fields have correct validators
-        assert [type(f.metadata.get('validator')) for f in fields] == [IntegerValidator, Noneable, StringValidator]
+        assert type(fields['foo'].metadata.get('validator')) is IntegerValidator
+        assert type(fields['bar'].metadata.get('validator')) is Noneable
+        assert type(fields['baz'].metadata.get('validator')) is StringValidator
 
     @staticmethod
     def test_validataclass_with_kwargs():
@@ -141,22 +160,24 @@ class ValidatorDataclassTest:
             baz: Optional[int] = (IntegerValidator(), Default(None))
 
         # Get fields from dataclass
-        fields = dataclasses.fields(UnitTestValidatorDataclass)  # noqa
+        fields = get_dataclass_fields(UnitTestValidatorDataclass)  # noqa
 
         # Check names and types of all fields
-        assert [f.name for f in fields] == ['foo', 'bar', 'baz']
-        assert [f.type for f in fields] == [int, int, Optional[int]]
+        assert list(fields.keys()) == ['foo', 'bar', 'baz']
+        assert fields['foo'].type is int
+        assert fields['bar'].type is int
+        assert fields['baz'].type is Optional[int]
 
         # Check that dataclass fields have NOT set regular default values
-        assert all(f.default is dataclasses.MISSING for f in fields)
+        assert all(f.default is dataclasses.MISSING for f in fields.values())
 
         # Check for defaults in metadata (only the last one should have a default value, which is None)
-        assert 'validator_default' not in fields[0].metadata
-        assert_field_default(fields[1], default_value=42)
-        assert_field_default(fields[2], default_value=None)
+        assert 'validator_default' not in fields['foo'].metadata
+        assert_field_default(fields['bar'], default_value=42)
+        assert_field_default(fields['baz'], default_value=None)
 
         # Check that fields have correct validators
-        assert all(type(f.metadata.get('validator')) is IntegerValidator for f in fields)
+        assert all(type(f.metadata.get('validator')) is IntegerValidator for f in fields.values())
 
     @staticmethod
     def test_validataclass_with_non_init_fields():
@@ -171,23 +192,24 @@ class ValidatorDataclassTest:
             non_init: int = dataclasses.field(init=False, default=1)
 
         # Get fields from dataclass
-        fields = dataclasses.fields(UnitTestValidatorDataclass)  # noqa
+        fields = get_dataclass_fields(UnitTestValidatorDataclass)  # noqa
 
         # Check names and types of all fields
-        assert [f.name for f in fields] == ['validated', 'non_init']
-        assert all(f.type is int for f in fields)
+        assert list(fields.keys()) == ['validated', 'non_init']
+        assert fields['validated'].type is int
+        assert fields['non_init'].type is int
 
         # Check 'init' value
-        assert fields[0].init is True
-        assert fields[1].init is False
+        assert fields['validated'].init is True
+        assert fields['non_init'].init is False
 
         # Check that non-init field has regular default value
-        assert fields[0].default is dataclasses.MISSING
-        assert fields[1].default == 1
+        assert fields['validated'].default is dataclasses.MISSING
+        assert fields['non_init'].default == 1
 
         # Check that non-init field has no validator metadata
-        assert type(fields[0].metadata.get('validator')) is IntegerValidator
-        assert 'validator' not in fields[1].metadata
+        assert type(fields['validated'].metadata.get('validator')) is IntegerValidator
+        assert 'validator' not in fields['non_init'].metadata
 
     # Subclassing / inheritance
 
@@ -226,11 +248,11 @@ class ValidatorDataclassTest:
             optional4: int = Default(42)
 
         # Get fields from dataclass
-        fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
+        fields = get_dataclass_fields(SubClass)
 
         # Check that all fields exist
-        assert set(fields.keys()) == \
-               {'required1', 'required2', 'required3', 'required4', 'optional1', 'optional2', 'optional3', 'optional4'}
+        assert list(fields.keys()) == \
+               ['required1', 'required2', 'required3', 'required4', 'optional1', 'optional2', 'optional3', 'optional4']
 
         # Check type annotations
         assert all(fields[field].type is int for field in ['required1', 'required2', 'optional2', 'optional4'])
@@ -281,10 +303,10 @@ class ValidatorDataclassTest:
             new2: Optional[str] = (StringValidator(), Default(None))
 
         # Get fields from dataclass
-        fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
+        fields = get_dataclass_fields(SubClass)
 
         # Check that all fields exist
-        assert set(fields.keys()) == {'required1', 'required2', 'optional1', 'optional2', 'new1', 'new2'}
+        assert list(fields.keys()) == ['required1', 'required2', 'optional1', 'optional2', 'new1', 'new2']
 
         # Check type annotations
         assert all(fields[field].type is str for field in ['required1', 'optional1', 'new1'])
@@ -319,26 +341,16 @@ class ValidatorDataclassTest:
             validated: int = (IntegerValidator(), Default(42))
 
         # Get fields from dataclass
-        fields = {field.name: field for field in dataclasses.fields(SubClass)}  # noqa
+        fields = get_dataclass_fields(SubClass)
 
         # Check names and types of all fields
-        assert set(fields.keys()) == {'validated', 'non_init'}
+        assert list(fields.keys()) == ['validated', 'non_init']
         assert all(f.type is int for f in fields.values())
 
-        # Check 'init' value
-        assert fields['validated'].init is True
+        # Check non-init field
         assert fields['non_init'].init is False
-
-        # Check that non-init field has regular default value
-        assert fields['validated'].default is dataclasses.MISSING
         assert fields['non_init'].default == 1
-
-        # Check that non-init field has no validator metadata
-        assert type(fields['validated'].metadata.get('validator')) is IntegerValidator
         assert 'validator' not in fields['non_init'].metadata
-
-        # Check default for modified field
-        assert_field_default(fields['validated'], default_value=42)
 
     # Error cases
 
@@ -401,6 +413,52 @@ class ValidatorDataclassTest:
                 foo: int = field_tuple
 
         assert str(exception_info.value) == expected_exception_msg
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'cls_name', [
+            'InvalidDataclassA',
+            'InvalidDataclassB',
+            'InvalidDataclassC',
+        ]
+    )
+    def test_validataclass_with_missing_annotations_invalid(cls_name):
+        """ Test that @validataclass raises exceptions when it detects a field with a validator but with a missing type annotation. """
+
+        class InvalidDataclassA:
+            foo = IntegerValidator()
+
+        class InvalidDataclassB:
+            foo = Default(0)
+
+        class InvalidDataclassC:
+            foo = (IntegerValidator(), Default(0))
+
+        classes = {
+            'InvalidDataclassA': InvalidDataclassA,
+            'InvalidDataclassB': InvalidDataclassB,
+            'InvalidDataclassC': InvalidDataclassC,
+        }
+
+        with pytest.raises(DataclassValidatorFieldException) as exception_info:
+            validataclass(classes[cls_name])
+        assert str(exception_info.value) == 'Dataclass field "foo" has a defined Validator and/or Default object, but no type annotation.'
+
+    @staticmethod
+    def test_validataclass_with_missing_annotations_valid():
+        """ Test that @validataclass allows missing type annotations under certain conditions. """
+
+        @validataclass
+        class InvalidDataclass:
+            # Attribute name begins with an underscore
+            _foo = IntegerValidator()
+
+            # Attribute is not a validator
+            bar = 42
+
+        assert len(get_dataclass_fields(InvalidDataclass)) == 0
+        assert type(InvalidDataclass._foo) is IntegerValidator
+        assert InvalidDataclass.bar == 42
 
     @staticmethod
     def test_validataclass_with_init_vars_exception():

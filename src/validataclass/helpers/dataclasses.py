@@ -34,7 +34,23 @@ def _prepare_dataclass_metadata(cls) -> None:
     # In case of a subclassed validataclass, get the already existing fields
     existing_validator_fields = _get_existing_validator_fields(cls)
 
-    for name, field_type in cls.__annotations__.items():
+    # Get class annotations
+    cls_annotations = cls.__dict__.get('__annotations__', {})
+
+    # Check for fields/attributes that have validators defined but missing a type annotation (most likely an error)
+    for name, value in cls.__dict__.items():
+        # Skip attributes with leading underscores, and attributes that have type annotations
+        if name[0] == '_' or name in cls_annotations:
+            continue
+
+        # Check if attribute has a validator and/or default object (as single value or as part of a tuple)
+        value_tuple = value if isinstance(value, tuple) else (value,)
+        if any(isinstance(v, (Validator, Default)) for v in value_tuple):
+            raise DataclassValidatorFieldException(
+                f'Dataclass field "{name}" has a defined Validator and/or Default object, but no type annotation.')
+
+    # Prepare dataclass fields by checking for validators and setting metadata accordingly
+    for name, field_type in cls_annotations.items():
         value = getattr(cls, name, None)
 
         # InitVars currently do not work, so better raise an Exception right here to avoid confusing error messages
@@ -136,8 +152,12 @@ def validataclass(cls=None, **kwargs):
     Prepares the class by generating dataclass metadata that is needed by the DataclassValidator, then turns the class into a dataclass
     using the regular @dataclass decorator.
 
-    Dataclass fields can be created either explicitly using `validataclass_field()` or `dataclasses.field()`, or implicitly by specifying
-    a `Validator` object and optionally a `Default` object (comma-separated as a tuple).
+    Dataclass fields can be defined by specifying a `Validator` object and optionally a `Default` object (comma-separated as a tuple),
+    or by using `validataclass_field()` or `dataclasses.field()`.
+
+    For an attribute to be recognized as a dataclass field, the attribute needs to have a type annotation (e.g. `foo: int = ...`). The
+    decorator will raise an error if it detects a field that has a defined validator but no type annotation (unless the attribute's name
+    begins with an underscore, e.g. `_foo = IntegerValidator()` would not raise an error, but would NOT result in a datafield either).
 
     Example:
 
