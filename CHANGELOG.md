@@ -6,19 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## Unreleased
+## [0.3.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.1) - 2021-11-11
 
-[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.3.0...HEAD)
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.3.0...0.3.1)
 
 ### Changed
 
 - `@validataclass` decorator detects fields with validator but without type annotations and will raise errors about that now.
-  [#26](https://github.com/binary-butterfly/validataclass/issues/26)
+  [#27](https://github.com/binary-butterfly/validataclass/pull/27)
 
 ### Fixed
 
 - `@validataclass` allows empty dataclasses now (raised an AttributeError before).
-  [#26](https://github.com/binary-butterfly/validataclass/issues/26) 
+  [#27](https://github.com/binary-butterfly/validataclass/pull/27) 
 
 
 ## [0.3.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.0) - 2021-11-10
