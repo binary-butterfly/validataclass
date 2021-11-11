@@ -126,6 +126,13 @@ class DictValidatorTest:
     # Tests for DictValidator with defined field_validators (with and without default_validator)
 
     @staticmethod
+    def test_empty_dict_validator_valid():
+        """ Test a validator that only returns empty dictionaries (input dictionaries might contain fields, but they will be ignored). """
+        validator = DictValidator(field_validators={})
+        assert validator.validate({}) == {}
+        assert validator.validate({'foo': 42}) == {}
+
+    @staticmethod
     def test_field_dict_without_default_validator_valid():
         """ Validate a dictionary with defined field validators, all fields required, without default_validator. """
         validator = DictValidator(field_validators={
