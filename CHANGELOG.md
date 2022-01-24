@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## Unreleased
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.3.2...HEAD)
+
+### Added
+
+- Official support for Python 3.10.
+
+
 ## [0.3.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.2) - 2021-11-11
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.3.1...0.3.2)
