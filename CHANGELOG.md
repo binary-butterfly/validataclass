@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Minor fixes for `Optional` type hints.
+- Add missing export for `T_Dataclass` in package `validataclass.validators`.
 
 
 ## [0.3.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.2) - 2021-11-11
