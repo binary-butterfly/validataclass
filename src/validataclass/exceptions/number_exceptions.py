@@ -11,6 +11,7 @@ from validataclass.exceptions import ValidationError
 __all__ = [
     'NumberRangeError',
     'DecimalPlacesError',
+    'InvalidIntegerError',
     'InvalidDecimalError',
     'NonFiniteNumberError',
 ]
@@ -18,11 +19,11 @@ __all__ = [
 
 class NumberRangeError(ValidationError):
     """
-    Validation error raised by number validators (e.g. `IntegerValidator`, `DecimalValidator`, ...) when a number range requirement
-    (minimal and/or maximal value) is specified and the input does not match those requirements.
+    Validation error raised by number validators (e.g. `IntegerValidator`, `DecimalValidator`, ...) when a number range
+    requirement (minimal and/or maximal value) is specified and the input does not match those requirements.
 
-    May contain the extra fields 'min_value' and 'max_value', depending on which are specified. The type of these fields depends on
-    the validator, e.g. an IntegerValidator sets integers, while a DecimalValidator sets decimal strings.
+    May contain the extra fields 'min_value' and 'max_value', depending on which are specified. The type of these fields
+    depends on the validator, e.g. an IntegerValidator sets integers, while a DecimalValidator sets decimal strings.
     """
     code = 'number_range_error'
 
@@ -34,8 +35,8 @@ class NumberRangeError(ValidationError):
 
 class DecimalPlacesError(ValidationError):
     """
-    Validation error raised by `DecimalValidator` when a minimum or maximum number of decimal places is specified and the input number
-    has too many or too little decimal places.
+    Validation error raised by `DecimalValidator` when a minimum or maximum number of decimal places is specified and
+    the input number has too many or too little decimal places.
 
     May contain the extra fields 'min_places' and 'max_places' (integers), depending on which are specified.
     """
@@ -47,16 +48,25 @@ class DecimalPlacesError(ValidationError):
         super().__init__(**min_places_args, **max_places_args, **kwargs)
 
 
+class InvalidIntegerError(ValidationError):
+    """
+    Validation error raised by `IntegerValidator` with `allow_strings=True` when an input string cannot be parsed as an
+    integer value, i.e. the string contains invalid characters or is empty.
+    """
+    code = 'invalid_integer'
+
+
 class InvalidDecimalError(ValidationError):
     """
-    Validation error raised by `DecimalValidator` when an input string cannot be parsed as a decimal value, i.e. the string is malformed.
+    Validation error raised by `DecimalValidator` when an input string cannot be parsed as a decimal value, i.e. the
+    string is malformed.
     """
     code = 'invalid_decimal'
 
 
 class NonFiniteNumberError(ValidationError):
     """
-    Validation error raised by `FloatValidator` (and subclasses) when an input string can be parsed as a float, but does not have a
-    finite value (i.e. it is either (+/-)Infinity or NaN).
+    Validation error raised by `FloatValidator` (and subclasses) when an input string can be parsed as a float, but does
+    not have a finite value (i.e. it is either (+/-)Infinity or NaN).
     """
     code = 'not_a_finite_number'

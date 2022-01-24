@@ -6,7 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import pytest
 
-from validataclass.exceptions import RequiredValueError, InvalidTypeError, NumberRangeError, InvalidValidatorOptionException
+from validataclass.exceptions import RequiredValueError, InvalidTypeError, NumberRangeError, InvalidIntegerError, \
+    InvalidValidatorOptionException
 from validataclass.validators import IntegerValidator
 
 
@@ -92,6 +93,69 @@ class IntegerValidatorTest:
             with pytest.raises(NumberRangeError) as exception_info:
                 validator.validate(input_data)
             assert exception_info.value.to_dict() == expected_error_dict
+
+    # Test optional allow_strings parameter
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_data, expected_output', [
+            # Actual integers should still work of course
+            (0, 0),
+            (42, 42),
+            (-123, -123),
+            # Integers as strings
+            ('0', 0),
+            ('42', 42),
+            ('-123', -123),
+        ]
+    )
+    def test_allow_strings_valid(input_data, expected_output):
+        """ Test IntegerValidator with allow_strings=True with valid input (both as integers and strings). """
+        validator = IntegerValidator(allow_strings=True)
+        output = validator.validate(input_data)
+        assert type(output) is int
+        assert output == expected_output
+
+    @staticmethod
+    def test_allow_strings_with_invalid_type():
+        """ Test that IntegerValidator with allow_strings=True only accepts integers and strings. """
+        validator = IntegerValidator(allow_strings=True)
+        with pytest.raises(InvalidTypeError) as exception_info:
+            validator.validate(1.234)
+        assert exception_info.value.to_dict() == {
+            'code': 'invalid_type',
+            'expected_types': ['int', 'str'],
+        }
+
+    @staticmethod
+    @pytest.mark.parametrize('input_data', ['', 'banana', '1.234', 'NaN', 'Infinity', '1e3'])
+    def test_allow_strings_with_invalid_strings(input_data):
+        """ Test that IntegerValidator with allow_strings=True raises exceptions on invalid (non-numeric) strings as input. """
+        validator = IntegerValidator(allow_strings=True)
+        with pytest.raises(InvalidIntegerError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {
+            'code': 'invalid_integer',
+        }
+
+    @staticmethod
+    def test_allow_strings_with_value_range():
+        """ Test IntegerValidation with allow_strings=True and a value range. """
+        validator = IntegerValidator(min_value=-5, max_value=10, allow_strings=True)
+
+        # Valid input
+        assert validator.validate('-5') == -5
+        assert validator.validate('10') == 10
+
+        # Invalid input
+        for input_value in ['-6', '11']:
+            with pytest.raises(NumberRangeError) as exception_info:
+                validator.validate(input_value)
+            assert exception_info.value.to_dict() == {
+                'code': 'number_range_error',
+                'min_value': -5,
+                'max_value': 10,
+            }
 
     # Invalid validator parameters
 

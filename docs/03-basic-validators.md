@@ -249,9 +249,14 @@ point arithmetics work, while integers and decimals are always precise.
 
 ### IntegerValidator
 
-The `IntegerValidator` accepts integer values (as type `int`, not as strings) and returns those values unmodified.
+The `IntegerValidator` accepts and returns integer values. By default, only actual integers (i.e. no strings) are
+accepted, so for example the string `"123"` would result in an `InvalidTypeError`.
 
-Optionally you can specify a range of valid values using `min_value` and `max_value`.
+The optional parameter `allow_strings` can be set to `True` to allow both integers and numeric strings as input. The
+validator will convert strings to integers in that case, so the input values `123` (integer) and `"123"` (string) will
+both result in the integer output value `123`.
+
+Optionally you can also specify a range of valid values using `min_value` and `max_value`.
 
 **Examples:**
 
@@ -264,6 +269,13 @@ validator.validate(0)     # will return 0
 validator.validate(123)   # will return 123
 validator.validate(-123)  # will return -123
 validator.validate("1")   # will raise InvalidTypeError (use DecimalValidator instead)
+
+# allow_strings parameter: Accept integers also as strings
+validator = IntegerValidator(allow_strings=True)
+validator.validate(42)      # will return 42
+validator.validate("42")    # will return 42
+validator.validate("-123")  # will return -123
+validator.validate("foo")   # will raise InvalidIntegerError
 
 # min_value parameter: Only allow zero or positive numbers
 validator = IntegerValidator(min_value=0)
