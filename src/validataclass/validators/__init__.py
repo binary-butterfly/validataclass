@@ -31,4 +31,4 @@ from .url_validator import UrlValidator
 # Composite type validators
 from .list_validator import ListValidator
 from .dict_validator import DictValidator
-from .dataclass_validator import DataclassValidator
+from .dataclass_validator import DataclassValidator, T_Dataclass

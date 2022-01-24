@@ -1,10 +1,11 @@
 # Settings
-DOCKER_MULTI_PYTHON_IMAGE = fkrull/multi-python:focal
+# NOTE: The multi-python image is a fork of fkrull/multi-python, which as of now has not been updated for Python 3.10 yet
+DOCKER_MULTI_PYTHON_IMAGE = gnufede/multi-python:focal
 DOCKER_USER = "$(shell id -u):$(shell id -g)"
 
 .PHONY: all venv build \
 	tox test flake8 open-coverage \
-	docker-tox docker-tox-py37 docker-tox-py38 docker-tox-py39 \
+	docker-tox docker-tox-py37 docker-tox-py38 docker-tox-py39 docker-tox-py310 docker-pull \
 	clean clean-dist clean-all
 
 # Default target
@@ -33,7 +34,7 @@ tox:
 
 # Only run pytest
 test:
-	tox -e 'py{39,38,37,py3}'
+	tox -e 'clean,py{310,39,38,37,py3},report'
 
 # Only run flake8 linter
 flake8:
@@ -50,16 +51,23 @@ docker-tox:
 		--mount "type=bind,src=$(shell pwd),target=/code" \
 		--workdir /code \
 		--env HOME=/tmp/home \
+		--env COVERAGE_FILE=.coverage_docker \
 		$(DOCKER_MULTI_PYTHON_IMAGE) \
 		tox --workdir .tox_docker $(TOX_ARGS)
 
 # Run partial tox test suites in Docker
+docker-tox-py39: TOX_ARGS="-e py310"
+docker-tox-py39: docker-tox
 docker-tox-py39: TOX_ARGS="-e py39"
 docker-tox-py39: docker-tox
 docker-tox-py38: TOX_ARGS="-e py38"
 docker-tox-py38: docker-tox
 docker-tox-py37: TOX_ARGS="-e py37"
 docker-tox-py37: docker-tox
+
+# Pull the latest image of the multi-python Docker image
+docker-pull:
+	docker pull $(DOCKER_MULTI_PYTHON_IMAGE)
 
 
 # Cleanup
