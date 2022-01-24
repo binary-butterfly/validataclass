@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 from collections import namedtuple
-from typing import Any, Union, Dict
+from typing import Any, Union, Dict, Optional
 
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.validators import Validator
@@ -196,7 +196,7 @@ def validataclass(cls=None, **kwargs):
     return wrap(cls)
 
 
-def validataclass_field(validator: Validator, default: Any = NoDefault, *, metadata: dict = None, **kwargs):
+def validataclass_field(validator: Validator, default: Any = NoDefault, *, metadata: Optional[dict] = None, **kwargs):
     """
     Define a dataclass field compatible with DataclassValidator.
 

@@ -31,9 +31,9 @@ class ValidationError(Exception):
     """
     code: str = 'unknown_error'
     reason: Optional[str] = None
-    extra_data: dict = None
+    extra_data: Optional[dict] = None
 
-    def __init__(self, *, code: str = None, reason: Optional[str] = None, **kwargs):
+    def __init__(self, *, code: Optional[str] = None, reason: Optional[str] = None, **kwargs):
         if code is not None:
             self.code = code
         if reason is not None:
@@ -130,7 +130,7 @@ class InternalValidationError(ValidationError):
     be accessible via `error.internal_error` or `repr(error)` for debugging purposes.
     """
     code = 'internal_error'
-    internal_error: Exception = None
+    internal_error: Optional[Exception] = None
 
     def __init__(self, *, internal_error: Optional[Exception] = None, **kwargs):
         super().__init__(**kwargs)

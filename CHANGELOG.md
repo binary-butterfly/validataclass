@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Official support for Python 3.10.
 
+### Fixed
+
+- Minor fixes for `Optional` type hints.
+
 
 ## [0.3.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.2) - 2021-11-11
 
