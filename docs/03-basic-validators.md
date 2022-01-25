@@ -268,7 +268,7 @@ validator = IntegerValidator()
 validator.validate(0)     # will return 0
 validator.validate(123)   # will return 123
 validator.validate(-123)  # will return -123
-validator.validate("1")   # will raise InvalidTypeError (use DecimalValidator instead)
+validator.validate("1")   # will raise InvalidTypeError (use allow_strings=True or a DecimalValidator)
 
 # allow_strings parameter: Accept integers also as strings
 validator = IntegerValidator(allow_strings=True)
@@ -302,9 +302,17 @@ validator.validate(-1234)  # valid! will return -1234
 
 ### FloatValidator
 
-The `FloatValidator` accepts float values (those of type `float`, no integers and no strings!) and returns those unmodified.
+The `FloatValidator` accepts and returns float values. By default, only actual floats (i.e. no integers or strings) are
+accepted, so for example the integer `1` and the string `"1.0"` would both result in an `InvalidTypeError`.
 
-Only finite value are allowed (i.e. neither `Infinity` nor `NaN`).
+The optional parameter `allow_integers` can be set to `True` to allow integers as input which will then be converted to
+floats, so the input values `1` (integer) and `1.0` (float) will both result in the float output value `1.0`.
+
+If you want to validate decimal numbers in string format (e.g. `"1.234"`), see the `DecimalValidator` instead. (Using
+`Decimal` instead of floats is generally recommended anyway in most cases (especially when working with money values!),
+so if you're designing an API, please consider using decimal strings and Python's `Decimal` class.)
+
+The `FloatValidator` also only allows finite values (i.e. neither `Infinity` nor `NaN` are accepted).
 
 Optionally you can specify a range of valid values using `min_value` and `max_value`.
 
@@ -318,8 +326,15 @@ validator = FloatValidator()
 validator.validate(1.234)   # will return 1.234 (as float)
 validator.validate(-0.001)  # will return -0.001
 validator.validate(1.0)     # will return 1.0
-validator.validate(1)       # will raise InvalidTypeError (use IntegerValidator instead)
-validator.validate("1.23")  # will raise InvalidTypeError (use DecimalValidator instead)
+validator.validate(1)       # will raise InvalidTypeError (use allow_integers=True or an IntegerValidator)
+validator.validate("1.23")  # will raise InvalidTypeError (use DecimalValidator or FloatToDecimalValidator instead)
+
+# allow_integers parameter: Accept integers and convert them to floats
+validator = FloatValidator(allow_integers=True)
+validator.validate(1.234)   # will return 1.234
+validator.validate(42.0)    # will return 42.0
+validator.validate(42)      # will return 42.0 (float, not integer!)
+validator.validate("1.23")  # will still raise InvalidTypeError
 
 # Value range: Only allow values from -1.0 to +1.0
 validator = FloatValidator(min_value=-1.0, max_value=1.0)
@@ -382,15 +397,23 @@ validator.validate("100000.00")  # will return Decimal('100000.000')
 
 ### FloatToDecimalValidator
 
-The `FloatToDecimalValidator` accepts **float** values (like the `FloatValidator`) but **converts** them to `Decimal` objects (like
-the `DecimalValidator`).
+The `FloatToDecimalValidator` accepts **float** values (like the `FloatValidator`) and **converts** them to `Decimal`
+objects (like the `DecimalValidator`).
 
-Like the `DecimalValidator` it supports the optional parameters `min_value`, `max_value` and `output_places`. It **does not** support the
-`min_places` and `max_places` parameters though (those are technically not possible with floats)!
+Like the `FloatValidator`, this validator only accepts floats by default, but can also accept integers by setting the
+parameter `allow_integers=True`. For example, the integer `42` will result in a `Decimal('42')`, while the float `42.0`
+results in a `Decimal('42.0')`.
 
-**Note:** Due to the way that floats work, the resulting decimals can have inaccuracies! It is recommended to use `DecimalValidator`
-with decimal strings instead of floats as input whenever possible. This validator mainly exists for cases where you need to accept floats
-as input.
+Additionally, by setting the parameter `allow_strings=True` the validator will accept decimal strings, which will then
+be parsed internally using a `DecimalValidator` (e.g. `"1.23"` will result in a `Decimal('1.23')`).
+
+Like the `DecimalValidator` it supports the optional parameters `min_value`, `max_value` (which can both be specified
+using floats, integers, `Decimal` or decimal strings) and `output_places`. However, it **does not** support the
+`min_places` and `max_places` parameters (those are technically not possible with floats)!
+
+**Note:** Due to the way that floats work, the resulting decimals can have inaccuracies! It is recommended to use
+`DecimalValidator` with decimal strings instead of floats as input whenever possible. This validator mainly exists for
+cases where you need to accept floats as input.
 
 **Examples:**
 
@@ -399,16 +422,28 @@ from validataclass.validators import FloatToDecimalValidator
 
 # Default options: Accepts any finite float value
 validator = FloatToDecimalValidator()
-validator.validate(1.234)   # should return Decimal('1.234')
-validator.validate(1)       # will raise InvalidTypeError (use IntegerValidator instead)
-validator.validate("1.23")  # will raise InvalidTypeError (use DecimalValidator instead)
+validator.validate(1.234)   # will return Decimal('1.234')
+validator.validate(1)       # will raise InvalidTypeError (use allow_integers=True or a IntegerValidator)
+validator.validate("1.23")  # will raise InvalidTypeError (use allow_strings=True or an DecimalValidator)
+
+# allow_integers parameter: Accept both floats and integers as input
+validator = FloatToDecimalValidator(allow_integers=True)
+validator.validate(42.0)    # will return Decimal('42.0')
+validator.validate(42)      # will return Decimal('42')
+validator.validate("1.23")  # will still raise InvalidTypeError
+
+# allow_strings parameter: Accept both floats and strings as input
+validator = FloatToDecimalValidator(allow_strings=True)
+validator.validate(42.0)    # will return Decimal('42.0')
+validator.validate("1.23")  # will return Decimal('1.23')
+validator.validate(42)      # will still raise InvalidTypeError
 
 # Number range and output places: Allow values from 0 to 1, always output with 3 decimal places
 validator = FloatToDecimalValidator(min_value=0, max_value=1, output_places=3)
-validator.validate(0.0)     # should return Decimal('0.000')
-validator.validate(0.1234)  # should return Decimal('0.123')
-validator.validate(0.1235)  # should return Decimal('0.124')
-validator.validate(1.0)     # should return Decimal('1.000')
+validator.validate(0.0)     # will return Decimal('0.000')
+validator.validate(0.1234)  # will return Decimal('0.123')
+validator.validate(0.1235)  # will return Decimal('0.124')
+validator.validate(1.0)     # will return Decimal('1.000')
 ```
 
 

@@ -29,7 +29,7 @@ class FloatValidatorTest:
         assert exception_info.value.to_dict() == {'code': 'required_value'}
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['banana', '1.234', True, [1.234]])
+    @pytest.mark.parametrize('input_data', [123, 'banana', '1.234', True, [1.234]])
     def test_invalid_wrong_type(input_data):
         """ Check that FloatValidator raises exceptions for values that are not of type 'float'. """
         validator = FloatValidator()
@@ -101,6 +101,59 @@ class FloatValidatorTest:
             with pytest.raises(NumberRangeError) as exception_info:
                 validator.validate(input_data)
             assert exception_info.value.to_dict() == expected_error_dict
+
+    # Test optional allow_integers parameter
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_data, expected_output', [
+            # Actual floats should still work of course
+            (1.234, 1.234),
+            (-123.4, -123.4),
+            # Floats as integers
+            (0, 0.0),
+            (42, 42.0),
+            (-123, -123.0),
+        ]
+    )
+    def test_allow_integers_valid(input_data, expected_output):
+        """ Test FloatValidator with allow_integers=True with valid input (both as floats and integers). """
+        validator = FloatValidator(allow_integers=True)
+        output = validator.validate(input_data)
+        assert type(output) is float
+        assert output == expected_output
+
+    @staticmethod
+    def test_allow_integers_with_invalid_type():
+        """ Test that FloatValidator with allow_integers=True only accepts floats and integers. """
+        validator = FloatValidator(allow_integers=True)
+        with pytest.raises(InvalidTypeError) as exception_info:
+            validator.validate('1.234')
+        assert exception_info.value.to_dict() == {
+            'code': 'invalid_type',
+            'expected_types': ['float', 'int'],
+        }
+
+    @staticmethod
+    def test_allow_integers_with_value_range():
+        """ Test FloatValidator with allow_integers=True and a value range. """
+        validator = FloatValidator(min_value=-1.9, max_value=10.0, allow_integers=True)
+
+        # Valid input
+        assert validator.validate(-1) == -1.0
+        assert validator.validate(10) == 10.0
+        assert validator.validate(-1.9) == -1.9
+        assert validator.validate(10.0) == 10.0
+
+        # Invalid input
+        for input_value in [-2, 11, -1.91, 10.1]:
+            with pytest.raises(NumberRangeError) as exception_info:
+                validator.validate(input_value)
+            assert exception_info.value.to_dict() == {
+                'code': 'number_range_error',
+                'min_value': -1.9,
+                'max_value': 10.0,
+            }
 
     # Invalid validator parameters
 
