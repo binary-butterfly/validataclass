@@ -19,12 +19,20 @@ class FloatValidator(Validator):
     """
     Validator for float values (IEEE 754), optionally with value range requirements.
 
+    By default, input values must be of type `float`, so integers like `123` will not be accepted. Set the parameter
+    `allow_integers=True` to allow integers as well and convert them to floats, e.g. the integer `123` would be converted
+    to the float `123.0`.
+
     Only allows finite value (i.e. neither Infinity nor NaN).
 
     Examples:
 
     ```
+    # Allows any (finite) float value, e.g. 1.234, -0.123, 0.0
     FloatValidator()
+
+    # Accepts integers as input, e.g. 123 would be converted to 123.0
+    FloatValidator(allow_integers=True)
 
     # Only allow zero or positive numbers
     FloatValidator(min_value=0)
@@ -45,13 +53,22 @@ class FloatValidator(Validator):
     min_value: Optional[float] = None
     max_value: Optional[float] = None
 
-    def __init__(self, *, min_value: Optional[Union[float, int]] = None, max_value: Optional[Union[float, int]] = None):
+    # Whether to accept integers and convert them to floats
+    allow_integers: bool = False
+
+    def __init__(
+        self, *,
+        min_value: Optional[Union[float, int]] = None,
+        max_value: Optional[Union[float, int]] = None,
+        allow_integers: bool = False,
+    ):
         """
         Create a FloatValidator with optional value range.
 
         Parameters:
             min_value: Float or integer, specifies lowest value an input float may have (default: None, no minimum value)
             max_value: Float or integer, specifies highest value an input float may have (default: None, no maximum value)
+            allow_integers: Boolean, if True, integers are accepted and converted to floats (default: False)
         """
         # Check parameter validity
         if min_value is not None and max_value is not None and min_value > max_value:
@@ -59,19 +76,23 @@ class FloatValidator(Validator):
 
         self.min_value = float(min_value) if min_value is not None else None
         self.max_value = float(max_value) if max_value is not None else None
+        self.allow_integers = allow_integers
 
     def validate(self, input_data: Any) -> float:
         """
         Validate type (and optionally value) of input data. Returns unmodified float.
         """
-        self._ensure_type(input_data, float)
+        self._ensure_type(input_data, [float, int] if self.allow_integers else float)
+
+        # If allow_integers is True, integers must be converted to floats
+        input_float = float(input_data)
 
         # Ensure float is finite (i.e. neither Infinity nor NaN)
-        if not math.isfinite(input_data):
+        if not math.isfinite(input_float):
             raise NonFiniteNumberError()
 
         # Check if value is in allowed range
-        if (self.min_value is not None and input_data < self.min_value) or (self.max_value is not None and input_data > self.max_value):
+        if (self.min_value is not None and input_float < self.min_value) or (self.max_value is not None and input_float > self.max_value):
             raise NumberRangeError(min_value=self.min_value, max_value=self.max_value)
 
-        return float(input_data)
+        return input_float

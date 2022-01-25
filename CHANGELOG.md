@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Official support for Python 3.10.
-- `IntegerValidator`: Add optional boolean parameter `allow_strings` to accept integers as strings (e.g. `"123"`).
+- `IntegerValidator`: Add optional boolean parameter `allow_strings` to accept integer strings as input (e.g. `"123"`).
+- `FloatValidator`: Add optional boolean parameter `allow_integers`.
+- `FloatToDecimalValidator`: Add optional boolean parameter `allow_integers`.
 
 ### Fixed
 
