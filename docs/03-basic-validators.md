@@ -268,7 +268,7 @@ validator = IntegerValidator()
 validator.validate(0)     # will return 0
 validator.validate(123)   # will return 123
 validator.validate(-123)  # will return -123
-validator.validate("1")   # will raise InvalidTypeError (use DecimalValidator instead)
+validator.validate("1")   # will raise InvalidTypeError (use allow_strings=True or a DecimalValidator)
 
 # allow_strings parameter: Accept integers also as strings
 validator = IntegerValidator(allow_strings=True)
@@ -327,14 +327,14 @@ validator.validate(1.234)   # will return 1.234 (as float)
 validator.validate(-0.001)  # will return -0.001
 validator.validate(1.0)     # will return 1.0
 validator.validate(1)       # will raise InvalidTypeError (use allow_integers=True or an IntegerValidator)
-validator.validate("1.23")  # will raise InvalidTypeError (use DecimalValidator instead)
+validator.validate("1.23")  # will raise InvalidTypeError (use DecimalValidator or FloatToDecimalValidator instead)
 
 # allow_integers parameter: Accept integers and convert them to floats
 validator = FloatValidator(allow_integers=True)
 validator.validate(1.234)   # will return 1.234
 validator.validate(42.0)    # will return 42.0
 validator.validate(42)      # will return 42.0 (float, not integer!)
-validator.validate("1.23")  # will still raise InvalidTypeError (use DecimalValidator instead)
+validator.validate("1.23")  # will still raise InvalidTypeError
 
 # Value range: Only allow values from -1.0 to +1.0
 validator = FloatValidator(min_value=-1.0, max_value=1.0)
@@ -423,7 +423,7 @@ from validataclass.validators import FloatToDecimalValidator
 # Default options: Accepts any finite float value
 validator = FloatToDecimalValidator()
 validator.validate(1.234)   # will return Decimal('1.234')
-validator.validate(1)       # will raise InvalidTypeError (use allow_integers=True or an IntegerValidator)
+validator.validate(1)       # will raise InvalidTypeError (use allow_integers=True or a IntegerValidator)
 validator.validate("1.23")  # will raise InvalidTypeError (use allow_strings=True or an DecimalValidator)
 
 # allow_integers parameter: Accept both floats and integers as input

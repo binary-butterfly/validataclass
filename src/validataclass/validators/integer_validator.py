@@ -41,7 +41,7 @@ class IntegerValidator(Validator):
     an `IntegerValidator(max_value=10)` allows all values less than or equal to 10. This includes ANY negative number though,
     so for example `-1234567` would be valid input!
 
-    Valid input: `int` (and `str` if `allow_strings=True`)
+    Valid input: `int` (also `str` if `allow_strings=True`)
     Output: `int`
     """
 

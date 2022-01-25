@@ -45,7 +45,7 @@ class FloatValidator(Validator):
     a `FloatValidator(max_value=10)` allows all values less than or equal to 10. This includes ANY negative number though, so
     for example `-12345.67` would be valid input!
 
-    Valid input: `float`
+    Valid input: `float` (also `int` if `allow_integers=True`)
     Output: `float`
     """
 

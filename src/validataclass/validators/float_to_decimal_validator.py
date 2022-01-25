@@ -57,7 +57,7 @@ class FloatToDecimalValidator(FloatValidator):
     FloatToDecimalValidator(output_places=2)
     ```
 
-    Valid input: `float`
+    Valid input: `float` (also `int` if `allow_integers=True`; also `str` if `allow_strings=True`)
     Output: `decimal.Decimal`
     """
 
