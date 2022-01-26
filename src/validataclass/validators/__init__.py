@@ -21,6 +21,7 @@ from .any_of_validator import AnyOfValidator
 from .enum_validator import EnumValidator
 from .decimal_validator import DecimalValidator
 from .float_to_decimal_validator import FloatToDecimalValidator
+from .numeric_validator import NumericValidator
 from .regex_validator import RegexValidator
 from .date_validator import DateValidator
 from .time_validator import TimeValidator, TimeFormat
