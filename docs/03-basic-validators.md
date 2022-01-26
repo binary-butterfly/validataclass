@@ -398,18 +398,16 @@ validator.validate("100000.00")  # will return Decimal('100000.000')
 ### FloatToDecimalValidator
 
 The `FloatToDecimalValidator` accepts **float** values (like the `FloatValidator`) and **converts** them to `Decimal`
-objects (like the `DecimalValidator`).
+objects (like the `DecimalValidator`). Internally it is based on the `DecimalValidator`.
 
-Like the `FloatValidator`, this validator only accepts floats by default, but can also accept integers by setting the
-parameter `allow_integers=True`. For example, the integer `42` will result in a `Decimal('42')`, while the float `42.0`
-results in a `Decimal('42.0')`.
+By default, this validator only accepts floats as input. Optionally it can also accept integers by setting the parameter
+`allow_integers=True`, e.g. the integer `42` will then result in a `Decimal('42')`, while the float `42.0` results in a
+`Decimal('42.0')`. You can also set the parameter `allow_strings=True` to allow decimal strings, which will be parsed
+by the underlying `DecimalValidator` (e.g. `"1.23"` will result in a `Decimal('1.23')`).
 
-Additionally, by setting the parameter `allow_strings=True` the validator will accept decimal strings, which will then
-be parsed internally using a `DecimalValidator` (e.g. `"1.23"` will result in a `Decimal('1.23')`).
-
-Like the `DecimalValidator` it supports the optional parameters `min_value`, `max_value` (which can both be specified
-using floats, integers, `Decimal` or decimal strings) and `output_places`. However, it **does not** support the
-`min_places` and `max_places` parameters (those are technically not possible with floats)!
+Like the `DecimalValidator` it supports the optional parameters `min_value` and `max_value` (specified as `Decimal`,
+decimal strings, floats or integers), as well as `output_places`. However, it **does not** support the `min_places` and
+max_places` parameters (those are technically not possible with floats)!
 
 **Note:** Due to the way that floats work, the resulting decimals can have inaccuracies! It is recommended to use
 `DecimalValidator` with decimal strings instead of floats as input whenever possible. This validator mainly exists for

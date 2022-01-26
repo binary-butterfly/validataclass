@@ -113,8 +113,8 @@ class FloatToDecimalValidatorTest:
 
         # Construct error dict with min_value and/or max_value, depending on which is specified
         expected_error_dict = {'code': 'number_range_error'}
-        expected_error_dict.update({'max_value': float(max_value)} if max_value is not None else {})
-        expected_error_dict.update({'min_value': float(min_value)} if min_value is not None else {})
+        expected_error_dict.update({'max_value': str(max_value)} if max_value is not None else {})
+        expected_error_dict.update({'min_value': str(min_value)} if min_value is not None else {})
 
         for input_data in input_data_list:
             with pytest.raises(NumberRangeError) as exception_info:
@@ -170,8 +170,8 @@ class FloatToDecimalValidatorTest:
                 validator.validate(input_value)
             assert exception_info.value.to_dict() == {
                 'code': 'number_range_error',
-                'min_value': -1.9,
-                'max_value': 10.0,
+                'min_value': '-1.9',
+                'max_value': '10.0',
             }
 
     # Test optional allow_strings parameter
