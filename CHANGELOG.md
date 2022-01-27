@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FloatValidator`: Add optional boolean parameter `allow_integers`.
 - `FloatToDecimalValidator`: Add optional boolean parameters `allow_integers` and `allow_strings`. Also, minimum and
   maximum values can now be specified as floats, integers, `Decimal` or decimal strings. 
+- `NumericValidator`: New validator as shortcut for `FloatToDecimalValidator` with `allow_integers` and `allow_strings`.
+
+### Changed
+
+- `FloatToDecimalValidator`: Reimplemented validator, based on `DecimalValidator` instead of `FloatValidator`.
+  - `NumberRangeError` exceptions raised by this validator now consistently use decimal strings for min/max values.
 
 ### Fixed
 

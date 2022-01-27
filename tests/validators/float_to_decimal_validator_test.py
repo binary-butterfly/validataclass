@@ -5,8 +5,10 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
+
 import pytest
 
+from tests.test_utils import unpack_params
 from validataclass.exceptions import RequiredValueError, InvalidTypeError, NumberRangeError, NonFiniteNumberError, \
     InvalidDecimalError, InvalidValidatorOptionException
 from validataclass.validators import FloatToDecimalValidator
@@ -15,19 +17,19 @@ from validataclass.validators import FloatToDecimalValidator
 class FloatToDecimalValidatorTest:
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_decimal_string', [
-            (0.0, '0'),
+        'input_data, expected_decimal_str', [
+            (0.0, '0.0'),
             (1.234, '1.234'),
             (-0.001, '-0.001'),
             (-123456.789, '-123456.789'),
         ]
     )
-    def test_valid_float(input_data, expected_decimal_string):
+    def test_valid_float(input_data, expected_decimal_str):
         """ Test FloatToDecimalValidator with valid floats. """
         validator = FloatToDecimalValidator()
         decimal = validator.validate(input_data)
         assert type(decimal) is Decimal
-        assert decimal == Decimal(expected_decimal_string)
+        assert str(decimal) == expected_decimal_str
 
     @staticmethod
     def test_invalid_none():
@@ -62,70 +64,103 @@ class FloatToDecimalValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_value, max_value, input_data, expected_decimal_string', [
+        'min_value, max_value, input_data, expected_decimal_str', [
             # min_value only (as float)
-            (3.0, None, 3.0, '3.0'),
-            (3.0, None, 3.1, '3.1'),
+            *unpack_params(
+                3.0, None,
+                [
+                    (3.0, '3.0'),
+                    (3.001, '3.001'),
+                    (9.999, '9.999'),
+                ],
+            ),
+
             # max_value only (as float)
-            (None, 10.0, -999.0, '-999.0'),
-            (None, 10.0, 9.9, '9.9'),
-            (None, 10.0, 10.0, '10.0'),
+            *unpack_params(
+                None, 10.0,
+                [
+                    (-999.0, '-999.0'),
+                    (9.9, '9.9'),
+                    (10.0, '10.0'),
+                ],
+            ),
+
             # min_value and max_value (as int)
-            (0, 1, 0.0, '0.0'),
-            (0, 1, 0.9, '0.9'),
-            (0, 1, 1.0, '1.0'),
-            # min_value and max_value (as Decimal)
-            (Decimal('-1.0'), Decimal('1.0'), -1.0, '-1.0'),
-            (Decimal('-1.0'), Decimal('1.0'), 0.9, '0.9'),
-            (Decimal('-1.0'), Decimal('1.0'), 1.0, '1.0'),
-            # min_value and max_value (as str)
-            ('-1.0', '1.0', -1.0, '-1.0'),
-            ('-1.0', '1.0', 0.9, '0.9'),
-            ('-1.0', '1.0', 1.0, '1.0'),
+            *unpack_params(
+                0, 1,
+                [
+                    (0.0, '0.0'),
+                    (0.001, '0.001'),
+                    (0.999, '0.999'),
+                    (1.0, '1.0'),
+                ],
+            ),
+
+            # min_value and max_value (as Decimal and str)
+            *unpack_params(
+                Decimal('-1.0'), '1.0',
+                [
+                    (-1.0, '-1.0'),
+                    (-0.999, '-0.999'),
+                    (0.999, '0.999'),
+                    (1.0, '1.0'),
+                ],
+            ),
         ]
     )
-    def test_float_value_range_valid(min_value, max_value, input_data, expected_decimal_string):
-        """ Test FloatToDecimalValidator with range requirements with a list of valid floats. """
+    def test_float_value_range_valid(min_value, max_value, input_data, expected_decimal_str):
+        """ Test FloatToDecimalValidator with range requirements with valid floats. """
         validator = FloatToDecimalValidator(min_value=min_value, max_value=max_value)
         output_value = validator.validate(input_data)
-
         assert type(output_value) is Decimal
-        assert output_value == Decimal(expected_decimal_string)
+        assert str(output_value) == expected_decimal_str
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_value, max_value, input_data_list', [
+        'min_value, max_value, input_data', [
             # min_value only (as float)
-            (3.0, None, [2.999, 2.9, -3.0]),
+            *unpack_params(
+                3.0, None,
+                [2.999, 2.9, -3.0],
+            ),
+
             # max_value only (as float)
-            (None, 10.0, [10.001, 11.0, 999.0]),
+            *unpack_params(
+                None, 10.0,
+                [10.001, 11.0, 999.0],
+            ),
+
             # min_value and max_value (as int)
-            (0, 1, [-1.0, -0.001, 1.001, 1.1]),
-            # min_value and max_value (as Decimal)
-            (Decimal('-1.0'), Decimal('1.0'), [-1.1, 1.1]),
-            # min_value and max_value (as str)
-            ('-1.0', '1.0', [-1.1, 1.1]),
+            *unpack_params(
+                0, 1,
+                [-1.0, -0.001, 1.001, 1.1],
+            ),
+
+            # min_value and max_value (as Decimal and str)
+            *unpack_params(
+                Decimal('-1.0'), '1.0',
+                [-1.1, -1.001, 1.001, 1.1],
+            ),
         ]
     )
-    def test_float_value_range_invalid(min_value, max_value, input_data_list):
-        """ Test FloatToDecimalValidator with range requirements with a list of invalid floats. """
+    def test_float_value_range_invalid(min_value, max_value, input_data):
+        """ Test FloatToDecimalValidator with range requirements with invalid floats. """
         validator = FloatToDecimalValidator(min_value=min_value, max_value=max_value)
 
         # Construct error dict with min_value and/or max_value, depending on which is specified
         expected_error_dict = {'code': 'number_range_error'}
-        expected_error_dict.update({'max_value': float(max_value)} if max_value is not None else {})
-        expected_error_dict.update({'min_value': float(min_value)} if min_value is not None else {})
+        expected_error_dict.update({'max_value': str(max_value)} if max_value is not None else {})
+        expected_error_dict.update({'min_value': str(min_value)} if min_value is not None else {})
 
-        for input_data in input_data_list:
-            with pytest.raises(NumberRangeError) as exception_info:
-                validator.validate(input_data)
-            assert exception_info.value.to_dict() == expected_error_dict
+        with pytest.raises(NumberRangeError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == expected_error_dict
 
     # Test optional allow_integers parameter
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_decimal_string', [
+        'input_data, expected_decimal_str', [
             # Floats should still work of course
             (1.234, '1.234'),
             (-123.4, '-123.4'),
@@ -135,12 +170,12 @@ class FloatToDecimalValidatorTest:
             (-123, '-123'),
         ]
     )
-    def test_allow_integers_valid(input_data, expected_decimal_string):
+    def test_allow_integers_valid(input_data, expected_decimal_str):
         """ Test FloatToDecimalValidator with allow_integers=True with valid input (both as floats and integers). """
         validator = FloatToDecimalValidator(allow_integers=True)
         decimal = validator.validate(input_data)
         assert type(decimal) is Decimal
-        assert decimal == Decimal(expected_decimal_string)
+        assert str(decimal) == expected_decimal_str
 
     @staticmethod
     def test_allow_integers_with_invalid_type():
@@ -159,10 +194,10 @@ class FloatToDecimalValidatorTest:
         validator = FloatToDecimalValidator(min_value=-1.9, max_value=10.0, allow_integers=True)
 
         # Valid input
-        assert validator.validate(-1) == Decimal('-1')
-        assert validator.validate(10) == Decimal('10')
-        assert validator.validate(-1.9) == Decimal('-1.9')
-        assert validator.validate(10.0) == Decimal('10.0')
+        assert str(validator.validate(-1)) == '-1'
+        assert str(validator.validate(10)) == '10'
+        assert str(validator.validate(-1.9)) == '-1.9'
+        assert str(validator.validate(10.0)) == '10.0'
 
         # Invalid input
         for input_value in [-2, 11, -1.91, 10.1]:
@@ -170,15 +205,15 @@ class FloatToDecimalValidatorTest:
                 validator.validate(input_value)
             assert exception_info.value.to_dict() == {
                 'code': 'number_range_error',
-                'min_value': -1.9,
-                'max_value': 10.0,
+                'min_value': '-1.9',
+                'max_value': '10.0',
             }
 
     # Test optional allow_strings parameter
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_decimal_string', [
+        'input_data, expected_decimal_str', [
             # Floats should still work of course
             (1.234, '1.234'),
             (-123.4, '-123.4'),
@@ -189,12 +224,12 @@ class FloatToDecimalValidatorTest:
             ('-1.23', '-1.23'),
         ]
     )
-    def test_allow_strings_valid(input_data, expected_decimal_string):
+    def test_allow_strings_valid(input_data, expected_decimal_str):
         """ Test FloatToDecimalValidator with allow_strings=True with valid input (both as floats and strings). """
         validator = FloatToDecimalValidator(allow_strings=True)
         decimal = validator.validate(input_data)
         assert type(decimal) is Decimal
-        assert decimal == Decimal(expected_decimal_string)
+        assert str(decimal) == expected_decimal_str
 
     @staticmethod
     @pytest.mark.parametrize('input_data', ['', 'banana', '1234x', '$123', '1,234', 'Infinity', 'NaN', '.', '1e3'])
@@ -224,8 +259,8 @@ class FloatToDecimalValidatorTest:
         validator = FloatToDecimalValidator(min_value='-1.9', max_value='10.0', allow_strings=True)
 
         # Valid input
-        assert validator.validate('-1.9') == Decimal('-1.9')
-        assert validator.validate('10.0') == Decimal('10.0')
+        assert str(validator.validate('-1.9')) == '-1.9'
+        assert str(validator.validate('10.0')) == '10.0'
 
         # Invalid input
         for input_value in ['-1.91', '10.1']:
@@ -241,7 +276,7 @@ class FloatToDecimalValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_decimal_string', [
+        'input_data, expected_decimal_str', [
             # Floats
             (0.0, '0.0'),
             (1.234, '1.234'),
@@ -256,12 +291,12 @@ class FloatToDecimalValidatorTest:
             ('-123.0', '-123.0'),
         ]
     )
-    def test_allow_integers_and_strings_valid(input_data, expected_decimal_string):
+    def test_allow_integers_and_strings_valid(input_data, expected_decimal_str):
         """ Test FloatToDecimalValidator with allow_integers=True AND allow_strings=True with valid input. """
         validator = FloatToDecimalValidator(allow_integers=True, allow_strings=True)
         decimal = validator.validate(input_data)
         assert type(decimal) is Decimal
-        assert decimal == Decimal(expected_decimal_string)
+        assert str(decimal) == expected_decimal_str
 
     @staticmethod
     def test_allow_integers_and_strings_with_invalid_strings():
@@ -288,7 +323,7 @@ class FloatToDecimalValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'output_places, input_data, expected_output', [
+        'output_places, input_data, expected_decimal_str', [
             # output_places=0
             (0, 0.0, '0'),
             (0, -42.0, '-42'),
@@ -303,10 +338,12 @@ class FloatToDecimalValidatorTest:
             (3, 123.456789, '123.457'),
         ]
     )
-    def test_output_places(output_places, input_data, expected_output):
+    def test_output_places(output_places, input_data, expected_decimal_str):
         """ Test FloatToDecimalValidator with output_places parameter (fixed number of decimal places in output value). """
         validator = FloatToDecimalValidator(output_places=output_places)
-        assert validator.validate(input_data) == Decimal(expected_output)
+        decimal = validator.validate(input_data)
+        assert type(decimal) is Decimal
+        assert str(decimal) == expected_decimal_str
 
     # Invalid validator parameters
 

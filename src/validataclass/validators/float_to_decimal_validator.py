@@ -4,31 +4,29 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from decimal import Decimal, InvalidOperation
-from typing import Any, Optional, Union
+import math
+from decimal import Decimal
+from typing import Any, Optional, Union, List
 
+from validataclass.exceptions import NonFiniteNumberError
 from .decimal_validator import DecimalValidator
-from .float_validator import FloatValidator
-from validataclass.exceptions import InvalidDecimalError, InvalidValidatorOptionException
 
 __all__ = [
     'FloatToDecimalValidator',
 ]
 
 
-class FloatToDecimalValidator(FloatValidator):
+class FloatToDecimalValidator(DecimalValidator):
     """
-    Validator that converts float values (IEEE 754) to `decimal.Decimal` objects. Sub class of `FloatValidator`.
+    Validator that converts float values (IEEE 754) to `decimal.Decimal` objects. Sub class of `DecimalValidator`.
 
-    Optionally a number range (minimum/maximum float value) and the `allow_integers` parameter can be specified, which
-    will be handled by the underlying FloatValidator.
+    Optionally a number range can be specified using the parameters 'min_value' and 'max_value' (specified as `Decimal`,
+    decimal strings, floats or integers), as well as a fixed number of decimal places in the output value using
+    'output_places'. These parameters will be passed to the underlying `DecimalValidator`.
 
     By default, only floats are allowed as input type. Set `allow_integers=True` to also accept integers as input (e.g.
     `1` results in a `Decimal('1')`). Furthermore, with `allow_strings=True` the validator will also accept decimal
-    strings, which will then be parsed using a `DecimalValidator` (e.g. `"1.23"` results in a `Decimal('1.23')`).
-
-    Also, similar to `DecimalValidator`, a fixed number of decimal places in the output value can be specified, which
-    will result in rounding according to the current decimal context (see `decimal.getcontext()`).
+    strings exactly like the `DecimalValidator` (e.g. `"1.23"` results in a `Decimal('1.23')`).
 
     NOTE: Due to the way that floats work, the resulting decimals can have inaccuracies! It is recommended to use
     `DecimalValidator` with decimal *strings* as input data instead of using float input (e.g. strings like `"1.234"`
@@ -51,7 +49,7 @@ class FloatToDecimalValidator(FloatValidator):
     FloatToDecimalValidator(min_value=0)
 
     # Only allow values from -0.5 to 0.5
-    FloatToDecimalValidator(min_value=-0.5, max_value=0.5)
+    FloatToDecimalValidator(min_value='-0.5', max_value='0.5')
 
     # Set fixed number of output decimal places (e.g. 1.0 -> '1.00', 1.2345 -> 1.23, 1.999 -> '2.00')
     FloatToDecimalValidator(output_places=2)
@@ -61,78 +59,67 @@ class FloatToDecimalValidator(FloatValidator):
     Output: `decimal.Decimal`
     """
 
-    # Quantum used in `.quantize()` to set a fixed number of decimal places (from constructor argument output_places)
-    output_quantum: Optional[Decimal] = None
-
-    # Whether to allow decimal strings as input (uses a DecimalValidator for strings)
+    # Whether to allow integers and/or decimal strings as input
+    allow_integers: bool = False
     allow_strings: bool = False
-    decimal_validator: Optional[DecimalValidator] = None
+
+    # List of allowed input types
+    allowed_types: List[type]
 
     def __init__(
         self, *,
-        min_value: Optional[Union[float, int, Decimal, str]] = None,
-        max_value: Optional[Union[float, int, Decimal, str]] = None,
+        min_value: Optional[Union[Decimal, str, float, int]] = None,
+        max_value: Optional[Union[Decimal, str, float, int]] = None,
+        output_places: Optional[int] = None,
         allow_integers: bool = False,
         allow_strings: bool = False,
-        output_places: Optional[int] = None,
     ):
         """
         Create a FloatToDecimalValidator with optional value range and optional number of decimal places in output value.
 
-        The parameters 'min_value', 'max_value' and 'allow_integers' are passed to the underlying FloatValidator.
-        The parameter 'output_places' behaves similar to the same parameter from DecimalValidator.
+        The parameters 'min_value', 'max_value' and 'output_places' are passed to the underlying DecimalValidator.
+
+        The parameters 'allow_integers' and 'allow_strings' can be used to extend the allowed input types. Strings, if
+        accepted, will be simply passed to the DecimalValidator.
 
         Parameters:
-            min_value: Float, int, Decimal or str, specifies lowest value an input float may have (default: None, no minimum value)
-            max_value: Float, int, Decimal or str, specifies highest value an input float may have (default: None, no maximum value)
+            min_value: Decimal, str, float or int, specifies lowest value an input float may have (default: None, no minimum value)
+            max_value: Decimal, str, float or int, specifies highest value an input float may have (default: None, no maximum value)
+            output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
             allow_integers: Boolean, if True, integers are accepted as input (default: False)
             allow_strings: Boolean, if True, decimal strings are accepted and will be parsed by a DecimalValidator (default: False)
-            output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
         """
-        # Pass min_value/max_value to base FloatValidator which will handle the number range check
+        # Initialize base DecimalValidator
         super().__init__(
-            min_value=float(min_value) if min_value is not None else None,
-            max_value=float(max_value) if max_value is not None else None,
-            allow_integers=allow_integers,
+            min_value=str(min_value) if type(min_value) in [float, int] else min_value,
+            max_value=str(max_value) if type(max_value) in [float, int] else max_value,
+            output_places=output_places,
         )
 
-        # Set output "quantum" (the output decimal will have the same number of decimal places as this value)
-        if output_places is not None:
-            if output_places < 0:
-                raise InvalidValidatorOptionException('Parameter "output_places" cannot be negative.')
-            self.output_quantum = Decimal('0.1') ** output_places
-
-        # Create a DecimalValidator for validating decimal strings (if enabled)
+        # Save parameters
+        self.allow_integers = allow_integers
         self.allow_strings = allow_strings
+
+        # Prepare list of allowed input types
+        self.allowed_types = [float]
+        if allow_integers:
+            self.allowed_types.append(int)
         if allow_strings:
-            self.decimal_validator = DecimalValidator(min_value=min_value, max_value=max_value, output_places=output_places)
+            self.allowed_types.append(str)
 
     def validate(self, input_data: Any) -> Decimal:
         """
-        Validate input data as a float, check number range, then convert it to a Decimal object.
+        Validate input data as a float (optionally also as integer or string), then convert it to a Decimal object.
         """
-        # If enabled, parse strings using DecimalValidator
-        if self.allow_strings:
-            self._ensure_type(input_data, [float, int, str] if self.allow_integers else [float, str])
+        # Check type of input data
+        self._ensure_type(input_data, self.allowed_types)
 
-            if type(input_data) is str:
-                return self.decimal_validator.validate(input_data)
+        # In case of floats, ensure the value is finite (i.e. neither Infinity nor NaN)
+        if type(input_data) is float and not math.isfinite(input_data):
+            raise NonFiniteNumberError()
 
-        # First, validate input data as a float (ensures the number is finite and in the min_value/max_value range).
-        # We will continue with the original input value instead of using the output of the FloatValidator, because it
-        # converts integers to floats (when allow_integers=True), which would result in a Decimal with a trailing '.0'
-        # instead of a Decimal without decimal places. E.g. the integer 123 should result in a smooth Decimal('123').
-        super().validate(input_data)
+        # Convert floats and integers to decimal strings first
+        input_str = str(input_data)
 
-        # Convert float (to string) to Decimal
-        try:
-            # Cast to string first to get more sensible values (e.g. '1.234' instead of '1.233999999999999985789145...')
-            decimal_out = Decimal(str(input_data))
-        except InvalidOperation:  # pragma: nocover
-            raise InvalidDecimalError()
-
-        # Set fixed number of decimal places (if wanted)
-        if self.output_quantum is not None:
-            return decimal_out.quantize(self.output_quantum)
-        else:
-            return decimal_out
+        # Parse decimal strings using the base DecimalValidator
+        return super().validate(input_str)

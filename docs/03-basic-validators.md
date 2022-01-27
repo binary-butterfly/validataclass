@@ -33,8 +33,9 @@ A much more useful distinction is to categorize the validators according to thei
 - Numeric types:
   - `IntegerValidator`: Validates integers (as `int`, not as `str`)
   - `FloatValidator`: Validates floats (as `float`, not as `str`)
-  - `DecimalValidator`: Validates decimal **strings** (e.g. `"1.23"`) to `decimal.decimal` **objects**
-  - `FloatToDecimalValidator`: Validates **floats** (e.g. `1.23`) to `decimal.decimal` **objects**
+  - `DecimalValidator`: Validates decimal **strings** (e.g. `"1.23"`) to `decimal.decimal` objects
+  - `FloatToDecimalValidator`: Validates floats (e.g. `1.23`) to `decimal.decimal` objects
+  - `NumericValidator`: Validates integers, floats **and** decimal strings to `decimal.Decimal` objects
 
 - Date and time types:
   - `DateValidator`: Validates date **strings** (e.g. `"2021-12-31"`) to `datetime.date` **objects**
@@ -243,8 +244,8 @@ validator.validate("https://example.com")  # will raise InvalidUrlError(reason='
 
 The following validators parse different types of numbers, namely **integers**, **floats** and **decimals**.
 
-In most cases it is recommended to use either `IntegerValidator` or `DecimalValidator`. Floats are error-prone due to how binary floating
-point arithmetics work, while integers and decimals are always precise.
+In most cases it is recommended to use either `IntegerValidator` or `DecimalValidator`. Floats are error-prone due to
+how binary floating point arithmetics work, while integers and decimals are always precise.
 
 
 ### IntegerValidator
@@ -398,18 +399,20 @@ validator.validate("100000.00")  # will return Decimal('100000.000')
 ### FloatToDecimalValidator
 
 The `FloatToDecimalValidator` accepts **float** values (like the `FloatValidator`) and **converts** them to `Decimal`
-objects (like the `DecimalValidator`).
+objects (like the `DecimalValidator`). Internally it is based on the `DecimalValidator`.
 
-Like the `FloatValidator`, this validator only accepts floats by default, but can also accept integers by setting the
-parameter `allow_integers=True`. For example, the integer `42` will result in a `Decimal('42')`, while the float `42.0`
-results in a `Decimal('42.0')`.
+By default, this validator only accepts floats as input. Optionally it can also accept integers by setting the parameter
+`allow_integers=True`, e.g. the integer `42` will then result in a `Decimal('42')`, while the float `42.0` results in a
+`Decimal('42.0')`. You can also set the parameter `allow_strings=True` to allow decimal strings, which will be parsed
+by the underlying `DecimalValidator` (e.g. `"1.23"` will result in a `Decimal('1.23')`).
 
-Additionally, by setting the parameter `allow_strings=True` the validator will accept decimal strings, which will then
-be parsed internally using a `DecimalValidator` (e.g. `"1.23"` will result in a `Decimal('1.23')`).
+If you want to accept all three numeric input types (integers, floats and decimal strings), you can simply combine
+`allow_integers=True` and `allow_strings=True`. As a shortcut for this, you can also use the `NumericValidator`, which
+basically is just a `FloatToDecimalValidator` with those two options always enabled.
 
-Like the `DecimalValidator` it supports the optional parameters `min_value`, `max_value` (which can both be specified
-using floats, integers, `Decimal` or decimal strings) and `output_places`. However, it **does not** support the
-`min_places` and `max_places` parameters (those are technically not possible with floats)!
+Like the `DecimalValidator` it supports the optional parameters `min_value` and `max_value` (specified as `Decimal`,
+decimal strings, floats or integers), as well as `output_places`. However, it **does not** support the `min_places` and
+max_places` parameters (those are technically not possible with floats)!
 
 **Note:** Due to the way that floats work, the resulting decimals can have inaccuracies! It is recommended to use
 `DecimalValidator` with decimal strings instead of floats as input whenever possible. This validator mainly exists for
@@ -444,6 +447,40 @@ validator.validate(0.0)     # will return Decimal('0.000')
 validator.validate(0.1234)  # will return Decimal('0.123')
 validator.validate(0.1235)  # will return Decimal('0.124')
 validator.validate(1.0)     # will return Decimal('1.000')
+```
+
+
+### NumericValidator
+
+The `NumericValidator` accepts numeric values as integers, floats **and** decimal strings and converts all of them to
+`decimal.Decimal` objects.
+
+This validator is a special version of the `FloatToDecimalValidator` with the options `allow_integers` and `allow_strings`
+always enabled, and is intended as a shortcut.
+
+Like the `FloatToDecimalValidator`, the `NumericValidator` supports the optional parameters `min_value` and `max_value`
+to specify the allowed value range, as well as `output_places` to set a fixed number of decimal places in the output
+value.
+
+**Examples:**
+
+```python
+from validataclass.validators import NumericValidator
+
+# Accept any numeric value (integers, floats and decimal strings)
+# This validator is equivalent to: FloatToDecimalValidator(allow_integers=True, allow_strings=True) 
+validator = NumericValidator()
+validator.validate(123)      # will return Decimal('123')
+validator.validate(1.234)    # will return Decimal('1.234')
+validator.validate("1.234")  # will return Decimal('1.234')
+
+# Number range and output places: Allow values from 0 to 00, always output with 2 decimal places
+validator = NumericValidator(min_value=0, max_value=10, output_places=2)
+validator.validate(0)        # will return Decimal('0.00')
+validator.validate(0.0)      # will return Decimal('0.00')
+validator.validate("0.000")  # will return Decimal('0.00')
+validator.validate("1.234")  # will return Decimal('1.23')
+validator.validate("1.235")  # will return Decimal('1.24')
 ```
 
 
