@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
+
 import pytest
 
 from tests.test_utils import unpack_params
