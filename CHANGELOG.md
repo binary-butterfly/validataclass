@@ -6,28 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## Unreleased
+## [0.4.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.4.0) - 2022-02-01
 
-[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.3.2...HEAD)
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.3.2...0.4.0)
+
 
 ### Added
 
-- Official support for Python 3.10.
-- `IntegerValidator`: Add optional boolean parameter `allow_strings` to accept integer strings as input (e.g. `"123"`).
-- `FloatValidator`: Add optional boolean parameter `allow_integers`.
+- Official support for Python 3.10. [#30]
+- `IntegerValidator`: Add optional boolean parameter `allow_strings` to accept integer strings as input (e.g. `"123"`). [#31]
+- `FloatValidator`: Add optional boolean parameter `allow_integers`. [#32]
 - `FloatToDecimalValidator`: Add optional boolean parameters `allow_integers` and `allow_strings`. Also, minimum and
-  maximum values can now be specified as floats, integers, `Decimal` or decimal strings. 
-- `NumericValidator`: New validator as shortcut for `FloatToDecimalValidator` with `allow_integers` and `allow_strings`.
+  maximum values can now be specified as floats, integers, `Decimal` or decimal strings. [#32]
+- `NumericValidator`: New validator as shortcut for `FloatToDecimalValidator` with `allow_integers` and `allow_strings`. [#33]
+- `StringValidator`: Added some unit tests for strings with unicode characters (including emoji). [#34]
 
 ### Changed
 
-- `FloatToDecimalValidator`: Reimplemented validator, based on `DecimalValidator` instead of `FloatValidator`.
+- `FloatToDecimalValidator`: Reimplemented validator, based on `DecimalValidator` instead of `FloatValidator`. [#33]
   - `NumberRangeError` exceptions raised by this validator now consistently use decimal strings for min/max values.
 
 ### Fixed
 
-- Minor fixes for `Optional` type hints.
-- Add missing export for `T_Dataclass` in package `validataclass.validators`.
+- Minor fixes for `Optional` type hints. [#30]
+- Add missing export for `T_Dataclass` in package `validataclass.validators`. [#30]
+
+[#30]: https://github.com/binary-butterfly/validataclass/pull/30
+[#31]: https://github.com/binary-butterfly/validataclass/pull/31
+[#32]: https://github.com/binary-butterfly/validataclass/pull/32
+[#33]: https://github.com/binary-butterfly/validataclass/pull/33
+[#34]: https://github.com/binary-butterfly/validataclass/pull/34
 
 
 ## [0.3.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.2) - 2021-11-11
