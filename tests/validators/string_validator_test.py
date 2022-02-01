@@ -40,6 +40,8 @@ class StringValidatorTest:
             'unit test banana',
             '1234567890',
             '!@#$%^&*()_+-={}[]<>|\\',
+            'üñí©óðé',  # Some unicode characters
+            '🍌🍍🍉🥑',  # Some emoji
         ]
     )
     def test_valid_string(input_data):
@@ -50,14 +52,30 @@ class StringValidatorTest:
     # Test length requirement checks: Only min_length specified
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['abc', 'banana', '1234567890abcdef'])
+    @pytest.mark.parametrize(
+        'input_data', [
+            'abc',
+            'banana',
+            '1234567890abcdef',
+            'äöü',
+            '🍌🍌🍌',
+        ])
     def test_string_min_length_valid(input_data):
         """ Test StringValidator with minimum length requirement with a list of valid strings. """
         validator = StringValidator(min_length=3)
         assert validator.validate(input_data) == input_data
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'a', 'ab'])
+    @pytest.mark.parametrize(
+        'input_data', [
+            '',
+            'a',
+            'ab',
+            'äö',
+            '🍌',
+            '🍌🍌',
+        ]
+    )
     def test_string_min_length_too_short(input_data):
         """ Test StringValidator with minimum length requirement with a list of strings that are too short. """
         validator = StringValidator(min_length=3)
@@ -71,14 +89,30 @@ class StringValidatorTest:
     # Test length requirement checks: Only max_length specified
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'a', 'banana', '1234567890'])
+    @pytest.mark.parametrize(
+        'input_data', [
+            '',
+            'a',
+            'banana',
+            '1234567890',
+            'äåéëþüúíóö',  # 10 unicode characters
+            '🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌',  # 10 banana emoji
+        ]
+    )
     def test_string_max_length_valid(input_data):
         """ Test StringValidator with maximum length requirement with a list of valid strings. """
         validator = StringValidator(max_length=10)
         assert validator.validate(input_data) == input_data
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['1234567890a', '1234567890abcdef'])
+    @pytest.mark.parametrize(
+        'input_data', [
+            '1234567890a',
+            '1234567890abcdef',
+            'äåéëþüúíóöß',  # 11 unicode characters
+            '🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌',  # 11 banana emoji
+        ]
+    )
     def test_string_max_length_too_long(input_data):
         """ Test StringValidator with maximum length requirement with a list of strings that are too long. """
         validator = StringValidator(max_length=10)
@@ -92,7 +126,15 @@ class StringValidatorTest:
     # Test length requirement checks: Both min_length and max_length specified
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['abc', 'banana', '1234567890'])
+    @pytest.mark.parametrize(
+        'input_data', [
+            'abc',
+            'banana',
+            '1234567890',
+            '🍌🍌🍌',  # 3 banana emoji
+            '🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌',  # 10 banana emoji
+        ]
+    )
     def test_string_min_max_length_valid(input_data):
         """ Test StringValidator with both minimum and maximum length requirement with a list of valid strings. """
         validator = StringValidator(min_length=3, max_length=10)
@@ -106,6 +148,8 @@ class StringValidatorTest:
             ('ab', 'string_too_short'),
             ('1234567890a', 'string_too_long'),
             ('1234567890abcdef', 'string_too_long'),
+            ('🍌🍌', 'string_too_short'),  # 2 banana emoji
+            ('🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌🍌', 'string_too_long'),  # 11 banana emoji
         ]
     )
     def test_string_min_max_length_invalid(input_data, error_code):
@@ -122,7 +166,14 @@ class StringValidatorTest:
     # Test length requirement checks: min_length equals max_length
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['banana', '000000'])
+    @pytest.mark.parametrize(
+        'input_data', [
+            'banana',
+            '000000',
+            'ääääää',
+            '🍌🍌🍌🍌🍌🍌',  # 6 banana emoji
+        ]
+    )
     def test_string_exact_length_valid(input_data):
         """ Test StringValidator with exact length requirement (minimum = maximum) with valid strings. """
         validator = StringValidator(min_length=6, max_length=6)
@@ -134,6 +185,10 @@ class StringValidatorTest:
             ('', 'string_too_short'),
             ('banan', 'string_too_short'),
             ('bananana', 'string_too_long'),
+            ('äääää', 'string_too_short'),
+            ('äääääää', 'string_too_long'),
+            ('🍌🍌🍌🍌🍌', 'string_too_short'),  # 5 banana emoji
+            ('🍌🍌🍌🍌🍌🍌🍌', 'string_too_long'),  # 7 banana emoji
         ]
     )
     def test_string_exact_length_invalid(input_data, error_code):
@@ -156,6 +211,8 @@ class StringValidatorTest:
             (True, False, 'singleline', 'singleline'),
             (True, False, 'foo\nbar', 'foo\nbar'),
             (True, False, 'foo\rbar\r\nbaz\n', 'foo\nbar\nbaz\n'),
+            (True, False, 'äää\rööö\r\nüüü\n', 'äää\nööö\nüüü\n'),
+            (True, False, '🍌\r🍍\r\n🍉\n', '🍌\n🍍\n🍉\n'),
 
             # Unsafe multiline strings (no normalization of line separators)
             (True, True, 'foo\nbar\0baz', 'foo\nbar\0baz'),
@@ -164,6 +221,9 @@ class StringValidatorTest:
             # Unsafe singleline strings
             (False, True, '\0', '\0'),
             (False, True, 'foo\tbar\x1fbaz\0', 'foo\tbar\x1fbaz\0'),
+            (False, True, 'üñí©óðé', 'üñí©óðé'),
+            (False, True, '🍌🍍🍉🥑', '🍌🍍🍉🥑'),
+            (False, True, '🏳️‍⚧️', '🏳️‍⚧️'),  # Emoji with zero width joiner
         ]
     )
     def test_unsafe_and_multiline_strings_valid(multiline, unsafe, input_string, expected_result):
