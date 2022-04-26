@@ -94,6 +94,21 @@ class ListValidatorTest:
             }
         }
 
+    # Check that ListValidator actually discards invalid items
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_data, expected_output', [
+            ([-22, 0, 7], [-22, 0, 7]),
+            ([-14, 0, 'lol', 42], [-14, 0, 42]),
+            (['no', 'valid', 'items'], [])
+        ]
+    )
+    def test_discard_integer_list(input_data, expected_output):
+        """ Test ListValidator with IntegerValidator as item validator to discard invalid items. """
+        validator = ListValidator(item_validator=IntegerValidator(), discard_invalid=True)
+        assert validator.validate(input_data) == expected_output
+
     # Test list length requirement checks
 
     @staticmethod
@@ -154,6 +169,59 @@ class ListValidatorTest:
     def test_list_length_invalid(min_length, max_length, input_data):
         """ Test ListValidator with length requirements with lists of the wrong length. """
         validator = ListValidator(IntegerValidator(), min_length=min_length, max_length=max_length)
+
+        # Construct error dict with min_length and/or max_length, depending on which is specified
+        expected_error_dict = {'code': 'list_invalid_length'}
+        expected_error_dict.update({'min_length': min_length} if min_length is not None else {})
+        expected_error_dict.update({'max_length': max_length} if max_length is not None else {})
+
+        with pytest.raises(ListLengthError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == expected_error_dict
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'min_length, max_length, input_data, expected_output', [
+            # min_length only
+            (1, None, [10, 'foo'], [10]),
+            (1, None, [411, 2207, 'bar', 'baz'], [411, 2207]),
+            (3, None, [1, 2, 3, 'nope', 5, 6], [1, 2, 3, 5, 6]),
+            # max_length only
+            (None, 1, ['ban'], []),
+            (None, 3, [1, 2, 'gav'], [1, 2]),
+            (None, 3, ['no', 'valid', 'item'], []),
+            # min_length and max_length
+            (1, 3, ['hell', 'sky', 5], [5]),
+            (3, 5, [999, 999, 'poof', 999], [999, 999, 999])
+        ]
+    )
+    def test_list_discard_length_valid(min_length, max_length, input_data, expected_output):
+        """ Test ListValidator with lists of the correct length after discarding invalid items. """
+        validator = ListValidator(IntegerValidator(), min_length=min_length, max_length=max_length,
+                                  discard_invalid=True)
+        assert validator.validate(input_data) == expected_output
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'min_length, max_length, input_data', [
+            # min_length only
+            (1, None, ['foo']),
+            (3, None, [1, 5, 'woosh', 'nah']),
+            # max_length only
+            (None, 1, ['lorem', 'ipsum', 1]),
+            (None, 3, [1, 4, 'reit', 'plur']),
+            # min_length and max_length
+            (1, 1, ['strike']),
+            (1, 2, ['sub', 'mar']),
+            (1, 3, ['never', 'gonna', 'give', 'you', 'up']),
+            (1, 5, ['never', 'gonna', 'let', 'you', 'down']),
+            (3, 7, [13, 21, 'say', 'goodbye'])
+        ]
+    )
+    def test_list_discard_length_invalid(min_length, max_length, input_data):
+        """ Test ListValidator with length requirements with lists of the wrong length. """
+        validator = ListValidator(IntegerValidator(), min_length=min_length, max_length=max_length,
+                                  discard_invalid=True)
 
         # Construct error dict with min_length and/or max_length, depending on which is specified
         expected_error_dict = {'code': 'list_invalid_length'}
