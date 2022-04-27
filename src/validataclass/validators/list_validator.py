@@ -35,6 +35,9 @@ class ListValidator(Validator):
 
     # Do not allow empty lists or lists with more than 20 items
     ListValidator(IntegerValidator(), min_length=1, max_length=20)
+
+    # Discard items that are not a valid integer and do not raise error.
+    ListValidator(IntegerValidator(), discard_invalid=True)
     ```
 
     Valid input: [item1, item2, ...] (if all items are valid input for the item validator)
