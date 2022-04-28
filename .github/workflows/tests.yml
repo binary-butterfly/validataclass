@@ -37,11 +37,39 @@ jobs:
 
       - name: Run unit tests with tox
         # Run tox using the version of Python in `PATH`
-        run: tox -e clean,py,flake8 -- --junit-xml=reports/pytest_junit_${{ matrix.python-version }}.xml
+        run: tox -e clean,py,flake8 -- --junit-xml=reports/pytest_${{ matrix.python-version }}.xml
 
-      - name: Upload test results as artifact
+      - name: Upload test result artifacts
         uses: actions/upload-artifact@v3
         if: success() || failure()
         with:
+          # This will add every pytest_VERSION.yml to the same artifact file
           name: pytest-results
-          path: reports/pytest_junit_${{ matrix.python-version }}.xml
+          path: reports/pytest_${{ matrix.python-version }}.xml
+
+  report:
+    name: Publish unit test reports
+    runs-on: ubuntu-latest
+
+    # Job depends on test results
+    needs: test
+
+    # Run this job only on the main repository, because the test-reporter would fail on a forked repository.
+    if: github.repository == 'binary-butterfly/validataclass'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download test result artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: pytest-results
+          path: reports/
+
+      - name: Publish unit test reports
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Pytest Report
+          path: reports/pytest_*.xml
+          reporter: java-junit
