@@ -23,5 +23,5 @@ jobs:
         with:
           artifact: pytest-results
           name: Pytest Report
-          path: reports/pytest_junit_*.xml
+          path: pytest_junit_*.xml
           reporter: java-junit
