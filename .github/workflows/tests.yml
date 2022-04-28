@@ -37,13 +37,11 @@ jobs:
 
       - name: Run unit tests with tox
         # Run tox using the version of Python in `PATH`
-        run: tox -e clean,py,flake8 -- --junit-xml=reports/pytest_junit.xml
+        run: tox -e clean,py,flake8 -- --junit-xml=reports/pytest_junit_${{ matrix.python-version }}.xml
 
-      - name: Publish unit test results
-        uses: dorny/test-reporter@v1
-        if: always()
+      - name: Upload test results as artifact
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
         with:
-          name: Pytest Report (Python ${{ matrix.python-version }})
-          path: reports/pytest_junit.xml
-          reporter: java-junit
-          fail-on-error: false
+          name: pytest-results
+          path: reports/pytest_junit_${{ matrix.python-version }}.xml
