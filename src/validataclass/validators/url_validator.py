@@ -74,6 +74,9 @@ class UrlValidator(StringValidator):
     # Whether the URL may contain the userinfo subcomponent (e.g. "https//userinfo@host/...")
     allow_userinfo: bool
 
+    # Whether to allow empty strings to pass
+    allow_empty: bool
+
     # Precompiled regular expression
     url_regex: re.Pattern = re.compile(r'''
         (?P<scheme> [a-z][a-z0-9.+-]* )
@@ -90,6 +93,7 @@ class UrlValidator(StringValidator):
         require_tld: bool = True,
         allow_ip: bool = True,
         allow_userinfo: bool = False,
+        allow_empty: bool = False,
     ):
         """
         Create a `UrlValidator` with optional parameters.
@@ -102,9 +106,13 @@ class UrlValidator(StringValidator):
             require_tld: `bool`, whether hostnames must have a top level domain (default: True)
             allow_ip: `bool`, whether IP addresses are allowed as host (default: True)
             allow_userinfo: `bool`, whether URLs may contain userinfo (default: False)
+            allow_empty: `bool`, whether empty strings should pass validation (default: False)
         """
+        # Set allow_empty and StringValidator's min_length
+        min_length = 0 if allow_empty else 1
+
         # Initialize StringValidator with some length requirements
-        super().__init__(min_length=1, max_length=2000)
+        super().__init__(min_length=min_length, max_length=2000)
 
         # Save allowed schemes
         if allowed_schemes is None:
@@ -116,6 +124,7 @@ class UrlValidator(StringValidator):
         self.require_tld = require_tld
         self.allow_ip = allow_ip
         self.allow_userinfo = allow_userinfo
+        self.allow_empty = allow_empty
 
     def validate(self, input_data: Any) -> str:
         """
@@ -123,6 +132,10 @@ class UrlValidator(StringValidator):
         """
         # Validate input data as string
         input_url = super().validate(input_data)
+
+        # Short-circuit: check if the string is empty and return it if allow_empty is True
+        if input_url == "" and self.allow_empty:
+            return input_url
 
         # Validate string with regular expression
         regex_match = self.url_regex.fullmatch(input_url)
