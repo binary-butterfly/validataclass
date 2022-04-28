@@ -54,8 +54,8 @@ jobs:
     # Job depends on test results
     needs: test
 
-    # Run this job only on the main repository, because the test-reporter would fail on a forked repository.
-    if: github.repository == 'binary-butterfly/validataclass'
+    # Do not run this job in pull requests from a forked repository (because the test-reporter would fail)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - uses: actions/checkout@v2
