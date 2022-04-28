@@ -27,6 +27,11 @@ with 0). See the examples below.
 By default the `ListValidator` accepts lists of any length, including the empty list (`[]`). The optional parameters `min_length` and
 `max_length` can be used to specify a minimum and/or maximum number of items though.
 
+In some cases you might not want the validation to fail completely if some of the list items are invalid, and rather
+just filter out the invalid items. This can be achieved by setting the optional parameter `discard_invalid=True`. If you
+also set a minimum list length, the length will be validated **after** discarding the invalid items, so you will never
+get a validated list that has less than `min_length` items.
+
 **Note:** A `ListValidator` always has exactly **one** item validator which will be used for **all** items, so you cannot simply specify
 multiple item validators to allow a list with mixed types. Instead, you can use a validator that accepts multiple types by itself as the
 item validator though. Currently there is no built-in way to do this easily (in a future version there is going to be a meta validator
@@ -51,6 +56,12 @@ validator.validate([])                # will raise ListLengthError(min_length=1,
 validator.validate([42])              # will return [42]
 validator.validate([42, 13, 12])      # will return [42, 13, 12]
 validator.validate([42, 13, 12, 11])  # will raise ListLengthError(min_length=1, max_length=3)
+
+# Discard invalid items instead of raising errors (with a minimum and maximum length)
+validator = ListValidator(IntegerValidator(), discard_invalid=True, min_length=2, max_length=5)
+validator.validate([42, 'foo', 13, None])   # will return [42, 13]
+validator.validate([42, 'foo', 'bar'])      # will raise ListLengthError (only 1 valid item in list)
+validator.validate([1, 2, 3, 4, 5, 'foo'])  # will raise ListLengthError (input list is too big)
 
 # Nested lists: Validate a *list of list of integers*
 validator = ListValidator(ListValidator(IntegerValidator()))
