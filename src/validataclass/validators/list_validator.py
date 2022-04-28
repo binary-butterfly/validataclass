@@ -35,6 +35,9 @@ class ListValidator(Validator):
 
     # Do not allow empty lists or lists with more than 20 items
     ListValidator(IntegerValidator(), min_length=1, max_length=20)
+
+    # Discard items that are not a valid integer and do not raise error.
+    ListValidator(IntegerValidator(), discard_invalid=True)
     ```
 
     Valid input: [item1, item2, ...] (if all items are valid input for the item validator)
@@ -48,7 +51,15 @@ class ListValidator(Validator):
     min_length: Optional[int] = None
     max_length: Optional[int] = None
 
-    def __init__(self, item_validator: Validator, *, min_length: Optional[int] = None, max_length: Optional[int] = None):
+    # Discard invalid items instead of raising error
+    discard_invalid: bool = False
+
+    def __init__(
+        self, item_validator: Validator, *,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        discard_invalid: bool = False
+    ):
         """
         Create a ListValidator with a given item validator and optional minimum/maximum list length requirements.
 
@@ -56,6 +67,7 @@ class ListValidator(Validator):
             item_validator: Validator, used to validate the items in the list (required)
             min_length: Integer, specifies minimum length of input list (default: None, no minimum length)
             max_length: Integer, specifies maximum length of input list (default: None, no maximum length)
+            discard_invalid: Boolean, if True, will discard invalid items instead of raising error
         """
         # Set validator used on each list item
         self.item_validator = item_validator
@@ -70,6 +82,7 @@ class ListValidator(Validator):
 
         self.min_length = min_length
         self.max_length = max_length
+        self.discard_invalid = discard_invalid
 
     def validate(self, input_data: Any) -> list:
         """
@@ -93,8 +106,14 @@ class ListValidator(Validator):
             except ValidationError as error:
                 validation_errors[index] = error
 
-        # Raise validation error if any item failed to be validated
-        if validation_errors:
+        # Check one more time if the validated list is not too short
+        if self.discard_invalid:
+            if self.min_length is not None and len(validated_list) < self.min_length:
+                raise ListLengthError(min_length=self.min_length, max_length=self.max_length)
+
+        # Raise validation error if discard_invalid is False,
+        # and if any item failed to be validated
+        elif validation_errors:
             raise ListItemsValidationError(item_errors=validation_errors)
 
         # Return list of validated items
