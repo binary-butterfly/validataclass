@@ -55,7 +55,7 @@ jobs:
     needs: test
 
     # Do not run this job in pull requests from a forked repository (because the test-reporter would fail)
-    if: github.event_name != 'pull_request" || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - uses: actions/checkout@v2
