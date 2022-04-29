@@ -34,7 +34,7 @@ class UrlValidatorTest:
 
     @staticmethod
     def test_invalid_empty_string():
-        """ Check that UrlValidator raises exceptions for empty strings. """
+        """ Check that UrlValidator raises exceptions for empty strings by default. """
         validator = UrlValidator()
         with pytest.raises(StringInvalidLengthError) as exception_info:
             validator.validate('')
@@ -257,3 +257,9 @@ class UrlValidatorTest:
             'code': 'invalid_url',
             'reason': error_reason,
         }
+
+    @staticmethod
+    def test_allow_empty_valid():
+        """ Check that UrlValidator with allow_empty=True lets empty string through unchanged. """
+        validator = UrlValidator(allow_empty=True)
+        assert validator.validate("") == ""
