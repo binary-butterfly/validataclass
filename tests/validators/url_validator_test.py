@@ -264,7 +264,6 @@ class UrlValidatorTest:
         validator = UrlValidator(allow_empty=True)
         assert validator.validate("") == ""
 
-
     @staticmethod
     def test_url_longer_than_max_length_invalid():
         """ Test UrlValidator with string longer than max_length """
