@@ -77,9 +77,6 @@ class UrlValidator(StringValidator):
     # Whether to allow empty strings to pass
     allow_empty: bool
 
-    # Maximum URL length
-    max_length: int
-
     # Precompiled regular expression
     url_regex: re.Pattern = re.compile(r'''
         (?P<scheme> [a-z][a-z0-9.+-]* )
@@ -111,6 +108,7 @@ class UrlValidator(StringValidator):
             allow_ip: `bool`, whether IP addresses are allowed as host (default: True)
             allow_userinfo: `bool`, whether URLs may contain userinfo (default: False)
             allow_empty: `bool`, whether empty strings should pass validation (default: False)
+            max_length: `int`, specifies maximum length of input strings (default: 2000)
         """
         # Set allow_empty and StringValidator's min_length
         min_length = 0 if allow_empty else 1
