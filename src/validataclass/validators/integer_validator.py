@@ -18,23 +18,33 @@ class IntegerValidator(Validator):
     """
     Validator for integer values, optionally with value range requirements.
 
+    Use the parameters `min_value` and/or `max_value` to set a value range (smallest and biggest allowed integer).
+    By default, these parameters are set so that only 32 bit integers are allowed, i.e. only integers from -2147483648
+    (-2^32) to 2147483647 (2^32 - 1).
+
+    However, these are just default values. To allow integers outside the 32 bit range, set `min_value` and `max_value`
+    to `None`.
+
     By default, only actual integer values (no strings) are allowed. Use the parameter `allow_strings=True` to allow
     numeric strings, e.g. the strings "-123" and "123" would be accepted and automatically converted to integers.
 
     Examples:
 
     ```
-    # Accepts any integer (e.g. -123456, 0, 123456, but not a string like "123")
+    # Accepts any 32 bit integer (e.g. -123456, 0, 123456, but not a string like "123")
     IntegerValidator()
 
-    # Accepts numeric strings, which will be converted to integers (e.g. "1234" -> 1234; "-123" -> -123)
-    IntegerValidator(allow_strings=True)
+    # Accepts any integer known to Python (e.g. -2147483649 and 2147483648, which would not be accepted by default)
+    IntegerValidator(min_value=None, max_value=None)
 
     # Only accepts zero or positive numbers
     IntegerValidator(min_value=0)
 
     # Only accepts values 1 to 10 (including the numbers 1 and 10)
     IntegerValidator(min_value=1, max_value=10)
+
+    # Accepts numeric strings, which will be converted to integers (e.g. "1234" -> 1234; "-123" -> -123)
+    IntegerValidator(allow_strings=True)
     ```
 
     Note: While it is allowed to set `max_value` without setting `min_value`, this might not do what you expect. For example,
@@ -45,6 +55,10 @@ class IntegerValidator(Validator):
     Output: `int`
     """
 
+    # Constants (minimum and maximum values for a 32 bit integer)
+    DEFAULT_MIN_VALUE = -2147483648  # -2^32
+    DEFAULT_MAX_VALUE = 2147483647  # 2^32 - 1
+
     # Value constraints
     min_value: Optional[int] = None
     max_value: Optional[int] = None
@@ -52,13 +66,18 @@ class IntegerValidator(Validator):
     # Whether to allow integers as strings
     allow_strings: bool = False
 
-    def __init__(self, *, min_value: Optional[int] = None, max_value: Optional[int] = None, allow_strings: bool = False):
+    def __init__(
+        self, *,
+        min_value: Optional[int] = DEFAULT_MIN_VALUE,
+        max_value: Optional[int] = DEFAULT_MAX_VALUE,
+        allow_strings: bool = False,
+    ):
         """
         Create a IntegerValidator with optional value range.
 
         Parameters:
-            min_value: Integer, specifies lowest value an input integer may have (default: None, no minimum value)
-            max_value: Integer, specifies highest value an input integer may have (default: None, no maximum value)
+            min_value: Integer or None, smallest allowed integer value (default: IntegerValidator.DEFAULT_MIN_VALUE = -2147483648)
+            max_value: Integer or None, biggest allowed integer value (default: IntegerValidator.DEFAULT_MAX_VALUE = 2147483647)
             allow_strings: Boolean, if True, numeric strings (e.g. "123") are accepted and converted to integers (default: False)
         """
         # Check parameter validity
