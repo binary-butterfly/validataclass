@@ -4,12 +4,12 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from decimal import Decimal, InvalidOperation
 import re
+from decimal import Decimal, InvalidOperation
 from typing import Any, Optional, Union
 
-from .string_validator import StringValidator
 from validataclass.exceptions import InvalidDecimalError, NumberRangeError, DecimalPlacesError, InvalidValidatorOptionException
+from .string_validator import StringValidator
 
 __all__ = [
     'DecimalValidator',
@@ -20,12 +20,13 @@ class DecimalValidator(StringValidator):
     """
     Validator that parses decimal numbers from strings (e.g. '1.234') to `decimal.Decimal` objects.
 
-    Only allows finite numbers in regular decimal notation (e.g. '1.234', '-42', '.00', ...), but no other values that are accepted
-    by `decimal.Decimal` (e.g. no 'Infinity' or 'NaN' and no scientific notation).
+    Only allows finite numbers in regular decimal notation (e.g. '1.234', '-42', '.00', ...), but no other values that
+    are accepted by `decimal.Decimal` (e.g. no 'Infinity' or 'NaN' and no scientific notation).
 
-    Optionally a number range (minimum/maximum decimal value), minimum/maximum number of decimal places and a fixed number of decimal
-    places in the output value can be specified. A fixed number of output places will result in rounding according to the current decimal
-    context (see `decimal.getcontext()`), by default this means that "1.49" will be rounded to "1" and "1.50" to "2".
+    Optionally a number range (minimum/maximum value as `Decimal`, integer or decimal string), minimum/maximum number of
+    decimal places and a fixed number of decimal places in the output value can be specified. A fixed number of output
+    places will result in rounding according to the current decimal context (see `decimal.getcontext()`), by default
+    this means that "1.49" will be rounded to "1" and "1.50" to "2".
 
     Examples:
 
@@ -34,7 +35,7 @@ class DecimalValidator(StringValidator):
     DecimalValidator()
 
     # Only allow zero or positive numbers (e.g. '0', '0.000', '1.234', but not '-0.001' or other negative numbers)
-    DecimalValidator(min_value='0')
+    DecimalValidator(min_value=0)
 
     # Only allow values from -0.5 to 0.5, including the boundaries (e.g. '0.5', '-0.123', but not '0.501')
     DecimalValidator(min_value='-0.5', max_value='0.5')
@@ -69,8 +70,8 @@ class DecimalValidator(StringValidator):
 
     def __init__(
         self, *,
-        min_value: Optional[Union[Decimal, str]] = None,
-        max_value: Optional[Union[Decimal, str]] = None,
+        min_value: Optional[Union[Decimal, int, str]] = None,
+        max_value: Optional[Union[Decimal, int, str]] = None,
         min_places: Optional[int] = None,
         max_places: Optional[int] = None,
         output_places: Optional[int] = None,
@@ -80,8 +81,8 @@ class DecimalValidator(StringValidator):
         of decimal places in output value.
 
         Parameters:
-            min_value: Decimal or string, specifies lowest value an input value may have (default: None, no minimum value)
-            max_value: Decimal or string, specifies highest value an input value may have (default: None, no maximum value)
+            min_value: Decimal, integer or string, specifies lowest allowed value (default: None, no minimum value)
+            max_value: Decimal, integer or string, specifies highest allowed value (default: None, no maximum value)
             min_places: Integer, minimum number of decimal places an input value must have (default: None, no minimum places)
             max_places: Integer, maximum number of decimal places an input value must have (default: None, no maximum places)
             output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
@@ -89,10 +90,10 @@ class DecimalValidator(StringValidator):
         # Restrict string length
         super().__init__(max_length=40)
 
-        # Convert min_value/max_value from strings to Decimals if necessary
-        if type(min_value) is str:
+        # Convert min_value/max_value from strings or integers to Decimals if necessary
+        if min_value is not None and not isinstance(min_value, Decimal):
             min_value = Decimal(min_value)
-        if type(max_value) is str:
+        if max_value is not None and not isinstance(max_value, Decimal):
             max_value = Decimal(max_value)
 
         # Check parameter validity
