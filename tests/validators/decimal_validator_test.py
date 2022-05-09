@@ -15,6 +15,10 @@ from validataclass.validators import DecimalValidator
 
 
 class DecimalValidatorTest:
+    """
+    Unit tests for DecimalValidator.
+    """
+
     @staticmethod
     @pytest.mark.parametrize(
         'input_data, expected_decimal_str', [
@@ -88,13 +92,13 @@ class DecimalValidatorTest:
                 ['-1.234', '-0.001', '0', '-0', '+0'],
             ),
 
-            # min_value and max_value
+            # min_value and max_value (as Decimal, integer and string)
             *unpack_params(
                 Decimal('0'), Decimal('10'),
                 ['0.000', '0.001', '1', '9.9999', '+10.00000'],
             ),
             *unpack_params(
-                '-1', '1',
+                -1, 1,
                 ['-1.0000', '-0.99999', '-0.0001', '0', '0.001', '0.9999', '1.000'],
             ),
             *unpack_params(

@@ -419,14 +419,16 @@ validator.validate(-1.234)  # will raise NumberRangeError(min_value=-1.0, max_va
 ### DecimalValidator
 
 The `DecimalValidator` accepts decimal numbers **as strings** (e.g. `"1.234"`) and **converts** them to
-[`decimal.Decimal`](https://docs.python.org/3/library/decimal.html) objects (see Python standard library).
+`decimal.Decimal` objects (see [Python standard library](https://docs.python.org/3/library/decimal.html)).
 
-Only allows finite numbers in regular decimal notation (e.g. `"1.234"`, `"-42"`, `".00"`, ...), but no other values that are accepted
-by `decimal.Decimal` (e.g. no `Infinity` or `NaN` and no scientific notation).
+Only allows finite numbers in regular decimal notation (e.g. `"1.234"`, `"-42"`, `".00"`, ...), but no other values that
+are accepted by `decimal.Decimal` (e.g. no `Infinity` or `NaN` and no scientific notation).
 
-Optionally a number range (minimum/maximum decimal value), minimum/maximum number of decimal places and a fixed number of decimal
-places in the output value can be specified. A fixed number of output places will result in rounding according to the current decimal
-context (see `decimal.getcontext()`), by default this means that `"1.49"` will be rounded to `1` and `"1.50"` to `2`.
+Optionally a number range (minimum/maximum value either as `Decimal`, integer or decimal string), minimum/maximum number
+of decimal places and a fixed number of decimal places in the output value can be specified.
+
+A fixed number of output places will result in rounding according to the current decimal context (see `decimal.getcontext()`),
+by default this means that `"1.49"` will be rounded to `1` and `"1.50"` to `2`.
 
 **Examples:**
 
@@ -443,7 +445,7 @@ validator.validate("-0.123")  # will return Decimal('-0.123')
 validator.validate(1)         # will raise InvalidTypeError (use IntegerValidator instead)
 validator.validate(1.23)      # will raise InvalidTypeError (use FloatValidator or FloatToDecimalValidator instead)
 
-# Value range: Can be either a decimal string or a Decimal object (but no integer or float)
+# Value range: Can be either a Decimal object, decimal string or integer (but no float)
 validator = DecimalValidator(min_value="0", max_value=Decimal("1.0"))
 validator.validate("1")       # will return Decimal('1')
 validator.validate("1.23")    # will raise NumberRangeError
