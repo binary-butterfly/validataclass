@@ -65,3 +65,7 @@ def unpack_params(*args) -> List[tuple]:
         else:
             unpacked = [(*current_params, arg) for current_params in unpacked]
     return unpacked
+
+
+# This is a sentinel object used in parametrized tests to represent "this parameter should not be set"
+UNSET_PARAMETER = object()
