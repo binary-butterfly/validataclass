@@ -268,32 +268,38 @@ The optional parameter `allow_strings` can be set to `True` to allow both intege
 validator will convert strings to integers in that case, so the input values `123` (integer) and `"123"` (string) will
 both result in the integer output value `123`.
 
-Optionally you can also specify a range of valid values using `min_value` and `max_value`.
+Use the parameters `min_value` and/or `max_value` to set a value range (smallest and biggest allowed integer).
+By default, these parameters are set so that only 32 bit integers are allowed, i.e. only integers from -2147483648
+(`-2^32`) to 2147483647 (`2^32 - 1`).
+
+However, these are just default values. To allow integers outside the 32-bit range, simply set `min_value` and
+`max_value` to `None`.
 
 **Examples:**
 
 ```python
 from validataclass.validators import IntegerValidator
 
-# Default: Accepts any integer
+# Default: Accepts any 32-bit integer
 validator = IntegerValidator()
-validator.validate(0)     # will return 0
-validator.validate(123)   # will return 123
-validator.validate(-123)  # will return -123
-validator.validate("1")   # will raise InvalidTypeError (use allow_strings=True or a DecimalValidator)
+validator.validate(0)            # will return 0
+validator.validate(123)          # will return 123
+validator.validate(-123)         # will return -123
+validator.validate("1")          # will raise InvalidTypeError (use allow_strings=True or a DecimalValidator)
+validator.validate(2147483648)   # will raise NumberRangeError(min_value=-2147483648, max_value=2147483647)
+validator.validate(-2147483649)  # will raise NumberRangeError(min_value=-2147483648, max_value=2147483647)
 
-# allow_strings parameter: Accept integers also as strings
-validator = IntegerValidator(allow_strings=True)
-validator.validate(42)      # will return 42
-validator.validate("42")    # will return 42
-validator.validate("-123")  # will return -123
-validator.validate("foo")   # will raise InvalidIntegerError
+# No value limits: Accepts any integer known to Python
+validator = IntegerValidator(min_value=None, max_value=None)
+validator.validate(2147483648)        # will return 2147483648
+validator.validate(-2147483649)       # will return -2147483649
+validator.validate(9999999999999999)  # will return 9999999999999999
 
 # min_value parameter: Only allow zero or positive numbers
 validator = IntegerValidator(min_value=0)
 validator.validate(0)     # will return 0
 validator.validate(123)   # will return 123
-validator.validate(-123)  # will raise NumberRangeError(min_value=0)
+validator.validate(-123)  # will raise NumberRangeError(min_value=0, max_value=2147483647)
 
 # min_value and max_value: Only allow values 1 to 10
 validator = IntegerValidator(min_value=1, max_value=10)
@@ -304,11 +310,18 @@ validator.validate(11)  # will raise NumberRangeError(min_value=1, max_value=10)
 
 # max_value only: Allow all values smaller than or equal to 10
 validator = IntegerValidator(max_value=10)
-validator.validate(1)   # will return 1
-validator.validate(10)  # will return 10
-validator.validate(11)  # will raise NumberRangeError(max_value=10)
+validator.validate(1)      # will return 1
+validator.validate(10)     # will return 10
+validator.validate(11)     # will raise NumberRangeError(min_value=-2147483648, max_value=10)
 # NOTE: This also allows any negative number (because no min_value is specified):
 validator.validate(-1234)  # valid! will return -1234
+
+# allow_strings parameter: Accept integers also as strings
+validator = IntegerValidator(allow_strings=True)
+validator.validate(42)      # will return 42
+validator.validate("42")    # will return 42
+validator.validate("-123")  # will return -123
+validator.validate("foo")   # will raise InvalidIntegerError
 ```
 
 
