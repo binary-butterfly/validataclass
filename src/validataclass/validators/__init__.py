@@ -18,6 +18,7 @@ from .noneable import Noneable
 
 # Extended type validators
 from .any_of_validator import AnyOfValidator
+from .big_integer_validator import BigIntegerValidator
 from .enum_validator import EnumValidator
 from .decimal_validator import DecimalValidator
 from .float_to_decimal_validator import FloatToDecimalValidator

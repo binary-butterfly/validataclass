@@ -32,6 +32,7 @@ A much more useful distinction is to categorize the validators according to thei
 
 - Numeric types:
   - `IntegerValidator`: Validates integers (as `int`, not as `str`)
+  - `BigIntegerValidator`: Validates integers (variation of `IntegerValidator`)
   - `FloatValidator`: Validates floats (as `float`, not as `str`)
   - `DecimalValidator`: Validates decimal **strings** (e.g. `"1.23"`) to `decimal.decimal` objects
   - `FloatToDecimalValidator`: Validates floats (e.g. `1.23`) to `decimal.decimal` objects
@@ -273,7 +274,7 @@ By default, these parameters are set so that only 32 bit integers are allowed, i
 (`-2^32`) to 2147483647 (`2^32 - 1`).
 
 However, these are just default values. To allow integers outside the 32-bit range, simply set `min_value` and
-`max_value` to `None`.
+`max_value` to `None`. See also the `BigIntegerValidator` below.
 
 **Examples:**
 
@@ -322,6 +323,51 @@ validator.validate(42)      # will return 42
 validator.validate("42")    # will return 42
 validator.validate("-123")  # will return -123
 validator.validate("foo")   # will raise InvalidIntegerError
+```
+
+
+### BigIntegerValidator
+
+The `BigIntegerValidator` is a variation of the `IntegerValidator` with other default parameters.
+
+It's exactly the same validator, just without the default values for `min_value` and `max_value` set by the regular
+`IntegerValidator`, thus allowing arbitrarily big integers by default.
+
+Basically, `BigIntegerValidator()` is a shorthand for `IntegerValidator(min_value=None, max_value=None)`.
+
+You can still set `min_value` and/or `max_value` with this validator, e.g. to restrict input to positive integers.
+If you need to set both parameters, you should use the regular `IntegerValidator` instead, since there is no point in
+using the `BigIntegerValidator` then.
+
+Like the IntegerValidator, it also supports the parameter `allow_strings` to allow strings as input.
+
+**Examples:**
+
+```python
+from validataclass.validators import BigIntegerValidator
+
+# Default: Accepts any integer
+validator = BigIntegerValidator()
+validator.validate(0)                # will return 0
+validator.validate(123)              # will return 123
+validator.validate(-123)             # will return -123
+validator.validate(99999999999999)   # will return 99999999999999
+validator.validate(-99999999999999)  # will return -99999999999999
+validator.validate("1")              # will raise InvalidTypeError
+
+# min_value parameter: Only allow zero or positive numbers
+validator = BigIntegerValidator(min_value=0)
+validator.validate(0)               # will return 0
+validator.validate(123)             # will return 123
+validator.validate(99999999999999)  # will return 99999999999999
+validator.validate(-123)            # will raise NumberRangeError(min_value=0, max_value=2147483647)
+
+# allow_strings parameter: Accept integers also as strings
+validator = BigIntegerValidator(allow_strings=True)
+validator.validate(42)                 # will return 42
+validator.validate("99999999999999")   # will return 99999999999999
+validator.validate("-99999999999999")  # will return -99999999999999
+validator.validate("foo")              # will raise InvalidIntegerError
 ```
 
 
