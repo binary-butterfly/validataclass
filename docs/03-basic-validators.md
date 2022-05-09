@@ -209,14 +209,19 @@ validator.validate("banana")           # will return InvalidEmailError(reason='I
 
 The `UrlValidator` validates URLs as strings and returns them unmodified.
 
-Please note that this validator is a bit opinionated and simplified in that it does **not** allow every valid URL. It's intended to be
-used primarily for HTTP URLs and thus only allows URLs with authority component (the `//host` part after the colon).
+Please note that this validator is a bit opinionated and simplified in that it does **not** allow every valid URL. It's
+intended to be used primarily for HTTP URLs and thus only allows URLs with authority component (the `//host` part after
+the colon).
 
-By default the validator allows only the URI schemes "http" and "https", requires hostnames to have a top level domain (e.g. "example.com"
-but not just "example"), allows IP addresses as host, and does not allow userinfo components in the URL.
+By default the validator allows only the URI schemes "http" and "https", requires hostnames to have a top level domain
+(e.g. "example.com" but not just "example"), allows IP addresses as host, and does not allow userinfo components in the URL.
 
 The parameters `allowed_schemes`, `require_tld`, `allow_ip` and `allow_userinfo` can be used to change these defaults.
 Please refer to the [documentation in the code](../src/validataclass/validators/url_validator.py) for details.
+
+The maximum string length defaults to 2000 characters, but can be changed using the `max_length` parameter.
+
+To allow empty strings as input, you can set the `allow_empty` parameter to `True` (defaults to `False`).
 
 **Examples:**
 
@@ -225,17 +230,23 @@ from validataclass.validators import UrlValidator
 
 # Default options: Only allows "http(s)" as scheme, requires a TLD, allows IP, does not allow userinfo
 validator = UrlValidator()
-validator.validate("https://example.com")                        # valid (returned unmodified)
-validator.validate("http://123.45.67.89/foo")                    # valid (returned unmodified)
-validator.validate("http://example.com:8080/foo?bar=baz#bloop")  # valid (returned unmodified)
+validator.validate("https://example.com")                        # returns string unmodified
+validator.validate("http://123.45.67.89/foo")                    # returns string unmodified
+validator.validate("http://example.com:8080/foo?bar=baz#bloop")  # returns string unmodified
+validator.validate("")                   # will raise StringTooShortError
 validator.validate("banana")             # will raise InvalidUrlError(reason='Invalid URL format.')
 validator.validate("ftp://example.com")  # will raise InvalidUrlError(reason='URL scheme is not allowed.')
 validator.validate("http://localhost")   # will raise InvalidUrlError(reason='Invalid host in URL.')
 
+# Allow empty strings
+validator = UrlValidator(allow_empty=True)
+validator.validate("https://example.com")  # returns string unmodified ("https://example.com")
+validator.validate("")                     # returns empty string unmodified ("")
+
 # Set allowed schemes to "ftp" and "sftp" and allow userinfo components
 validator = UrlValidator(allowed_schemes=['ftp', 'sftp'], allow_userinfo=True)
-validator.validate("ftp://example.com/foo/bar")                     # valid (returned unmodified)
-validator.validate("sftp://username:password@example.com/foo/bar")  # valid (returned unmodified)
+validator.validate("ftp://example.com/foo/bar")                     # returns string unmodified
+validator.validate("sftp://username:password@example.com/foo/bar")  # returns string unmodified
 validator.validate("https://example.com")  # will raise InvalidUrlError(reason='URL scheme is not allowed.')
 ```
 
