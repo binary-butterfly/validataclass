@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
+
 import pytest
 
 from validataclass.exceptions import ValidationError
@@ -12,23 +13,41 @@ from validataclass.validators import Noneable, DecimalValidator, IntegerValidato
 
 
 class NoneableTest:
-    @staticmethod
-    def test_valid_none():
-        """ Test that Noneable allows None as value and returns None in that case by default. """
-        validator = Noneable(DecimalValidator())
-        assert validator.validate(None) is None
+    """
+    Unit tests for the Noneable meta validator.
+    """
 
     @staticmethod
-    def test_valid_with_default():
-        """ Test that Noneable allows None as value and returns a specified default value. """
+    @pytest.mark.parametrize(
+        'input_data, expected_result',
+        [
+            (None, None),
+            ('12.34', Decimal('12.34')),
+        ]
+    )
+    def test_noneable_valid(input_data, expected_result):
+        """ Test Noneable with different valid input (None and non-None). """
+        validator = Noneable(DecimalValidator())
+        result = validator.validate(input_data)
+
+        assert type(result) == type(expected_result)
+        assert result == expected_result
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_data, expected_result',
+        [
+            (None, Decimal('3.1415')),
+            ('12.34', Decimal('12.34')),
+        ]
+    )
+    def test_noneable_with_default_valid(input_data, expected_result):
+        """ Test Noneable with a custom default value with different valid input (None and non-None). """
         validator = Noneable(DecimalValidator(), default=Decimal('3.1415'))
-        assert validator.validate(None) == Decimal('3.1415')
+        result = validator.validate(input_data)
 
-    @staticmethod
-    def test_valid_not_none_value():
-        """ Test that Noneable correctly wraps a specified validator in case of non-None values. """
-        validator = Noneable(DecimalValidator())
-        assert validator.validate('12.34') == Decimal('12.34')
+        assert type(result) == type(expected_result)
+        assert result == expected_result
 
     @staticmethod
     def test_invalid_not_none_value():
@@ -61,5 +80,24 @@ class NoneableTest:
         second_list = validator.validate(None)
         assert first_list == []
         assert second_list == []
+
         # The lists are equal (both are empty lists), but they must not be the *same* object, otherwise bad stuff will happen.
         assert first_list is not second_list
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'validator',
+        [
+            # Non-sense types
+            None,
+            'banana',
+
+            # Validator class instead of instance (common mistake)
+            IntegerValidator,
+        ]
+    )
+    def test_invalid_validator_type(validator):
+        """ Test that Noneable raises an exception on construction if the wrapped validator has the wrong type. """
+        with pytest.raises(TypeError) as exception_info:
+            Noneable(validator)  # noqa
+        assert str(exception_info.value) == 'Noneable requires a Validator instance.'
