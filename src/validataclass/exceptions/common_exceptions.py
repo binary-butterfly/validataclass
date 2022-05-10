@@ -9,6 +9,7 @@ from typing import Union, Optional, Dict, List
 __all__ = [
     'ValidationError',
     'RequiredValueError',
+    'FieldNotAllowedError',
     'InvalidTypeError',
     'InternalValidationError',
 ]
@@ -76,6 +77,16 @@ class RequiredValueError(ValidationError):
     Validation error raised when None is passed as input data (unless using `Noneable`).
     """
     code = 'required_value'
+
+
+class FieldNotAllowedError(ValidationError):
+    """
+    Validation error raised by the `RejectValidator` for any input data (except for `None` if allowed by the validator).
+
+    In practice, this error mostly is raised when the user specifies an input value for a field in a validataclass that
+    uses a `RejectValidator` (e.g. because the user is not allowed to set this field).
+    """
+    code = 'field_not_allowed'
 
 
 class InvalidTypeError(ValidationError):

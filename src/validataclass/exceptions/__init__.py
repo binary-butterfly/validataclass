@@ -8,7 +8,13 @@ Use of this source code is governed by an MIT-style license that can be found in
 from .meta_exceptions import InvalidValidatorOptionException, DataclassValidatorFieldException
 
 # Base and common validation error exceptions (base class ValidationError)
-from .common_exceptions import ValidationError, InternalValidationError, InvalidTypeError, RequiredValueError
+from .common_exceptions import (
+    ValidationError,
+    RequiredValueError,
+    FieldNotAllowedError,
+    InternalValidationError,
+    InvalidTypeError,
+)
 
 # More specific validation errors
 from .dataclass_exceptions import DataclassPostValidationError
