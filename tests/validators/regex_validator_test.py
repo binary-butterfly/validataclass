@@ -4,14 +4,27 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-import pytest
 import re
 
-from validataclass.exceptions import RequiredValueError, InvalidTypeError, RegexMatchError, StringInvalidLengthError
+import pytest
+
+from tests.test_utils import UNSET_PARAMETER
+from validataclass.exceptions import ValidationError, RequiredValueError, InvalidTypeError, RegexMatchError, StringInvalidLengthError
 from validataclass.validators import RegexValidator
 
 
+class UnitTestValidationError(ValidationError):
+    """
+    Example exception to use as a custom error class in RegexValidator tests.
+    """
+    code = 'unit_test_error'
+
+
 class RegexValidatorTest:
+    """
+    Unit tests for RegexValidator.
+    """
+
     # General tests
 
     @staticmethod
@@ -85,9 +98,11 @@ class RegexValidatorTest:
             # Case-insensitive matching (i)
             (r'banana', re.IGNORECASE, ['banana', 'BANANA', 'BaNaNa']),
             (r'[0-9a-z]+', re.IGNORECASE, ['0123', 'abcd42', 'ABCD42']),
+
             # Multiline (m)
             (r'(^banana$\n*)+', re.MULTILINE, ['banana', 'banana\nbanana', 'banana\n\nbanana\n']),
             (r'(^[0-9]+\s[a-z]+$\n?)+', re.MULTILINE, ['13 bananas', '13 bananas\n12 apples\n11 strawberries']),
+
             # Dotall: '.' matches newlines (s)
             (r'foo.bar', re.DOTALL, ['foo-bar', 'foo bar', 'foo\nbar']),
             (r'foo.*bar', re.DOTALL, ['foobar', 'foooooobar', 'foo\nooo\nbar']),
@@ -108,9 +123,11 @@ class RegexValidatorTest:
             # Case-insensitive matching (i)
             (r'banana', re.IGNORECASE, ['', 'banano', 'BANANANA']),
             (r'[0-9a-z]+', re.IGNORECASE, ['', '...', '123$banana']),
+
             # Multiline (m)
             (r'(^banana$\n*)+', re.MULTILINE, ['', 'banano', 'banana\nbanano', 'bananabanana']),
             (r'(^[0-9]+\s[a-z]+$\n?)+', re.MULTILINE, ['', 'banana', '13 bananas 12 apples', 'bananas 13\n12 apples']),
+
             # Dotall: '.' matches newlines (s)
             (r'foo.bar', re.DOTALL, ['foobar', 'foo  bar', 'foo\n\nbar']),
             (r'foo.*bar', re.DOTALL, ['foo', '\nfoobar\n']),
@@ -144,20 +161,48 @@ class RegexValidatorTest:
             RegexValidator('[')
         assert str(exception_info.value) == 'unterminated character set at position 0'
 
-    # Test RegexValidator with custom error code
+    # Test RegexValidator with custom error classes and/or error codes
 
     @staticmethod
-    def test_custom_error_code():
-        """ Test RegexValidator with a custom error code. """
-        validator = RegexValidator('[0-9]{5}', custom_error_code='invalid_zip_code')
+    @pytest.mark.parametrize(
+        'custom_error_class, custom_error_code, expected_error_class, expected_error_code',
+        [
+            # Defaults
+            (UNSET_PARAMETER, UNSET_PARAMETER, RegexMatchError, 'invalid_string_format'),
 
-        # Valid input
-        assert validator.validate('12345') == '12345'
+            # Default error class with custom error code
+            (UNSET_PARAMETER, 'invalid_zip_code', RegexMatchError, 'invalid_zip_code'),
 
-        # Invalid input
-        with pytest.raises(RegexMatchError) as exception_info:
-            validator.validate('abcde')
-        assert exception_info.value.to_dict() == {'code': 'invalid_zip_code'}
+            # Custom error class with default error code
+            (UnitTestValidationError, UNSET_PARAMETER, UnitTestValidationError, 'unit_test_error'),
+
+            # Custom error class with custom error code
+            (UnitTestValidationError, 'invalid_zip_code', UnitTestValidationError, 'invalid_zip_code'),
+        ]
+    )
+    def test_custom_errors(custom_error_class, custom_error_code, expected_error_class, expected_error_code):
+        """ Test RegexValidator with a custom error classes and/or error codes. """
+        # Set validator parameters (use defaults if unset)
+        validator_args = {}
+        if custom_error_class is not UNSET_PARAMETER:
+            validator_args['custom_error_class'] = custom_error_class
+        if custom_error_code is not UNSET_PARAMETER:
+            validator_args['custom_error_code'] = custom_error_code
+
+        validator = RegexValidator('[0-9]', **validator_args)
+
+        with pytest.raises(ValidationError) as exception_info:
+            validator.validate('x')
+
+        assert type(exception_info.value) == expected_error_class
+        assert exception_info.value.to_dict() == {'code': expected_error_code}
+
+    @staticmethod
+    def test_custom_error_class_invalid_type():
+        """ Test that RegexValidator raises an error on construction if the custom error class is not a ValidatonError subclass. """
+        with pytest.raises(TypeError) as exception_info:
+            RegexValidator('[0-9]', custom_error_class=Exception)  # noqa
+        assert str(exception_info.value) == 'Custom error class must be a subclass of ValidationError.'
 
     # Tests with length requirements
 

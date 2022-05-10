@@ -144,15 +144,22 @@ validator.validate("foo\0")       # will return "foo\0" (with ASCII null-byte)
 
 The `RegexValidator` uses a custom regular expression to validate strings.
 
-The regex can be specified either as a precompiled pattern (see `re.compile()`) or as a string which will be compiled by the class.
-Regex flags (e.g. `re.IGNORECASE` for case-insensitive matching) can only be set by precompiling a pattern with those flags.
+The regex can be specified either as a precompiled pattern (see `re.compile()`) or as a string which will be compiled by
+the class. Regex flags (e.g. `re.IGNORECASE` for case-insensitive matching) can only be set by precompiling a pattern
+with those flags.
 
-The input string will then be matched against the regex using `re.fullmatch()`, which means that the **full** string must match the regex.
-
-This validator is based on the `StringValidator` (see above) and accepts all of its parameters, so you can use `min_length`, `multiline`,
-etc. just like with the `StringValidator` (the same default values are applied here).
+The input string will then be matched against the regex using `re.fullmatch()`, which means that the **full** string
+must match the regex.
 
 For further information on regular expressions, see: https://docs.python.org/3/library/re.html
+
+This validator is based on the `StringValidator` (see above) and accepts all of its parameters, so you can use
+`min_length`, `multiline`, etc. just like with the `StringValidator` (the same default values are applied here).
+
+If the input string does not match the regex, a `RegexMatchError` validation error with the default error code
+'invalid_string_format' is raised. To get more explicit error messages, you can specify a custom validation error
+using the parameters `custom_error_class` (which must be a subclass of `ValidationError`) and/or `custom_error_code`
+(which is a string that overrides the default error code).
 
 **Examples:**
 
@@ -181,6 +188,15 @@ validator.validate("123Abcdef")  # will raise StringTooLongError
 # Same example, but setting a custom error code
 validator = RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_code='invalid_hex_number')
 validator.validate("banana")  # will raise RegexMatchError, but with code='invalid_hex_number'
+
+# Define a custom exception class instead of just setting a custom error code
+from validataclass.exceptions import ValidationError
+
+class InvalidHexNumberError(ValidationError):
+    code = 'invalid_hex_number'
+
+validator = RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_class=InvalidHexNumberError)
+validator.validate("banana")  # will raise a InvalidHexNumberError with its defined error code
 ```
 
 
