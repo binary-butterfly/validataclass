@@ -54,6 +54,7 @@ A much more useful distinction is to categorize the validators according to thei
 
 - Meta validators:
   - `Noneable`: Wraps another validator but allows the input to be `None`
+  - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
 
 
 These are a lot of different validators (and there will be even more in future versions) and many of them have a lot of parameters, so we
@@ -985,6 +986,77 @@ validator = Noneable(StringValidator(), default='no value given!')
 validator.validate('banana')  # will return the string 'banana'
 validator.validate('')        # will return the string ''
 validator.validate(None)      # will return the string 'no value given!'
+```
+
+
+### RejectValidator
+
+The `RejectValidator` is a special validator rejects any input with a validation error. 
+
+This validator can be used for example in dataclasses to define a field that may never be set, or to override an
+existing field in a subclassed dataclass that may not be set in this subclass. Keep in mind that in a dataclass
+you still need to define a default value for this field, e.g. with `DefaultUnset` or `Default(None)` (as explained
+later), otherwise you have a dataclass with a field that is required but can never be valid.
+
+By default, the validator literally rejects anything. In some cases you may want to allow `None` as the only valid
+input value. This can be done by setting the parameter `allow_none=True`. In that case, the validator returns `None`
+if `None` is the input value, and rejects anything else.
+
+An alternative to allow `None` is to wrap the validator inside a `Noneable` validator. This can be useful in some cases
+as the `Noneable` wrapper allows to convert the input `None` into a different value (see examples).
+
+The validator raises a `FieldNotAllowedError` by default. Optionally you can set a custom exception class using
+the parameter `error_class` (must be a subclass of `ValidationError`). There are also the parameters `error_code`
+to override the default error code with a custom one, and `error_reason` to specify a detailed error message for
+the user.
+
+**Examples:**
+
+```python
+from validataclass.validators import RejectValidator, Noneable
+
+# Rejects *any* input with the default exception (including None)
+validator = RejectValidator()
+validator.validate(None)  # raises FieldNotAllowedError
+validator.validate(42)    # raises FieldNotAllowedError
+validator.validate('')    # raises FieldNotAllowedError
+
+# Accepts only None and rejects anything else
+validator = RejectValidator(allow_none=True)
+validator.validate(None)  # returns None
+validator.validate(42)    # raises FieldNotAllowedError
+validator.validate('')    # raises FieldNotAllowedError
+
+# Use the Noneable wrapper to convert None into a different value, rejects anything else
+validator = Noneable(RejectValidator(), default='')
+validator.validate(None)  # returns '' (empty string)
+validator.validate(42)    # raises FieldNotAllowedError
+validator.validate('')    # raises FieldNotAllowedError
+
+# NOTE: Even if None is converted to an empty string in this example, the empty string itself is
+# not accepted as input by this validator. If you need a validator that does accept the empty
+# string (and rejects anything else), consider using a StringValidator with max_length=0.
+
+# Set a custom error code (but still raise FieldNotAllowedError exceptions)
+validator = RejectValidator(error_code='custom_error_code')
+validator.validate('foo')  # raises FieldNotAllowedError with custom code='custom_error_code'
+
+# Set a reason text for a more detailed error message
+validator = RejectValidator(error_reason='This field cannot be changed.')
+validator.validate('foo')  # raises FieldNotAllowedError with reason='This field cannot be changed.'
+
+# Define a custom exception class instead of just setting a custom error code
+from validataclass.exceptions import ValidationError
+
+class CustomValidationError(ValidationError):
+    code = 'custom_error_code'
+
+validator = RejectValidator(error_class=CustomValidationError)
+validator.validate('foo')  # raises CustomValidationError (with its default code)
+
+# Use the custom exception class but with a custom reason
+validator = RejectValidator(error_class=CustomValidationError, error_reason='This field cannot be changed.')
+validator.validate('foo')  # raises CustomValidationError with reason='This field cannot be changed.'
 ```
 
 

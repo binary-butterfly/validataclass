@@ -135,7 +135,7 @@ When validating input data, the `DictValidator` first ensures that the input dat
 and that all keys of the dictionary are strings (see note below). It further checks if any **required field** is missing in the input
 dictionary. Then it iterates over all fields in the dictionary. If a field validator is defined for a field, the field **value** will
 be validated using this field validator. Otherwise, the **default validator** will be used. If no default validator is defined, the field
-will be **silently discarded** (i.e. it does not result in a validation error). The output of the `DictValidator` will be new dictionary
+will be **silently discarded** (i.e. it does not result in a validation error). The output of the `DictValidator` will be a new dictionary
 containing the same fields of the input dictionary (except those that were discarded) with the values being the output of the field
 (or default) validators.
 
@@ -152,7 +152,7 @@ DictValidator](06-build-your-own.md) for your usecase.
 **Examples:**
 
 ```python
-from validataclass.validators import DictValidator, IntegerValidator, StringValidator, DecimalValidator
+from validataclass.validators import DictValidator, IntegerValidator, StringValidator, DecimalValidator, RejectValidator
 
 # Validate a dictionary with three fields: "id" (integer), "name" (string), "price" (non-negative Decimal).
 # All three fields are required, since neither required_fields nor optional_fields was set explicitly.
@@ -207,6 +207,16 @@ validator = DictValidator(
 validator.validate({'id': 3, 'foo': '1.2', 'bar': '0.5'})    # returns {'id': 3, 'foo': Decimal('1.2'), 'bar': Decimal('0.5')}
 validator.validate({'foo': '1.2', 'bar': '0.5'})             # raises DictFieldsValidationError (with DictRequiredFieldError for 'id')
 validator.validate({'id': '3', 'foo': '1.2', 'bar': '0.5'})  # raises DictFieldsValidationError (with InvalidTypeError for 'id')
+
+# Without a default validator, unknown fields are silently discarded. If you explicitly want to *reject* unknown fields,
+# use a RejectValidator as the default validator.
+validator = DictValidator(
+    field_validators={'id': IntegerValidator()},
+    default_validator=RejectValidator(),
+)
+
+validator.validate({'id': 42})                   # returns {'id': 42}
+validator.validate({'id': 42, 'foo': 'banana'})  # raises DictFieldsValidationError (with FieldNotAllowedError for 'foo')
 ```
 
 

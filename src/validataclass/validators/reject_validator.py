@@ -16,7 +16,7 @@ __all__ = [
 
 class RejectValidator(Validator):
     """
-    Meta validator that rejects any input data with a validation error.
+    Special validator that rejects any input data with a validation error.
 
     This validator can be used for example in dataclasses to define a field that may never be set, or to override an
     existing field in a subclassed dataclass that may not be set in this subclass. Keep in mind that in a dataclass
