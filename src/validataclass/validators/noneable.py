@@ -17,7 +17,7 @@ __all__ = [
 
 class Noneable(Validator):
     """
-    Meta validator that wraps another validator, but allows `None` as input value.
+    Special validator that wraps another validator, but allows `None` as input value.
 
     By default, the wrapper returns `None` for `None` as input value. Optionally a default value can be specified in the
     constructor that will be returned instead of `None`.
@@ -47,7 +47,7 @@ class Noneable(Validator):
 
     def __init__(self, validator: Validator, *, default: Any = None):
         """
-        Create a Noneable meta validator.
+        Create a Noneable wrapper validator.
 
         Parameters:
             validator: Validator that will be wrapped (required)

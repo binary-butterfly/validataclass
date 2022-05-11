@@ -52,7 +52,7 @@ A much more useful distinction is to categorize the validators according to thei
   - `DictValidator`: Validates **dicts**, validating each field with specified **field validators**
   - `DataclassValidator`: Validates **dicts** to dataclasses, using **field validators** that are defined in the dataclass
 
-- Meta validators:
+- Special validators:
   - `Noneable`: Wraps another validator but allows the input to be `None`
   - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
 
@@ -945,29 +945,32 @@ As these validators are a bit more complex than those that we've seen before, we
 But before we go on with them, we have another special type of validators left.
 
 
-## Meta validators
+## Special validators
 
-Meta validators are a special category of validators. They don't validate anything on their own, instead they wrap one or more other
-validators and then "decide" which one to use for a given input value (or whether to validate it at all), e.g. by looking at the type
-of the input data.
+There are a handful of validators that don't fit into the other categories and have special purposes.
 
-Currently only the `Noneable` meta validator exists, but more are planned to be added in a future version.
+These special validators most of the time don't validate that much on their own. For example, the `AnythingValidator` _(to be implemented!)_
+and `RejectValidator` are special validators that accept/reject any input (with only a few configurable exceptions). 
+
+Some special validators are wrappers around other validators, for example the `Noneable` wrapper that allows `None` as
+input value and passes all other values to the wrapped validator, or the `MultiTypeValidator` _(to be implemented!)_
+that uses one of multiple wrapped validators depending on the type of input data.
 
 
 ### Noneable
 
-The `Noneable` meta validator wraps another validator and additionally allows `None` as an input value.
+The `Noneable` validator wraps another validator and additionally allows `None` as an input value.
 
-Most validators do not allow `None` as the input value and raise an `RequiredValueError` instead. To allow a value to be `None`, the
-`Noneable` meta validator can be used.
+Most validators do not allow `None` as input and raise an `RequiredValueError` instead. To allow the value to be `None`,
+the `Noneable` wrapper can be used.
 
-It first checks if the input value is `None`, in which case it will simply return `None`. In all other cases the input will be passed
-to the wrapped validator as if it was used without `Noneable`.
+It first checks if the input value is `None`, in which case it simply returns `None`. In all other cases the input will
+be passed to the wrapped validator as if it was used without `Noneable`.
 
-Optionally a custom default value can be specified with the `default` parameter. If set, the `Noneable` validator will return this
-default value instead of `None` when the input value is `None`.
+Optionally a custom default value can be specified with the `default` parameter. If set, the `Noneable` validator
+returns this default value instead of `None` when the input value is `None`.
 
-Additionally, if the wrapped validator raises an `InvalidTypeError`, the meta validator will add `"none"` to the `expected_types`
+Additionally, if the wrapped validator raises an `InvalidTypeError`, the wrapper will add `"none"` to the `expected_types`
 parameter of the exception.
 
 **Examples:**

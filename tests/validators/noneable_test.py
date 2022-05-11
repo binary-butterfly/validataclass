@@ -14,7 +14,7 @@ from validataclass.validators import Noneable, DecimalValidator, IntegerValidato
 
 class NoneableTest:
     """
-    Unit tests for the Noneable meta validator.
+    Unit tests for the Noneable wrapper validator.
     """
 
     @staticmethod

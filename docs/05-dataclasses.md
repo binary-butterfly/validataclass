@@ -417,8 +417,8 @@ whether the field was literally an empty string.
 
 One solution is to use `Default(None)` instead: If the field is `None`, you know that the field did not exist in the input dictionary.
 
-This is sufficient in a lot of cases, but sometimes `None` is an allowed value for a field (e.g. when using the `Noneable` meta validator)
-and you need to distinguish between "the field did not exist" and "the field was explicitly set to `None`".
+This is sufficient in a lot of cases, but sometimes `None` is an allowed value for a field (e.g. when using the `Noneable`
+wrapper) and you need to distinguish between "the field did not exist" and "the field was explicitly set to `None`".
 
 For this case, we defined a special value called `UnsetValue`, which you can use similarly to `None`. These values are so called
 [sentinel objects](https://python-patterns.guide/python/sentinel-object/): Their purpose is to represent a missing value. They also are
@@ -488,14 +488,14 @@ For example, imagine a dataclass with only one field: `some_var: Optional[int] =
 dictionary  `{}` would result in an object with the default value `some_var = None`, but the input dictionary `{"some_var": None}` itself
 would **not** be valid at all.
 
-Instead, to explicitly allow `None` as value, you can use the `Noneable` meta validator (introduced [earlier](03-basic-validators.md)),
+Instead, to explicitly allow `None` as value, you can use the `Noneable` wrapper (introduced [earlier](03-basic-validators.md)),
 e.g. `some_var: Optional[int] = Noneable(IntegerValidator())`. This however does **not** make the field optional, so an input dictionary
 with the value `None` would be allowed, but omitting the field in an input dictionary would be invalid.
 
 To make a field both optional **and** allow `None` as value, you can simply combine `Noneable()` and a `Default` value. \
 For example: `some_var: Optional[int] = Noneable(IntegerValidator()), Default(None)`.
 
-You can also configure the `Noneable` meta validator to use a different default value than `None`. For example, to always use `0` as the
+You can also configure the `Noneable` wrapper to use a different default value than `None`. For example, to always use `0` as the
 default value, regardless of whether the field is missing in the input dictionary or whether the field has the input value `None`: \
 `some_var: int = Noneable(IntegerValidator(), default=0), Default(0)`.
 
