@@ -52,8 +52,9 @@ A much more useful distinction is to categorize the validators according to thei
   - `DictValidator`: Validates **dicts**, validating each field with specified **field validators**
   - `DataclassValidator`: Validates **dicts** to dataclasses, using **field validators** that are defined in the dataclass
 
-- Meta validators:
+- Special validators:
   - `Noneable`: Wraps another validator but allows the input to be `None`
+  - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
 
 
 These are a lot of different validators (and there will be even more in future versions) and many of them have a lot of parameters, so we
@@ -944,29 +945,32 @@ As these validators are a bit more complex than those that we've seen before, we
 But before we go on with them, we have another special type of validators left.
 
 
-## Meta validators
+## Special validators
 
-Meta validators are a special category of validators. They don't validate anything on their own, instead they wrap one or more other
-validators and then "decide" which one to use for a given input value (or whether to validate it at all), e.g. by looking at the type
-of the input data.
+There are a handful of validators that don't fit into the other categories and have special purposes.
 
-Currently only the `Noneable` meta validator exists, but more are planned to be added in a future version.
+These special validators most of the time don't validate that much on their own. For example, the `AnythingValidator` _(to be implemented!)_
+and `RejectValidator` are special validators that accept/reject any input (with only a few configurable exceptions). 
+
+Some special validators are wrappers around other validators, for example the `Noneable` wrapper that allows `None` as
+input value and passes all other values to the wrapped validator, or the `MultiTypeValidator` _(to be implemented!)_
+that uses one of multiple wrapped validators depending on the type of input data.
 
 
 ### Noneable
 
-The `Noneable` meta validator wraps another validator and additionally allows `None` as an input value.
+The `Noneable` validator wraps another validator and additionally allows `None` as an input value.
 
-Most validators do not allow `None` as the input value and raise an `RequiredValueError` instead. To allow a value to be `None`, the
-`Noneable` meta validator can be used.
+Most validators do not allow `None` as input and raise an `RequiredValueError` instead. To allow the value to be `None`,
+the `Noneable` wrapper can be used.
 
-It first checks if the input value is `None`, in which case it will simply return `None`. In all other cases the input will be passed
-to the wrapped validator as if it was used without `Noneable`.
+It first checks if the input value is `None`, in which case it simply returns `None`. In all other cases the input will
+be passed to the wrapped validator as if it was used without `Noneable`.
 
-Optionally a custom default value can be specified with the `default` parameter. If set, the `Noneable` validator will return this
-default value instead of `None` when the input value is `None`.
+Optionally a custom default value can be specified with the `default` parameter. If set, the `Noneable` validator
+returns this default value instead of `None` when the input value is `None`.
 
-Additionally, if the wrapped validator raises an `InvalidTypeError`, the meta validator will add `"none"` to the `expected_types`
+Additionally, if the wrapped validator raises an `InvalidTypeError`, the wrapper will add `"none"` to the `expected_types`
 parameter of the exception.
 
 **Examples:**
@@ -985,6 +989,77 @@ validator = Noneable(StringValidator(), default='no value given!')
 validator.validate('banana')  # will return the string 'banana'
 validator.validate('')        # will return the string ''
 validator.validate(None)      # will return the string 'no value given!'
+```
+
+
+### RejectValidator
+
+The `RejectValidator` is a special validator rejects any input with a validation error. 
+
+This validator can be used for example in dataclasses to define a field that may never be set, or to override an
+existing field in a subclassed dataclass that may not be set in this subclass. Keep in mind that in a dataclass
+you still need to define a default value for this field, e.g. with `DefaultUnset` or `Default(None)` (as explained
+later), otherwise you have a dataclass with a field that is required but can never be valid.
+
+By default, the validator literally rejects anything. In some cases you may want to allow `None` as the only valid
+input value. This can be done by setting the parameter `allow_none=True`. In that case, the validator returns `None`
+if `None` is the input value, and rejects anything else.
+
+An alternative to allow `None` is to wrap the validator inside a `Noneable` validator. This can be useful in some cases
+as the `Noneable` wrapper allows to convert the input `None` into a different value (see examples).
+
+The validator raises a `FieldNotAllowedError` by default. Optionally you can set a custom exception class using
+the parameter `error_class` (must be a subclass of `ValidationError`). There are also the parameters `error_code`
+to override the default error code with a custom one, and `error_reason` to specify a detailed error message for
+the user.
+
+**Examples:**
+
+```python
+from validataclass.validators import RejectValidator, Noneable
+
+# Rejects *any* input with the default exception (including None)
+validator = RejectValidator()
+validator.validate(None)  # raises FieldNotAllowedError
+validator.validate(42)    # raises FieldNotAllowedError
+validator.validate('')    # raises FieldNotAllowedError
+
+# Accepts only None and rejects anything else
+validator = RejectValidator(allow_none=True)
+validator.validate(None)  # returns None
+validator.validate(42)    # raises FieldNotAllowedError
+validator.validate('')    # raises FieldNotAllowedError
+
+# Use the Noneable wrapper to convert None into a different value, rejects anything else
+validator = Noneable(RejectValidator(), default='')
+validator.validate(None)  # returns '' (empty string)
+validator.validate(42)    # raises FieldNotAllowedError
+validator.validate('')    # raises FieldNotAllowedError
+
+# NOTE: Even if None is converted to an empty string in this example, the empty string itself is
+# not accepted as input by this validator. If you need a validator that does accept the empty
+# string (and rejects anything else), consider using a StringValidator with max_length=0.
+
+# Set a custom error code (but still raise FieldNotAllowedError exceptions)
+validator = RejectValidator(error_code='custom_error_code')
+validator.validate('foo')  # raises FieldNotAllowedError with custom code='custom_error_code'
+
+# Set a reason text for a more detailed error message
+validator = RejectValidator(error_reason='This field cannot be changed.')
+validator.validate('foo')  # raises FieldNotAllowedError with reason='This field cannot be changed.'
+
+# Define a custom exception class instead of just setting a custom error code
+from validataclass.exceptions import ValidationError
+
+class CustomValidationError(ValidationError):
+    code = 'custom_error_code'
+
+validator = RejectValidator(error_class=CustomValidationError)
+validator.validate('foo')  # raises CustomValidationError (with its default code)
+
+# Use the custom exception class but with a custom reason
+validator = RejectValidator(error_class=CustomValidationError, error_reason='This field cannot be changed.')
+validator.validate('foo')  # raises CustomValidationError with reason='This field cannot be changed.'
 ```
 
 

@@ -13,8 +13,9 @@ from .integer_validator import IntegerValidator
 from .float_validator import FloatValidator
 from .string_validator import StringValidator
 
-# Meta validators / helpers
+# Special validators
 from .noneable import Noneable
+from .reject_validator import RejectValidator
 
 # Extended type validators
 from .any_of_validator import AnyOfValidator
