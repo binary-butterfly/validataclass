@@ -10,7 +10,7 @@ from typing import Optional
 import pytest
 
 from validataclass.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
-    InternalValidationError, InvalidValidatorOptionException, DataclassValidatorFieldException
+    InvalidValidatorOptionException, DataclassValidatorFieldException
 from validataclass.helpers import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset, UnsetValue, OptionalUnset
 from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
@@ -314,21 +314,12 @@ class DataclassValidatorTest:
 
         validator: DataclassValidator[PostInitDataclass] = DataclassValidator(PostInitDataclass)
 
-        with pytest.raises(DataclassPostValidationError) as exception_info:
+        with pytest.raises(ZeroDivisionError):
             # Let's cause a divide-by-zero error!
             validator.validate({
                 'a': 1,
                 'b': 0,
             })
-
-        assert exception_info.value.to_dict() == {
-            'code': 'post_validation_errors',
-            'error': {
-                'code': 'internal_error',
-            },
-        }
-        assert type(exception_info.value.wrapped_error) is InternalValidationError
-        assert type(getattr(exception_info.value.wrapped_error, 'internal_error')) is ZeroDivisionError
 
     # Tests for subclassed DataclassValidators (with post_validate() method)
 
