@@ -15,6 +15,7 @@ from .string_validator import StringValidator
 
 # Special validators
 from .noneable import Noneable
+from .anything_validator import AnythingValidator
 from .reject_validator import RejectValidator
 
 # Extended type validators
