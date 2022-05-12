@@ -6,10 +6,63 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.5.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.5.0) - 2022-05-12
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.4.0...0.5.0)
+
+This release introduces some new validators, new parameters for existing validators and some other smaller changes.
+
+There are two potentially **breaking changes** ([#51] and [#59]), although it's very unlikely that any existing code is
+negatively affected by it.
+
+### Added
+
+- `AnythingValidator`: New validator that accepts any input without validation. [#56]
+- `RejectValidator`: New validator that rejects any input. [#55]
+- `NoneToUnsetValue`: New validator as a shortcut for `Noneable(..., default=UnsetValue)`. [#57]
+- `ListValidator`: Add parameter `discard_invalid` to ignore invalid list elements (by [@lahdjirayhan]). [#43]
+- `UrlValidator`: Add parameters `allow_empty` and `max_length` (by [@lahdjirayhan]).  [#49] 
+- `RegexValidator`: Add parameter `custom_error_class` to set a custom exception class. [#54]
+
+### Changed
+
+- `IntegerValidator`: Set defaults for `min_value` and `max_value` to restrict input to 32-bit integers. [#51]
+- `Noneable`: Raise exception if wrapped validator is not a valid `Validator` object. [#52]
+- `DecimalValidator`: Allow `min_value` and `max_value` parameters to be specified as integers. [#53]
+- `DataclassValidator`: Don't wrap uncaught exceptions in `InternalValidationError` anymore. [#59]
+
+### Removed
+
+- Removed `InternalValidationError` exception. [#59]
+
+### Fixed
+
+- **GitHub CI:** Fix running unit test workflows in pull requests from forked repositories. [#45], [#47], [#48]
+
+### New contributors
+
+- [@lahdjirayhan] made their first contributions in [#43] and [#49].
+
+[#43]: https://github.com/binary-butterfly/validataclass/pull/43
+[#45]: https://github.com/binary-butterfly/validataclass/pull/45
+[#47]: https://github.com/binary-butterfly/validataclass/pull/47
+[#48]: https://github.com/binary-butterfly/validataclass/pull/48
+[#49]: https://github.com/binary-butterfly/validataclass/pull/49
+[#51]: https://github.com/binary-butterfly/validataclass/pull/51
+[#52]: https://github.com/binary-butterfly/validataclass/pull/52
+[#53]: https://github.com/binary-butterfly/validataclass/pull/53
+[#54]: https://github.com/binary-butterfly/validataclass/pull/54
+[#55]: https://github.com/binary-butterfly/validataclass/pull/55
+[#56]: https://github.com/binary-butterfly/validataclass/pull/56
+[#57]: https://github.com/binary-butterfly/validataclass/pull/57
+[#59]: https://github.com/binary-butterfly/validataclass/pull/59
+
+[@lahdjirayhan]: https://github.com/lahdjirayhan
+
+
 ## [0.4.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.4.0) - 2022-02-01
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.3.2...0.4.0)
-
 
 ### Added
 
