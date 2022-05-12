@@ -54,6 +54,7 @@ A much more useful distinction is to categorize the validators according to thei
 
 - Special validators:
   - `Noneable`: Wraps another validator but allows the input to be `None`
+  - `NoneToUnsetValue`: Like `Noneable`, but converts `None` to `UnsetValue`
   - `AnythingValidator`: Accepts any input without validation (optionally with type restrictions)
   - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
 
@@ -990,6 +991,29 @@ validator = Noneable(StringValidator(), default='no value given!')
 validator.validate('banana')  # will return the string 'banana'
 validator.validate('')        # will return the string ''
 validator.validate(None)      # will return the string 'no value given!'
+```
+
+
+### NoneToUnsetValue
+
+The `NoneToUnsetValue` validator is a variation of the `Noneable` validator. It is equivalent to
+`Noneable(validator, default=UnsetValue)`.
+
+In other words, if the input value is `None`, this validator returns the special value `UnsetValue`. In all other cases,
+the input is validated using the wrapped validator.
+
+**Note:** The meaning of `UnsetValue` is explained later in the chapter about [dataclasses](05-dataclasses.md).
+
+**Examples:**
+
+```python
+from validataclass.validators import NoneToUnsetValue, StringValidator
+
+# Accepts all strings allowed by the StringValidator, and None, which is converted to UnsetValue
+validator = NoneToUnsetValue(StringValidator())
+validator.validate('banana')  # will return 'banana'
+validator.validate('')        # will return '' (empty string)
+validator.validate(None)      # will return UnsetValue
 ```
 
 
