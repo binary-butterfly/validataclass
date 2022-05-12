@@ -7,10 +7,10 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 from typing import Any, Optional, TypeVar, Generic, Dict
 
-from . import Validator, DictValidator
-from validataclass.exceptions import InvalidValidatorOptionException, DataclassValidatorFieldException, ValidationError, \
-    DataclassPostValidationError, InternalValidationError
+from validataclass.exceptions import ValidationError, DataclassValidatorFieldException, DataclassPostValidationError, \
+    InvalidValidatorOptionException
 from validataclass.helpers import Default, NoDefault
+from . import Validator, DictValidator
 
 __all__ = [
     'DataclassValidator',
@@ -173,10 +173,7 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
         except ValidationError as error:
             # Wrap validation error in a DataclassPostValidationError
             raise DataclassPostValidationError(error=error)
-        except Exception as error:
-            # Wrap unknown exception in an 'internal_error' (the exception will not be included in to_dict() but accessible for debugging)
-            internal_error = InternalValidationError(internal_error=error)
-            raise DataclassPostValidationError(error=internal_error)
+        # Ignore all non-ValidationError exceptions (these are either errors in the code or should be handled properly by the user)
 
     # noinspection PyMethodMayBeStatic
     def post_validate(self, validated_object: T_Dataclass) -> T_Dataclass:
