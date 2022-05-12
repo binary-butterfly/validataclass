@@ -98,6 +98,5 @@ class NoneableTest:
     )
     def test_invalid_validator_type(validator):
         """ Test that Noneable raises an exception on construction if the wrapped validator has the wrong type. """
-        with pytest.raises(TypeError) as exception_info:
+        with pytest.raises(TypeError, match='Noneable requires a Validator instance'):
             Noneable(validator)  # noqa
-        assert str(exception_info.value) == 'Noneable requires a Validator instance.'

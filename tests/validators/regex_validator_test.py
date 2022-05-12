@@ -157,9 +157,8 @@ class RegexValidatorTest:
     @staticmethod
     def test_invalid_regex_pattern():
         """ Check that RegexValidator raises an exception for invalid regex patterns. """
-        with pytest.raises(re.error) as exception_info:
+        with pytest.raises(re.error, match='unterminated character set at position 0'):
             RegexValidator('[')
-        assert str(exception_info.value) == 'unterminated character set at position 0'
 
     # Test RegexValidator with custom error classes and/or error codes
 
@@ -194,15 +193,14 @@ class RegexValidatorTest:
         with pytest.raises(ValidationError) as exception_info:
             validator.validate('x')
 
-        assert type(exception_info.value) == expected_error_class
+        assert type(exception_info.value) is expected_error_class
         assert exception_info.value.to_dict() == {'code': expected_error_code}
 
     @staticmethod
     def test_custom_error_class_invalid_type():
         """ Test that RegexValidator raises an error on construction if the custom error class is not a ValidatonError subclass. """
-        with pytest.raises(TypeError) as exception_info:
+        with pytest.raises(TypeError, match='Custom error class must be a subclass of ValidationError'):
             RegexValidator('[0-9]', custom_error_class=Exception)  # noqa
-        assert str(exception_info.value) == 'Custom error class must be a subclass of ValidationError.'
 
     # Tests with length requirements
 
