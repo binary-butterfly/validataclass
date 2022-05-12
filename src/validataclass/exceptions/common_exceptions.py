@@ -11,7 +11,6 @@ __all__ = [
     'RequiredValueError',
     'FieldNotAllowedError',
     'InvalidTypeError',
-    'InternalValidationError',
 ]
 
 
@@ -130,25 +129,4 @@ class InvalidTypeError(ValidationError):
             base_dict.update({'expected_type': self.expected_types[0]})
         else:
             base_dict.update({'expected_types': self.expected_types})
-        return base_dict
-
-
-class InternalValidationError(ValidationError):
-    """
-    Validation error raised when an unhandled exception (that is not a `ValidationError` subclass) occurs, e.g. in post validation.
-
-    The unhandled exception can be wrapped inside the 'internal_error' argument, which will NOT be included in `to_dict()` but will
-    be accessible via `error.internal_error` or `repr(error)` for debugging purposes.
-    """
-    code = 'internal_error'
-    internal_error: Optional[Exception] = None
-
-    def __init__(self, *, internal_error: Optional[Exception] = None, **kwargs):
-        super().__init__(**kwargs)
-        self.internal_error = internal_error
-
-    def _get_repr_dict(self) -> Dict[str, str]:
-        base_dict = super()._get_repr_dict()
-        if self.internal_error is not None:
-            base_dict['internal_error'] = repr(self.internal_error)
         return base_dict

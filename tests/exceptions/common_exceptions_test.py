@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import pytest
 
-from validataclass.exceptions import ValidationError, InvalidTypeError, InternalValidationError
+from validataclass.exceptions import ValidationError, InvalidTypeError
 
 
 class ValidationErrorTest:
@@ -130,32 +130,3 @@ class InvalidTypeErrorTest:
         # Check error after adding types
         assert repr(error) == "InvalidTypeError(code='invalid_type', expected_types=['banana', 'float', 'int'])"
         assert error.to_dict() == {'code': 'invalid_type', 'expected_types': ['banana', 'float', 'int']}
-
-
-class InternalValidationErrorTest:
-    """
-    Tests for the InternalValidationError exception class.
-    This exception should look like a regular exception when using to_dict(), but repr() should contain the internal exception.
-    """
-
-    @staticmethod
-    def test_internal_validation_error_without_exception():
-        """ Tests InternalValidationError with some internal exception. """
-        error = InternalValidationError()
-
-        # No internal_error in neither representation
-        assert repr(error) == "InternalValidationError(code='internal_error')"
-        assert error.to_dict() == {'code': 'internal_error'}
-
-    @staticmethod
-    def test_internal_validation_error_with_exception():
-        """ Tests InternalValidationError with some internal exception. """
-        internal_error = ValueError('banana.')
-        error = InternalValidationError(internal_error=internal_error)
-
-        # Check that exception contains the internal error
-        assert error.internal_error is internal_error
-        assert repr(error) == "InternalValidationError(code='internal_error', internal_error=ValueError('banana.'))"
-
-        # The to_dict() representation (user-facing) should not contain the internal exception though
-        assert error.to_dict() == {'code': 'internal_error'}
