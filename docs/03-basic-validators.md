@@ -54,6 +54,7 @@ A much more useful distinction is to categorize the validators according to thei
 
 - Special validators:
   - `Noneable`: Wraps another validator but allows the input to be `None`
+  - `AnythingValidator`: Accepts any input without validation (optionally with type restrictions)
   - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
 
 
@@ -949,7 +950,7 @@ But before we go on with them, we have another special type of validators left.
 
 There are a handful of validators that don't fit into the other categories and have special purposes.
 
-These special validators most of the time don't validate that much on their own. For example, the `AnythingValidator` _(to be implemented!)_
+These special validators most of the time don't validate that much on their own. For example, the `AnythingValidator`
 and `RejectValidator` are special validators that accept/reject any input (with only a few configurable exceptions). 
 
 Some special validators are wrappers around other validators, for example the `Noneable` wrapper that allows `None` as
@@ -989,6 +990,72 @@ validator = Noneable(StringValidator(), default='no value given!')
 validator.validate('banana')  # will return the string 'banana'
 validator.validate('')        # will return the string ''
 validator.validate(None)      # will return the string 'no value given!'
+```
+
+
+### AnythingValidator
+
+The `AnythingValidator` is a special validator that accepts any input without further validation.
+
+This validator can be used in places where it's not possible or necessary to validate the input but where the input
+should still be preserved (e.g. as a field in a dataclass), or where the unvalidated data should be saved and properly
+validated at a later point.
+
+By default this validator accepts literally anything, including `None`. There are two optional parameters which can be
+used to restrict the validator to some extend: `allow_none` and `allowed_types`.
+
+To reject `None` as input, but accept anything else, you can set `allow_none=False`.
+
+To only allow a certain set of input data types, you can set `allowed_types` to a list or set (or any iterable) of
+types. The validator will do a type check on the input data then and reject any types that are not part of
+`allowed_types`. Keep in mind that no further validation will be performed on the data.
+
+Setting `allowed_types` will also cause the validator to reject `None` unless it is part of the allowed types. For
+example, if you set `allowed_types=[str]`, only strings will be accepted. If you additionally want to allow `None`,
+you can set `allow_none=True`. Alternatively you can also specify `type(None)` or `None` in the allowed types list.
+
+The validation errors raised by this validator are `RequiredValueError` (only if `allow_none=False` or `allowed_types`
+is used) and `InvalidTypeError` (only if `allowed_types` is used).
+
+**Examples:**
+
+```python
+from validataclass.validators import AnythingValidator
+
+# Accepts any input and returns it unmodified (including None)
+validator = AnythingValidator()
+validator.validate(None)  # returns None
+validator.validate('')    # returns '' (empty string)
+validator.validate(42)    # returns 42
+
+# Accepts any input *except* for None
+validator = AnythingValidator(allow_none=False)
+validator.validate(None)  # raises RequiredValueError
+validator.validate('')    # returns '' (empty string)
+validator.validate(42)    # returns 42
+
+# Accepts only integers and floats, which are returned unmodified (None is not allowed)
+validator = AnythingValidator(allowed_types=[int, float])
+validator.validate(None)  # raises RequiredValueError
+validator.validate('')    # raises InvalidTypeError (with expected_types=['float', 'int'])
+validator.validate(42)    # returns 42
+validator.validate(1.23)  # returns 1.23
+
+# Like above, accepts only integers and floats, but also allows None
+# The following definitions are equivalent:
+validator = AnythingValidator(allowed_types=[int, float], allow_none=True)
+#         = AnythingValidator(allowed_types=[int, float, type(None)])
+#         = AnythingValidator(allowed_types=[int, float, None])
+validator.validate(None)  # returns None
+validator.validate('')    # raises InvalidTypeError (with expected_types=['float', 'int', 'none'])
+validator.validate(42)    # returns 42
+
+# Accepts only dictionaries (which are returned completely unvalidated!)
+validator = AnythingValidator(allowed_types=dict)
+validator.validate(None)      # raises RequiredValueError
+validator.validate('')        # raises InvalidTypeError (with expected_type='dict')
+validator.validate({})        # returns {} (empty dictionary)
+validator.validate({13: 12})  # returns {13: 12}
 ```
 
 
