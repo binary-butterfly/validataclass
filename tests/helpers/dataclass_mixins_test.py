@@ -100,12 +100,9 @@ class ValidataclassMixinTest:
     @staticmethod
     def test_create_with_defaults_invalid_required_fields():
         """ Tests the create_with_defaults() class method missing required fields. """
-        with pytest.raises(TypeError) as exception_info:
+        # The exact exception message changed between Python versions 3.9 and 3.10
+        with pytest.raises(TypeError, match="missing 1 required positional argument: 'foo'"):
             UnitTestDataclass.create_with_defaults()
-
-        # The exact exception message changed between Python versions 3.9 (first variant) and 3.10 (second variant)
-        assert str(exception_info.value) == "__init__() missing 1 required positional argument: 'foo'" \
-            or str(exception_info.value) == "UnitTestDataclass.__init__() missing 1 required positional argument: 'foo'"
 
     @staticmethod
     def test_create_with_defaults_on_subclass():
