@@ -152,7 +152,8 @@ DictValidator](06-build-your-own.md) for your usecase.
 **Examples:**
 
 ```python
-from validataclass.validators import DictValidator, IntegerValidator, StringValidator, DecimalValidator, RejectValidator
+from validataclass.validators import DictValidator, IntegerValidator, StringValidator, DecimalValidator, \
+    AnythingValidator, RejectValidator
 
 # Validate a dictionary with three fields: "id" (integer), "name" (string), "price" (non-negative Decimal).
 # All three fields are required, since neither required_fields nor optional_fields was set explicitly.
@@ -217,6 +218,16 @@ validator = DictValidator(
 
 validator.validate({'id': 42})                   # returns {'id': 42}
 validator.validate({'id': 42, 'foo': 'banana'})  # raises DictFieldsValidationError (with FieldNotAllowedError for 'foo')
+
+# If you want to validate only certain fields, but keep all other fields in the dictionary without discarding them, you
+# can use the AnythingValidator as the default validator.
+validator = DictValidator(
+    field_validators={'id': IntegerValidator()},
+    default_validator=AnythingValidator(),
+)
+
+validator.validate({'id': 42})                   # returns {'id': 42}
+validator.validate({'id': 42, 'foo': 'banana'})  # returns {'id': 42, 'foo': 'banana'}
 ```
 
 
