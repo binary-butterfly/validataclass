@@ -36,11 +36,13 @@ class UnsetValueType:
     def __bool__(self):
         return False
 
+    def __eq__(self, other):
+        return other is self
+
 
 # Create sentinel object and redefine __new__ so that the object cannot be cloned
 UnsetValue = UnsetValueType()
 UnsetValueType.__new__ = lambda cls: UnsetValue
-
 
 # Type alias OptionalUnset[T] for fields with DefaultUnset (similar to Optional[T] but using UnsetValueType instead of NoneType)
 T = TypeVar('T')

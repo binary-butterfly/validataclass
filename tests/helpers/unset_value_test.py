@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from copy import copy
 
+import pytest
+
 from validataclass.helpers import UnsetValue, UnsetValueType
 
 
@@ -30,3 +32,17 @@ class UnsetValueTest:
 
         # Test that calling the UnsetValue returns the UnsetValue itself
         assert UnsetValue() is UnsetValue
+
+    @staticmethod
+    def test_unset_value_equal_to_itself():
+        """ Test that UnsetValue is equal to itself. """
+        assert UnsetValue == UnsetValue
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'other_value', [None, False, True, object(), 0, '', 'UnsetValue', '<UnsetValue>', (UnsetValue,), [UnsetValue]]
+    )
+    def test_unset_value_not_equal(other_value):
+        """ Test that nothing is equal to UnsetValue (except itself). """
+        assert other_value != UnsetValue
+        assert UnsetValue != other_value
