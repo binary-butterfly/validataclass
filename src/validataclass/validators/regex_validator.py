@@ -72,6 +72,9 @@ class RegexValidator(StringValidator):
     # Precompiled regex pattern
     regex_pattern: re.Pattern
 
+    # Output template
+    output_template: Optional[str]
+
     # Exception class to use when regex matching fails
     custom_error_class: Type[ValidationError]
 
@@ -81,6 +84,7 @@ class RegexValidator(StringValidator):
     def __init__(
         self,
         pattern: Union[re.Pattern, str],
+        output_template: Optional[str] = None,
         *,
         custom_error_class: Type[ValidationError] = RegexMatchError,
         custom_error_code: Optional[str] = None,
@@ -110,6 +114,9 @@ class RegexValidator(StringValidator):
         else:
             self.regex_pattern = re.compile(pattern)
 
+        # Save output_template
+        self.output_template = output_template
+
         # Save custom error class and code
         self.custom_error_class = custom_error_class
         self.custom_error_code = custom_error_code
@@ -119,10 +126,17 @@ class RegexValidator(StringValidator):
         Validate input as string and match full string against regular expression. Returns unmodified string.
         """
         # Validate input with base StringValidator (checks length requirements)
-        input_data = super().validate(input_data)
+        output = super().validate(input_data)
 
         # Match full string against Regex pattern
-        if not self.regex_pattern.fullmatch(input_data):
+        match = self.regex_pattern.fullmatch(input_data)
+
+        # Raise error if match not found
+        if not match:
             raise self.custom_error_class(code=self.custom_error_code)
 
-        return input_data
+        # Expand template if output_template was supplied
+        if self.output_template:
+            output = match.expand(self.output_template)
+
+        return output
