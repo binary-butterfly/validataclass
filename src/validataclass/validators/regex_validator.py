@@ -55,6 +55,9 @@ class RegexValidator(StringValidator):
     # As above, but setting string length requirements to only allow 6-digit hex numbers (e.g. '123abc')
     RegexValidator(re.compile(r'[0-9a-f]+', re.IGNORECASE), min_length=6, max_length=6)
 
+    # Output a template substituted with match groups instead of original input string
+    RegexValidator(re.compile(r'(?P<hex>[0-9a-f]+)'), "Validated hexadecimal: \g<hex>")
+
     # Set a custom error code (will raise RegexMatchError with error code 'invalid_hex_number' on error)
     RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_code='invalid_hex_number')
 
@@ -98,6 +101,7 @@ class RegexValidator(StringValidator):
 
         Parameters:
             pattern: `re.Pattern` or `str`, regex pattern to use for validation (required)
+            output_template: Optional `str`, template to be used in output, will be supplied to match.expand() (default: None)
             custom_error_class: Subclass of `ValidationError` raised when regex matching fails (default: RegexMatchError)
             custom_error_code: Optional `str`, overrides the default error code in the regex match exception (default: None)
         """
@@ -123,7 +127,9 @@ class RegexValidator(StringValidator):
 
     def validate(self, input_data: Any) -> str:
         """
-        Validate input as string and match full string against regular expression. Returns unmodified string.
+        Validate input as string and match full string against regular expression.
+
+        Returns unmodified string, unless when output template was supplied.
         """
         # Validate input with base StringValidator (checks length requirements)
         output = super().validate(input_data)
