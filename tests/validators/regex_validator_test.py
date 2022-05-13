@@ -160,6 +160,80 @@ class RegexValidatorTest:
         with pytest.raises(re.error, match='unterminated character set at position 0'):
             RegexValidator('[')
 
+    # Test RegexValidator with output template
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'regex_pattern, output_template, input_data, expected_output', [
+            # Empty template returns the original string
+            (r'.*', r'', 'some input', 'some input'),
+
+            # Constant/no match template
+            (r'.*', r'constant template', 'lorem ipsum lololol', 'constant template'),
+
+            # With numeric groups for matches
+            (r'(\w+) (\w+)', r'First: \1, Last: \2', "Isaac Newton", "First: Isaac, Last: Newton"),
+
+            # With named groups for matches
+            (r'(?P<first>\w+) (?P<last>\w+)', r'First: \g<first>, Last: \g<last>', "Isaac Newton", "First: Isaac, Last: Newton"),
+        ]
+    )
+    def test_templated_output_valid(regex_pattern, output_template, input_data, expected_output):
+        """ Check that RegexValidator give templated outputs correctly. """
+        validator = RegexValidator(regex_pattern, output_template)
+        assert validator.validate(input_data) == expected_output
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'regex_pattern, output_template, input_data, exception_message', [
+            # No numeric match group
+            (
+                r'.*',
+                r'\1',
+                'lmao',
+                "invalid group reference 1 at position 1",
+            ),
+
+            # Nonexisting numeric match group
+            (
+                r'(\w+) (\w+)',
+                r'\3',
+                "Isaac Newton",
+                "invalid group reference 3 at position 1",
+            ),
+
+            # Nonexisting named match group
+            (
+                r'(?P<first>\w+) (\w+)',
+                r'\g<last>',
+                "Isaac Newton",
+                "unknown group name 'last'",
+            ),
+        ]
+    )
+    def test_templated_output_invalid(regex_pattern, output_template, input_data, exception_message):
+        """ Check that RegexValidator raises exception for invalid templates. """
+        validator = RegexValidator(regex_pattern, output_template)
+        with pytest.raises((re.error, IndexError)) as exception_info:
+            validator.validate(input_data)
+        assert str(exception_info.value) == exception_message
+
+    @staticmethod
+    def test_input_invalid():
+        """ Check that RegexValidator will raise error
+
+        Instead of e.g. returning unfilled templates when input is invalid.
+        """
+        pattern = r'(?P<filename>\w+)\.(?P<ext>png|jpg)'
+        template = r'Name: \g<filename>; Extension: \g<ext>'
+        invalid_input_list = ['name.jpgg', 'nonamepng', '.png', 'noext.']
+        validator = RegexValidator(pattern, template)
+
+        for invalid_input in invalid_input_list:
+            with pytest.raises(RegexMatchError) as exception_info:
+                validator.validate(invalid_input)
+            assert exception_info.value.to_dict() == {'code': 'invalid_string_format'}
+
     # Test RegexValidator with custom error classes and/or error codes
 
     @staticmethod
