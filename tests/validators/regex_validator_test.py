@@ -220,20 +220,26 @@ class RegexValidatorTest:
         assert str(exception_info.value) == exception_message
 
     @staticmethod
-    def test_input_invalid():
+    @pytest.mark.parametrize(
+        'input_data', [
+            'name.jpgg',
+            'nonamepng',
+            '.png',
+            'noext.',
+        ]
+    )
+    def test_input_invalid(input_data):
         """ Check that RegexValidator will raise error
 
         Instead of e.g. returning unfilled templates when input is invalid.
         """
         pattern = r'(?P<filename>\w+)\.(?P<ext>png|jpg)'
         template = r'Name: \g<filename>; Extension: \g<ext>'
-        invalid_input_list = ['name.jpgg', 'nonamepng', '.png', 'noext.']
         validator = RegexValidator(pattern, template)
 
-        for invalid_input in invalid_input_list:
-            with pytest.raises(RegexMatchError) as exception_info:
-                validator.validate(invalid_input)
-            assert exception_info.value.to_dict() == {'code': 'invalid_string_format'}
+        with pytest.raises(RegexMatchError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {'code': 'invalid_string_format'}
 
     # Test RegexValidator with custom error classes and/or error codes
 
