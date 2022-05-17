@@ -16,7 +16,7 @@ __all__ = [
 
 
 class RegexValidator(StringValidator):
-    """
+    r"""
     Validator that matches strings against a regular expression, optionally with minimal/maximal length requirements.
 
     This validator is based on the `StringValidator` which first handles type checking and optional length requirements.
@@ -56,7 +56,7 @@ class RegexValidator(StringValidator):
     RegexValidator(re.compile(r'[0-9a-f]+', re.IGNORECASE), min_length=6, max_length=6)
 
     # Output a template substituted with match groups instead of original input string
-    RegexValidator(re.compile(r'(?P<hex>[0-9a-f]+)'), "Validated hexadecimal: \g<hex>")
+    RegexValidator(re.compile(r'(?P<hex>[0-9a-f]+)'), r'Validated hexadecimal: \g<hex>')
 
     # Set a custom error code (will raise RegexMatchError with error code 'invalid_hex_number' on error)
     RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_code='invalid_hex_number')
