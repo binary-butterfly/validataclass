@@ -142,7 +142,7 @@ class RegexValidator(StringValidator):
             raise self.custom_error_class(code=self.custom_error_code)
 
         # Expand template if output_template was supplied
-        if self.output_template:
+        if self.output_template is not None:
             output = match.expand(self.output_template)
 
         return output
