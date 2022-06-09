@@ -5,12 +5,13 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
+import sys
 from collections import namedtuple
-from typing import Any, Union, Dict, Optional
+from typing import Any, Union, Dict, Optional, NoReturn
 
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.validators import Validator
-from .dataclass_defaults import Default, NoDefault
+from .dataclass_defaults import Default, NoDefault, DefaultFactory, DefaultUnset
 
 # Specify which functions/symbols are imported with `from module import *`
 __all__ = [
@@ -81,8 +82,8 @@ def _prepare_dataclass_metadata(cls) -> None:
         if not isinstance(field_default, Default):
             field_default = NoDefault
 
-        # Create dataclass field
-        setattr(cls, name, validataclass_field(validator=field_validator, default=field_default))
+        # Create dataclass field (_name is only needed for generating the default_factory for required fields in Python < 3.10)
+        setattr(cls, name, validataclass_field(validator=field_validator, default=field_default, _name=name))
 
 
 def _get_existing_validator_fields(cls) -> Dict[str, _ValidatorField]:
@@ -183,9 +184,15 @@ def validataclass(cls=None, **kwargs):
     Optional parameters will be passed to the `@dataclass` decorator. In most cases no parameters are necessary.
     """
 
+    # In Python 3.10 and higher, we use kw_only=True by default to allow for required and optional fields in any order.
+    # In older Python versions, we use a workaround by setting default_factory to a function that raises an exception
+    # for required fields.
+    if sys.version_info >= (3, 10):
+        kwargs.setdefault('kw_only', True)
+
     def wrap(_cls):
         _prepare_dataclass_metadata(_cls)
-        return dataclasses.dataclass(_cls, **kwargs)
+        return dataclasses.dataclass(_cls, **kwargs)  # noqa (weird PyCharm warning)
 
     # Check if decorator is called as @validataclass or @validataclass(**kwargs)
     if cls is None:
@@ -196,7 +203,14 @@ def validataclass(cls=None, **kwargs):
     return wrap(cls)
 
 
-def validataclass_field(validator: Validator, default: Any = NoDefault, *, metadata: Optional[dict] = None, **kwargs):
+def validataclass_field(
+    validator: Validator,
+    default: Any = NoDefault,
+    *,
+    metadata: Optional[dict] = None,
+    _name: Optional[str] = None,  # noqa (undocumented parameter, only used internally)
+    **kwargs
+):
     """
     Define a dataclass field compatible with DataclassValidator.
 
@@ -226,10 +240,38 @@ def validataclass_field(validator: Validator, default: Any = NoDefault, *, metad
     # Add validator metadata
     metadata['validator'] = validator
 
-    # Add default values to metadata
-    if default is not NoDefault and default is not dataclasses.MISSING:
-        # Allow raw values as default parameter by autocreating Default objects from them
-        metadata['validator_default'] = default if isinstance(default, Default) else Default(default)
+    # Ensure default is a Default object (or any subclass of Default)
+    if default is dataclasses.MISSING:
+        default = NoDefault
+    elif not isinstance(default, Default):
+        default = Default(default)
+
+    if default is not NoDefault:
+        # Add default values to metadata
+        metadata['validator_default'] = default
+
+        # Set regular dataclass default (depending on the type of default)
+        if type(default) is Default or default is DefaultUnset:
+            kwargs['default'] = default.get_value()
+        elif type(default) is DefaultFactory:
+            kwargs['default_factory'] = default.factory
+        else:
+            # Fallback to a lambda
+            kwargs['default_factory'] = lambda: default.get_value()
+
+    # Compatibility for Python 3.9 and older: Use a workaround to allow required and optional fields to be defined in
+    # any order. (In Python 3.10 the kw_only=True option for dataclasses is introduced, which can be used instead.)
+    if default is NoDefault and sys.version_info < (3, 10):
+        # Use a default_factory that raises an exception for required fields.
+        kwargs['default_factory'] = lambda: _raise_field_required(_name)
 
     # Create a dataclass field with our metadata
     return dataclasses.field(metadata=metadata, **kwargs)
+
+
+def _raise_field_required(name: str) -> NoReturn:
+    """
+    Raises a TypeError exception. Used for required fields (only in Python 3.9 or lower where the kw_only option is not
+    supported yet).
+    """
+    raise TypeError(f"Missing required keyword-only argument: '{name}'" if name else 'Missing required keyword-only argument')

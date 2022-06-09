@@ -118,8 +118,8 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
             if field_default is not NoDefault:
                 self.field_defaults[field.name] = field_default
 
-            # Make field optional if any kind of default value is set (including regular dataclass field defaults to keep compatibility)
-            if field_default is NoDefault and field.default is dataclasses.MISSING and field.default_factory is dataclasses.MISSING:
+            # Make field optional if a default value is set
+            if field_default is NoDefault:
                 required_fields.append(field.name)
 
         # Initialize the underlying DictValidator
