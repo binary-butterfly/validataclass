@@ -13,10 +13,12 @@ plugins =
 
 [report]
 show_missing = True
+skip_empty = True
+skip_covered = True
 
 [html]
 directory = reports/coverage_html/
-skip_empty = True
+skip_covered = False
 show_contexts = True
 
 [coverage_conditional_plugin]
