@@ -5,7 +5,6 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
-from typing import Optional
 
 import pytest
 
@@ -74,7 +73,9 @@ class ValidataclassMixinTest:
     @staticmethod
     def test_create_with_defaults():
         """ Tests the create_with_defaults() class method, only with required fields. """
-        obj = UnitTestDataclass.create_with_defaults(foo=42)
+        with pytest.deprecated_call():
+            obj = UnitTestDataclass.create_with_defaults(foo=42)
+
         assert isinstance(obj, UnitTestDataclass)
         assert obj.to_dict() == {
             'foo': 42,
@@ -89,7 +90,9 @@ class ValidataclassMixinTest:
     @staticmethod
     def test_create_with_defaults_overwrite_defaults():
         """ Tests the create_with_defaults() class method with explicitly set optional fields. """
-        obj = UnitTestDataclass.create_with_defaults(foo=42, bar='meep', baz=Decimal('-1.23'))
+        with pytest.deprecated_call():
+            obj = UnitTestDataclass.create_with_defaults(foo=42, bar='meep', baz=Decimal('-1.23'))
+
         assert isinstance(obj, UnitTestDataclass)
         assert obj.to_dict() == {
             'foo': 42,
@@ -102,25 +105,5 @@ class ValidataclassMixinTest:
         """ Tests the create_with_defaults() class method missing required fields. """
         # The exact exception message changed between Python versions 3.9 and 3.10
         with pytest.raises(TypeError, match="required keyword-only argument: 'foo'"):
-            UnitTestDataclass.create_with_defaults()
-
-    @staticmethod
-    def test_create_with_defaults_on_subclass():
-        """ Tests the create_with_defaults() class method on a subclassed validataclass. """
-
-        @validataclass
-        class UnitTestSubclass(UnitTestDataclass):
-            foo: int = Default(3)
-            bar: Optional[str] = Default(None)
-
-        obj: UnitTestSubclass = UnitTestSubclass.create_with_defaults()
-        assert isinstance(obj, UnitTestSubclass)
-        assert obj.to_dict() == {
-            'foo': 3,
-            'bar': None,
-        }
-        assert obj.to_dict(keep_unset_values=True) == {
-            'foo': 3,
-            'bar': None,
-            'baz': UnsetValue,
-        }
+            with pytest.deprecated_call():
+                UnitTestDataclass.create_with_defaults()
