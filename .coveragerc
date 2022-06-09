@@ -8,6 +8,8 @@ branch = True
 source = validataclass
 omit =
     */_version.py
+plugins =
+    coverage_conditional_plugin
 
 [report]
 show_missing = True
@@ -16,3 +18,10 @@ show_missing = True
 directory = reports/coverage_html/
 skip_empty = True
 show_contexts = True
+
+[coverage_conditional_plugin]
+# These rules are a bit contraintuitive as they define when to IGNORE code from coverage, instead of when to include it,
+# so we prefix the pragmas with "ignore-" to make it more clear.
+rules =
+    "sys_version_info < (3, 10)": ignore-py-lt-310
+    "sys_version_info >= (3, 10)": ignore-py-gte-310

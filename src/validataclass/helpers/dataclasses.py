@@ -187,8 +187,10 @@ def validataclass(cls=None, **kwargs):
     # In Python 3.10 and higher, we use kw_only=True by default to allow for required and optional fields in any order.
     # In older Python versions, we use a workaround by setting default_factory to a function that raises an exception
     # for required fields.
-    if sys.version_info >= (3, 10):
+    if sys.version_info >= (3, 10):  # pragma: ignore-py-lt-310
         kwargs.setdefault('kw_only', True)
+    else:  # pragma: ignore-py-gte-310
+        pass
 
     def wrap(_cls):
         _prepare_dataclass_metadata(_cls)
@@ -261,7 +263,7 @@ def validataclass_field(
 
     # Compatibility for Python 3.9 and older: Use a workaround to allow required and optional fields to be defined in
     # any order. (In Python 3.10 the kw_only=True option for dataclasses is introduced, which can be used instead.)
-    if default is NoDefault and sys.version_info < (3, 10):
+    if default is NoDefault and sys.version_info < (3, 10):  # pragma: ignore-py-gte-310
         # Use a default_factory that raises an exception for required fields.
         kwargs['default_factory'] = lambda: _raise_field_required(_name)
 
@@ -269,7 +271,7 @@ def validataclass_field(
     return dataclasses.field(metadata=metadata, **kwargs)
 
 
-def _raise_field_required(name: str) -> NoReturn:
+def _raise_field_required(name: str) -> NoReturn:  # pragma: ignore-py-gte-310
     """
     Raises a TypeError exception. Used for required fields (only in Python 3.9 or lower where the kw_only option is not
     supported yet).
