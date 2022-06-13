@@ -21,7 +21,7 @@ negatively affected by it.
 - `RejectValidator`: New validator that rejects any input. [#55]
 - `NoneToUnsetValue`: New validator as a shortcut for `Noneable(..., default=UnsetValue)`. [#57]
 - `ListValidator`: Add parameter `discard_invalid` to ignore invalid list elements (by [@lahdjirayhan]). [#43]
-- `UrlValidator`: Add parameters `allow_empty` and `max_length` (by [@lahdjirayhan]).  [#49] 
+- `UrlValidator`: Add parameters `allow_empty` and `max_length` (by [@lahdjirayhan]).  [#49]
 - `RegexValidator`: Add parameter `custom_error_class` to set a custom exception class. [#54]
 
 ### Changed
@@ -113,7 +113,7 @@ negatively affected by it.
 ### Fixed
 
 - `@validataclass` allows empty dataclasses now (raised an AttributeError before).
-  [#27](https://github.com/binary-butterfly/validataclass/pull/27) 
+  [#27](https://github.com/binary-butterfly/validataclass/pull/27)
 
 
 ## [0.3.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.0) - 2021-11-10

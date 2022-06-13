@@ -572,7 +572,7 @@ value.
 from validataclass.validators import NumericValidator
 
 # Accept any numeric value (integers, floats and decimal strings)
-# This validator is equivalent to: FloatToDecimalValidator(allow_integers=True, allow_strings=True) 
+# This validator is equivalent to: FloatToDecimalValidator(allow_integers=True, allow_strings=True)
 validator = NumericValidator()
 validator.validate(123)      # will return Decimal('123')
 validator.validate(1.234)    # will return Decimal('1.234')
@@ -965,7 +965,7 @@ But before we go on with them, we have another special type of validators left.
 There are a handful of validators that don't fit into the other categories and have special purposes.
 
 These special validators most of the time don't validate that much on their own. For example, the `AnythingValidator`
-and `RejectValidator` are special validators that accept/reject any input (with only a few configurable exceptions). 
+and `RejectValidator` are special validators that accept/reject any input (with only a few configurable exceptions).
 
 Some special validators are wrappers around other validators, for example the `Noneable` wrapper that allows `None` as
 input value and passes all other values to the wrapped validator, or the `MultiTypeValidator` _(to be implemented!)_
@@ -1098,7 +1098,7 @@ validator.validate({13: 12})  # returns {13: 12}
 
 ### RejectValidator
 
-The `RejectValidator` is a special validator rejects any input with a validation error. 
+The `RejectValidator` is a special validator rejects any input with a validation error.
 
 This validator can be used for example in dataclasses to define a field that may never be set, or to override an
 existing field in a subclassed dataclass that may not be set in this subclass. Keep in mind that in a dataclass

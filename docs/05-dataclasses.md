@@ -381,7 +381,7 @@ from validataclass.validators import IntegerValidator, StringValidator
 class ExampleDataclass:
     example_field: int = IntegerValidator()
     optional_field: int = IntegerValidator(), Default(42)
-    
+
     # Compatibility note: In Python 3.7 parentheses are required when using the tuple notation:
     optional_field2: int = (IntegerValidator(), Default(42))
 ```
@@ -478,14 +478,14 @@ class ExampleClass:
     field_a: int = IntegerValidator(), Default(42)                  # Default value is 42
     field_b: Optional[int] = IntegerValidator(), Default(None)      # Default value is None
     field_c: OptionalUnset[int] = IntegerValidator(), DefaultUnset  # Default value is UnsetValue
-    
+
     # Defaults for lists
     field_d: list = ListValidator(IntegerValidator()), Default([])  # Default value is an empty list
-    
+
     # DefaultFactories for datetime fields
     field_e: datetime = DateTimeValidator(), DefaultFactory(datetime.now)           # Default value will be datetime of validation
     field_f: int = IntegerValidator(), DefaultFactory(lambda: datetime.now().year)  # Default value will be YEAR of validation (as int)
-    
+
     # No default: The following two fields are exactly the same (both are required)
     field_g: int = IntegerValidator()
     field_h: int = IntegerValidator(), NoDefault
@@ -653,7 +653,7 @@ exception, but it's recommended to use `ValidationError`, any of the built-in su
 The `DataclassValidator` will automatically **wrap** this exception in a `DataclassPostValidationError` (similar to how field errors are
 wrapped in a `DictFieldsValidationError`), unless the exception already is an exception of this type, then it is re-raised unmodified.
 A `DataclassPostValidationError` can also contain multiple validation errors, which are then mapped to individual fields. See the
-[docstrings of `DataclassPostValidationError`](../src/validataclass/exceptions/dataclass_exceptions.py) for further details. 
+[docstrings of `DataclassPostValidationError`](../src/validataclass/exceptions/dataclass_exceptions.py) for further details.
 
 Converting the `DataclassPostValidationError` of the example above to a dictionary using `.to_dict()` will result in the following
 dictionary:
@@ -684,7 +684,7 @@ from validataclass.validators import DataclassValidator, BooleanValidator, Integ
 class ExampleClass:
     # This field is always required
     enable_something: bool = BooleanValidator()
-    
+
     # This field is required only if enable_something is True. Otherwise it will be ignored.
     some_value: Optional[int] = IntegerValidator(), Default(None)
 
@@ -710,7 +710,7 @@ The `DataclassPostValidationError` from this example will look like this after c
 
 ```pycon
 {
-    'code': 'post_validation_errors', 
+    'code': 'post_validation_errors',
     'field_errors': {
         'some_value': {
             'code': 'required_value',
@@ -743,7 +743,7 @@ from validataclass.validators import DataclassValidator, IntegerValidator
 class ExampleClass:
     value1: int = IntegerValidator()
     value2: int = IntegerValidator()
-    
+
     sum: int = field(init=False)
 
     def __post_init__(self):
