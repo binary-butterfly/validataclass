@@ -37,7 +37,7 @@ jobs:
 
       - name: Run unit tests with tox
         # Run tox using the version of Python in `PATH`
-        run: tox -e clean,py,flake8 -- --junit-xml=reports/pytest_${{ matrix.python-version }}.xml
+        run: tox -e clean,py,flake8,report -- --junit-xml=reports/pytest_${{ matrix.python-version }}.xml
 
       - name: Upload test result artifacts
         uses: actions/upload-artifact@v3

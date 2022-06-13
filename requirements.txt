@@ -3,4 +3,5 @@ setuptools_scm~=6.2
 build~=0.7
 pytest~=6.2
 pytest-cov~=2.12
+coverage-conditional-plugin~=0.5
 python-dateutil~=2.8
