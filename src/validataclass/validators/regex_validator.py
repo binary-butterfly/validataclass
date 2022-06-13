@@ -34,6 +34,11 @@ class RegexValidator(StringValidator):
     using the parameters `custom_error_class` (which must be a subclass of `ValidationError`) and/or `custom_error_code`
     (which is a string that overrides the default error code).
 
+    By default, valid input strings are returned unmodified. Alternatively, you can specify an output template with the
+    `output_template` parameter which will then be expanded to generate the output string using
+    [`re.Match.expand`](https://docs.python.org/3/library/re.html#re.Match.expand), i.e. backreferences to regex groups
+    will be replaced with the groups' contents.
+
     By default only "safe" singleline strings are allowed (i.e. no non-printable characters). See the `StringValidator`
     options `unsafe` and `multiline` for more details.
 
@@ -55,8 +60,9 @@ class RegexValidator(StringValidator):
     # As above, but setting string length requirements to only allow 6-digit hex numbers (e.g. '123abc')
     RegexValidator(re.compile(r'[0-9a-f]+', re.IGNORECASE), min_length=6, max_length=6)
 
-    # Output a template substituted with match groups instead of original input string
-    RegexValidator(re.compile(r'(?P<hex>[0-9a-f]+)'), r'Validated hexadecimal: \g<hex>')
+    # Output a template substituted with match groups instead of original input string (e.g. '123abc' -> '0x123abc')
+    RegexValidator(re.compile(r'(?:0[xh])?([0-9a-f]+)', re.IGNORECASE), r'0x\1')
+    RegexValidator(re.compile(r'(?:0[xh])?(?P<hex>[0-9a-f]+)', re.IGNORECASE), r'0x\g<hex>')  # same with named groups
 
     # Set a custom error code (will raise RegexMatchError with error code 'invalid_hex_number' on error)
     RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_code='invalid_hex_number')

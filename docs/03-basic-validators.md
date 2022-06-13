@@ -164,6 +164,11 @@ If the input string does not match the regex, a `RegexMatchError` validation err
 using the parameters `custom_error_class` (which must be a subclass of `ValidationError`) and/or `custom_error_code`
 (which is a string that overrides the default error code).
 
+By default, valid input strings are returned unmodified. Alternatively, you can specify an output template with the
+`output_template` parameter which will then be expanded to generate the output string using
+[`re.Match.expand`](https://docs.python.org/3/library/re.html#re.Match.expand), i.e. backreferences to regex groups
+will be replaced with the groups' contents.
+
 **Examples:**
 
 ```python
@@ -187,6 +192,14 @@ validator = RegexValidator(re.compile(r'[0-9a-f]+', re.IGNORECASE), min_length=6
 validator.validate("0")          # will raise StringTooShortError
 validator.validate("123Abc")     # will return "123Abc"
 validator.validate("123Abcdef")  # will raise StringTooLongError
+
+# Output templates: This validator accepts hexadecimal numbers in different formats (with "0x" prefix, with "0h" prefix
+# or without any prefix), and uses an output template to always output the number in a fixed format (with "0x" prefix)
+validator = RegexValidator(re.compile(r'(?:0[xh])?([0-9a-f]+)', re.IGNORECASE), r'0x\1')
+validator.validate("123abc")    # will return "0x123abc"
+validator.validate("0x123abc")  # will return "0x123abc"
+validator.validate("0h123abc")  # will return "0x123abc"
+validator.validate("0x")        # will raise RegexMatchError
 
 # Same example, but setting a custom error code
 validator = RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_code='invalid_hex_number')
