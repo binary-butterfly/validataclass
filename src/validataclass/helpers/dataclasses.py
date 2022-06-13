@@ -27,8 +27,8 @@ _ValidatorField = namedtuple('_ValidatorField', ['validator', 'default'])
 
 def _prepare_dataclass_metadata(cls) -> None:
     """
-    Prepares a soon-to-be dataclass (before it is decorated with @dataclass) to be usable with DataclassValidator by checking it
-    for Validator objects and setting dataclass metadata.
+    Prepares a soon-to-be dataclass (before it is decorated with @dataclass) to be usable with DataclassValidator by
+    checking it for Validator objects and setting dataclass metadata.
 
     (Used internally by the @validataclass decorator.)
     """
@@ -88,8 +88,8 @@ def _prepare_dataclass_metadata(cls) -> None:
 
 def _get_existing_validator_fields(cls) -> Dict[str, _ValidatorField]:
     """
-    Returns a dictionary containing all fields (as `_ValidatorField` objects) of an existing validataclass that have a validator set in
-    their metadata, or an empty dictionary if the class is not a dataclass (yet).
+    Returns a dictionary containing all fields (as `_ValidatorField` objects) of an existing validataclass that have a
+    validator set in their metadata, or an empty dictionary if the class is not a dataclass (yet).
 
     (Internal helper function.)
     """
@@ -150,38 +150,41 @@ def validataclass(cls=None, **kwargs):
     """
     Decorator that turns a normal class into a DataclassValidator-compatible dataclass.
 
-    Prepares the class by generating dataclass metadata that is needed by the DataclassValidator, then turns the class into a dataclass
-    using the regular @dataclass decorator.
+    Prepares the class by generating dataclass metadata that is needed by the DataclassValidator, then turns the class
+    into a dataclass using the regular @dataclass decorator.
 
-    Dataclass fields can be defined by specifying a `Validator` object and optionally a `Default` object (comma-separated as a tuple),
-    or by using `validataclass_field()` or `dataclasses.field()`.
+    Dataclass fields can be defined by specifying a `Validator` object and optionally a `Default` object (comma-separated
+    as a tuple), or by using `validataclass_field()` or `dataclasses.field()`.
 
-    For an attribute to be recognized as a dataclass field, the attribute needs to have a type annotation (e.g. `foo: int = ...`). The
-    decorator will raise an error if it detects a field that has a defined validator but no type annotation (unless the attribute's name
-    begins with an underscore, e.g. `_foo = IntegerValidator()` would not raise an error, but would NOT result in a datafield either).
+    For an attribute to be recognized as a dataclass field, the attribute must have a type annotation (e.g. `foo: int = ...`).
+    The decorator will raise an error if it detects a field that has a defined validator but no type annotation (unless
+    the attribute's name begins with an underscore, e.g. `_foo = IntegerValidator()` would not raise an error, but would
+    NOT result in a datafield either).
 
     Example:
 
     ```
     @validataclass
     class ExampleDataclass:
-        # Explicit field creation:
-        example_field: str = validataclass_field(StringValidator(), default='not set')
-        post_init_field: int = field(init=False, default=0)
+        # Implicit field definitions (using validators only or tuples)
+        example_field1: str = StringValidator()  # This field is required because it has no default
+        example_field2: str = StringValidator(), Default('not set')  # This field is optional
 
-        # Implicit field creation:
-        another_field: str = StringValidator()
-        field_with_default: str = StringValidator(), Default('not set')
+        # Field definitions using validataclass_field() and regular dataclasses field()
+        example_field3: str = validataclass_field(StringValidator())  # Same as example_field1
+        example_field4: str = validataclass_field(StringValidator(), default='not set')  # Same as example_field2
+        post_init_field: int = field(init=False, default=0)  # Post-init field without validator
 
-        # Compatibility note: In Python 3.7 parentheses are required when setting a Default using the tuple notation:
+        # COMPATIBILITY NOTE: In Python 3.7 parentheses are required when setting a Default using the tuple notation:
         # field_with_default: str = (StringValidator(), Default('not set'))
     ```
 
-    Note: As of now, InitVars are not supported because they are not recognized as proper fields. This might change in a future version.
-    As a workaround you can specify normal fields that you can access in __post_init__() and use as a init variable. The only difference
-    to real InitVars is that this field will still exist after initialization.
+    Note: As of now, InitVars are not supported because they are not recognized as proper fields. This might change in a
+    future version. As a workaround you can specify normal fields that you can access in __post_init__() and use as init
+    variables. The only difference to real InitVars is that this field will still exist after initialization.
 
-    Optional parameters will be passed to the `@dataclass` decorator. In most cases no parameters are necessary.
+    Optional parameters to the decorator will be passed directly to the `@dataclass` decorator. In most cases no
+    parameters are necessary. In Python 3.10 and upwards, the argument `kw_only=True` will be used by default.
     """
 
     # In Python 3.10 and higher, we use kw_only=True by default to allow for required and optional fields in any order.
@@ -219,9 +222,10 @@ def validataclass_field(
     Wraps the regular `dataclasses.field()` function, but has special parameters to add validator metadata to the field.
 
     Additional keyword arguments will be passed to `dataclasses.field()`, with some exceptions:
-    - 'default' is handled by this function and is *not* passed on (default values are handled differently than in normal dataclasses)
-    - 'default_factory' is not allowed (use `default=DefaultFactory(...)` instead)
-    - 'init' is not allowed (validators wouldn't be applied with init=False; to create a non-init field, use a normal `field(init=False)`)
+    - 'default' is handled by this function to set metadata. It can be either a direct value or a `Default` object. It
+      is then converted to a direct value (or factory) if neccessary and passed to `dataclasses.field()`.
+    - 'default_factory' is not allowed. Use `default=DefaultFactory(...)` instead.
+    - 'init' is not allowed. To create a non-init field, use `dataclasses.field(init=False)` instead.
 
     Parameters:
         validator: Validator to use for validating the field (saved as metadata)

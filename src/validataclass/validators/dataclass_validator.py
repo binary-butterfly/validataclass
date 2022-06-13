@@ -25,27 +25,16 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
     """
     Validator that converts dictionaries to instances of user-defined dataclasses with validated fields.
 
-    The DataclassValidator is basically a specialized variant of the DictValidator that takes a dataclass with special metadata
-    as parameter, which it uses to determine the dictionary fields, which validators to use for validating them, which fields are
-    required or optional, and what default values to use for optional fields. Input data is first validated as a regular dictionary
-    and then used to create an instance of the dataclass.
+    The DataclassValidator is basically a specialized variant of the DictValidator that takes a dataclass with special
+    metadata as parameter, which it uses to determine the dictionary fields, which validators to use for validating
+    them, which fields are required or optional, and what default values to use for optional fields. Input data is first
+    validated as a regular dictionary and then used to create an instance of the dataclass.
 
-    In order to use a dataclass with this validator, each field of the dataclass needs to be defined with metadata that specifies a
-    Validator (and optionally default values) for this field. This *can* be done manually using the regular Python dataclass
-    function `dataclasses.field()` like this:
+    While you *can* define this metadata manually using the built-in Python dataclass function `dataclasses.field()`,
+    it is highly recommended to use the helpers provided by this library, i.e. the decorator `@validataclass` and (if
+    necessary) the function `validataclass_field()`.
 
-    ```
-    @dataclass
-    class ExampleDataclass:
-        example_field: str = field(metadata={'validator': StringValidator()})
-        optional_field: str = field(metadata={'validator': StringValidator(), 'default': Default('')})
-    ```
-
-    To simplify (and prettify) your dataclasses, there are also some helper functions in `validataclass.helpers` that generate
-    this metadata for you, e.g. the decorator `@validataclass` and the function `validataclass_field()`. It is highly recommended
-    to use these helpers instead of defining the metadata manually as it improves code readability.
-
-    Equivalent example using the helper functions:
+    Example:
 
     ```
     from validataclass.helpers import validataclass, validataclass_field
@@ -58,21 +47,25 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
         # Compatibility note: In Python 3.7 parentheses are required when setting a Default using the tuple notation:
         # optional_field: str = (StringValidator(), Default(''))
 
-        # Also equivalent:
+        # Equivalent definition using validataclass_field():
         # example_field: str = validataclass_field(StringValidator())
         # optional_field: str = validataclass_field(StringValidator(), default='')
+
+        # "Behind the scenes": Equivalent definition using plain dataclass fields:
+        # example_field: str = field(metadata={'validator': StringValidator()})
+        # optional_field: str = field(metadata={'validator': StringValidator(), 'default': Default('')})
     ```
 
-    It is important to note that DataclassValidator implements its own mechanism for setting default values in optional fields instead
-    of using the regular dataclass field defaults. This allows for more flexibility, for example you can define required and optional
-    fields in any order, while in regular dataclasses all optional fields must be defined *after* the required fields. See the example
-    above for how to specify default values.
+    Note: You can define required and optional fields in any order. This differs from regular dataclasses where by
+    default all required fields must be defined first, followed by all optional fields. See chapter 5 (Validation with
+    Dataclasses) in the library documentation for more details about this.
 
-    All fields that do not specify a default value (or explicitly use the special value `NoDefault`) are required.
+    All fields that do NOT specify a default value (or explicitly use the special value `NoDefault`) are required.
 
-    Post-validation checks can be implemented either as a `__post_init__()` method in the dataclass or by subclassing DataclassValidator
-    and overriding the `post_validate()` method. In both cases, you can raise either `DataclassPostValidationError` exceptions directly
-    or raise normal `ValidationError` exceptions, which will be wrapped inside a `DataclassPostValidationError` automatically.
+    Post-validation checks can be implemented either as a `__post_init__()` method in the dataclass or by subclassing
+    DataclassValidator and overriding the `post_validate()` method. In both cases, you can either raise
+    `DataclassPostValidationError` exceptions directly or raise normal `ValidationError` exceptions, which will be
+    wrapped inside a `DataclassPostValidationError` automatically.
     """
 
     # Dataclass type that the validated dictionary will be converted to

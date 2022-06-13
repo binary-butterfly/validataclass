@@ -16,7 +16,7 @@ Yes, we can be sure that the data inside our dictionaries is valid and safe to w
 which undoubtedly is better than working with raw, unvalidated dictionaries.
 
 But from a code perspective, dictionaries don't have any inner structure by themselves, they're just key-value stores with arbitrary data.
-This makes it difficult for type checkers or code linters (including IDEs like Pycharm) to analyse the code that's working with the
+This makes it difficult for type checkers or code linters (including IDEs like PyCharm) to analyse the code that's working with the
 input data. For example, a type checker doesn't know that a specific field in this dictionary has been validated using a `DecimalValidator`
 and therefore must be a `Decimal` object. Similarly, your IDE cannot warn you about the wrong key in `validated_dict['prize']` (which
 should have been `'price'` instead), not to mention code autocompletion.
@@ -266,7 +266,7 @@ creates implicit fields). Then it applies the regular `@dataclass` decorator to 
 To prepare the fields, the `@validataclass` decorator looks at all type-annotated class variables and checks their value. If a field
 has already been defined explicitly (either using `validataclass_field()` or using the regular `field()` function), nothing needs to be
 done. If the value is a `Validator` object, a field is created using `validataclass_field()` with this validator. A special format using
-tuples can also be used to specify a field default (explained later). In all other cases (including when a class variable has no value
+tuples can also be used to specify a field default (explained later). In most other cases (including when a class variable has no value
 set at all), the decorator will raise an exception.
 
 Here is our dataclass example again, now using the `@validataclass` decorator:
@@ -299,9 +299,10 @@ being applied to the class.
 
 ## Defining field defaults
 
-While dataclasses have built-in support for field default values, they unfortunately have a rather impractical restriction on the order
-of fields: In a dataclass, all optional fields (i.e. fields with default values) must be defined **after** all of the required fields.
-Defining a required field (i.e. a field without default value) after an optional field will result in an error:
+While dataclasses have built-in support for field default values, they unfortunately have a rather impractical
+restriction on the order of fields: In a dataclass, all optional fields (i.e. fields with default values) must be
+defined **after** all of the required fields. Defining a required field (i.e. a field without default value) after an
+optional field will result in an error:
 
 ```python
 from dataclasses import dataclass
@@ -315,21 +316,36 @@ class ExampleDataclass:
 
 In this example, you would either have to move the `var3` field above `var2` or define a default for `var3`.
 
-To circumvent this restriction, we opted to implement our own default value handling in the `DataclassValidator`. Like the field
-validators, the field defaults are stored in the **metadata** of the field, namely under the key `"validator_default"`. From the point
-of view of the dataclass, all fields will be "required" fields because no `default` attributes are set. The `DataclassValidator` will
-fill the missing fields in the input dictionaries with the default values before attempting to create dataclass objects from them. 
+To circumvent this restriction, we first opted to implement our own default value handling in the `DataclassValidator`.
+Like the field validators, the field defaults are stored in the **metadata** of the field, namely under the key
+`"validator_default"`. The `DataclassValidator` will then fill the missing fields in the input dictionary with these
+default values before attempting to create dataclass objects.
 
-Further, the `DataclassValidator` will see all fields as required **unless** they have a **default value**. To define an optional field
-**without** a default value, use the `DefaultUnset` object (which is explained later).
+This first implementation was far from perfect, though (namely, you couldn't simply use a validataclass in the same way
+as a regular dataclass because (from a regular dataclass perspective) the fields didn't have any defaults and thus were
+all required).
 
-Of course, both the `validataclass_field()` function and the `@validataclass` decorator support setting the metadata for default values.  
+Starting with validataclass 0.6.0, fields now also have proper dataclass field defaults. The `DataclassValidator` will
+still use the defaults stored in the field metadata, but you can now also create objects from a validataclass using
+default values in the same way as with a regular dataclass.
+
+This is accomplished by creating dataclasses with the option `kw_only=True` (which modifies the auto-generated class
+constructor to only accept keyword arguments, so that the order of arguments doesn't matter anymore). This option was
+only introduced in Python 3.10, though, so for older versions of Python a slightly hacky workaround was implemented
+(take a look at the code of `validataclass_field()` if you're curious).
+
+In general, all fields that do **not** have any default value are required fields (i.e. `DataclassValidator` will reject
+any input where one of these fields is missing). To define an optional field **without** a default value, you can use
+the special `DefaultUnset` object (which is explained later).
+
+Of course, both the `validataclass_field()` function and the `@validataclass` decorator can be used to conveniently set
+default values for fields.
 
 
 ### Setting defaults with `validataclass_field()`
 
-To set a default value with `validataclass_field()`, you simply specify the `default` parameter. This parameter can be set either to a
-`Default` object (which we will explain in a moment) or directly to a value.
+To set a default value with `validataclass_field()`, you simply specify the `default` parameter. This parameter can be
+set either to a `Default` object (which we will explain in a moment) or directly to a value.
 
 **Example:**
 
@@ -349,11 +365,11 @@ class ExampleDataclass:
 
 ### Setting defaults with `@validataclass`
 
-To set a default value for a field using the `@validataclass` decorator, you have to define the field as a **tuple** consisting of the
-validator and a `Default` object, e.g. `IntegerValidator(), Default(42)`.
+To set a default value for a field using the `@validataclass` decorator, you have to define the field as a **tuple**
+consisting of the validator and a `Default` object, e.g. `IntegerValidator(), Default(42)`.
 
-Please note that in Python 3.7 for some reason these tuples require parentheses (see example). Unless you're writing code for Python 3.7,
-it is recommended to omit the parentheses for a more consistent look, though.
+Please note that in Python 3.7 for some reason these tuples require parentheses (see example). Unless you're writing
+code for Python 3.7, it is recommended to omit the parentheses for a more consistent look, though.
 
 **Example:**
 
@@ -401,7 +417,7 @@ being the datetime at which the input dictionary was validated. To use the curre
 
 Contrary to `Default` the values will **not** be deepcopied. This also means that you can use a `DefaultFactory` as a workaround if you
 actually want to use an object **reference** as a default value. For example, if you have a list `some_list = []` and use a
-`DefaultFactory(lambda: some_list)` as default for a dataclass field, all objects validated using this dataclass with use **the same**
+`DefaultFactory(lambda: some_list)` as default for a dataclass field, all objects validated using this dataclass will use **the same**
 list as their default. Modifying the list of one validated object will modify the list for **all** objects.
 
 
@@ -412,8 +428,8 @@ if the field exists, or the default value. If you don't set a default value, the
 without this field will fail validation.
 
 Sometimes you want optional fields **without** default values though: If a string field uses `Default('')` for example, it will always
-have a string value (either empty or not empty), and you cannot distinguish whether the field was missing in the input dictionary or
-whether the field was literally an empty string.
+have a string value (either empty or not empty), and you cannot distinguish whether the field was omitted in the input dictionary or
+whether the user explicitly set the field to an empty string.
 
 One solution is to use `Default(None)` instead: If the field is `None`, you know that the field did not exist in the input dictionary.
 
@@ -543,7 +559,7 @@ the "modify" dataclass from the "create" dataclass and change all field defaults
 
 ```python
 from decimal import Decimal
-from typing import Optional, Union
+from typing import Optional
 
 from validataclass.helpers import validataclass, Default, DefaultUnset, OptionalUnset, OptionalUnsetNone
 from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator
@@ -584,7 +600,7 @@ specify the start and end of a time interval. You might want to ensure that `beg
 interval cannot end before it starts. This cannot be done using the field validators alone, so you need to do this integrity check
 **post validation**.
 
-Of course, you can do any sort of post-validation on a validated object after is was returned by the `DataclassValidator`. But a more
+Of course, you can do any sort of post-validation on a validated object after it was returned by the `DataclassValidator`. But a more
 elegant way is to **integrate** the post-validation logic into the validator and/or dataclass itself.
 
 There are two ways to do this: One way is to **subclass** the `DataclassValidator` for your dataclass and override the `post_validate()`
