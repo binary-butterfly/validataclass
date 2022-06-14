@@ -7,9 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 from copy import deepcopy
 from typing import Any, NoReturn, Callable
 
-from .unset_value import UnsetValue, UnsetValueType
+from validataclass.helpers import UnsetValue, UnsetValueType
 
-# Specify which functions/symbols are imported with `from module import *`
 __all__ = [
     'Default',
     'DefaultFactory',

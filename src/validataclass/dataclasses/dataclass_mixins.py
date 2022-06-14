@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import warnings
 
-from .unset_value import UnsetValue
+from validataclass.helpers import UnsetValue
 
 __all__ = [
     'ValidataclassMixin',

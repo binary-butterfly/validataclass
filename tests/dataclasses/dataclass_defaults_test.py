@@ -5,9 +5,11 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from copy import copy
+
 import pytest
 
-from validataclass.helpers import Default, DefaultFactory, DefaultUnset, NoDefault, UnsetValue
+from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, NoDefault
+from validataclass.helpers import UnsetValue
 
 
 class DefaultTest:

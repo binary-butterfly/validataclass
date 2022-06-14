@@ -13,7 +13,6 @@ from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.validators import Validator
 from .dataclass_defaults import Default, NoDefault, DefaultFactory, DefaultUnset
 
-# Specify which functions/symbols are imported with `from module import *`
 __all__ = [
     'validataclass',
     'validataclass_field',

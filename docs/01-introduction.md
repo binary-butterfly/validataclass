@@ -148,8 +148,9 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 
-from validataclass.validators import *
-from validataclass.helpers import validataclass
+from validataclass.dataclasses import validataclass
+from validataclass.validators import DataclassValidator, DateTimeValidator, EnumValidator, IntegerValidator, \
+    ListValidator, StringValidator
 
 
 # Define a Enum class

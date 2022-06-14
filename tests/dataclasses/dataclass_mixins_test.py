@@ -8,8 +8,9 @@ from decimal import Decimal
 
 import pytest
 
-from validataclass.helpers import validataclass, ValidataclassMixin, Default, DefaultUnset, OptionalUnset, UnsetValue
-from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator, DataclassValidator
+from validataclass.dataclasses import validataclass, ValidataclassMixin, Default, DefaultUnset
+from validataclass.helpers import OptionalUnset, UnsetValue
+from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
 
 @validataclass
