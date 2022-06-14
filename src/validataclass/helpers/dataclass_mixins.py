@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import warnings
 
-from validataclass.dataclasses.dataclass_mixins import ValidataclassMixin
+from validataclass.dataclasses.validataclass_mixin import ValidataclassMixin
 
 __all__ = [
     'ValidataclassMixin',

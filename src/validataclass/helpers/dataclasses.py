@@ -6,7 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import warnings
 
-from validataclass.dataclasses.dataclasses import validataclass, validataclass_field
+from validataclass.dataclasses.validataclass import validataclass
+from validataclass.dataclasses.validataclass_field import validataclass_field
 
 __all__ = [
     'validataclass',

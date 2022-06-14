@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import warnings
 
-from validataclass.dataclasses.dataclass_defaults import Default, DefaultFactory, DefaultUnset, NoDefault
+from validataclass.dataclasses.defaults import Default, DefaultFactory, DefaultUnset, NoDefault
 
 __all__ = [
     'Default',
