@@ -7,9 +7,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 from typing import Any, Optional, TypeVar, Generic, Dict
 
+from validataclass.dataclasses import Default, NoDefault
 from validataclass.exceptions import ValidationError, DataclassValidatorFieldException, DataclassPostValidationError, \
     InvalidValidatorOptionException
-from validataclass.helpers import Default, NoDefault
 from . import Validator, DictValidator
 
 __all__ = [
@@ -37,7 +37,7 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
     Example:
 
     ```
-    from validataclass.helpers import validataclass, validataclass_field
+    from validataclass.dataclasses import validataclass, validataclass_field
 
     @validataclass
     class ExampleDataclass:

@@ -11,7 +11,7 @@ from typing import Any, Optional
 
 from .string_validator import StringValidator
 from validataclass.exceptions import InvalidDateTimeError, InvalidValidatorOptionException, DateTimeRangeError
-from validataclass.helpers.datetime_range import BaseDateTimeRange
+from validataclass.helpers import BaseDateTimeRange
 
 __all__ = [
     'DateTimeFormat',
@@ -100,7 +100,7 @@ class DateTimeValidator(StringValidator):
 
     Additionally the parameter 'datetime_range' can be used to specify a range of datetime values that are allowed (e.g. a minimum and
     a maximum datetime, which can be dynamically defined using callables). See the classes `DateTimeRange` and `DateTimeOffsetRange`
-    from `validataclass.helpers.datetime_range` for further information.
+    from `validataclass.helpers` for further information.
 
     Note: When using datetime ranges, make sure not to mix datetimes that have timezones with local datetimes because those comparisons
     will raise `TypeError` exceptions. It's recommended either to use only datetimes with defined timezones (for both input values and
@@ -200,7 +200,7 @@ class DateTimeValidator(StringValidator):
         the parameter "local_timezone" is required (otherwise it would be unclear how to interpret and convert local datetimes).
 
         To define datetime ranges using the "datetime_range" parameter, see the classes `DateTimeRange` and `DateTimeOffsetRange` from
-        `validataclass.helpers.datetime_range`.
+        `validataclass.helpers`.
 
         Parameters:
             datetime_format: `DateTimeFormat`, specifies the accepted string formats (default: `ALLOW_TIMEZONE`)

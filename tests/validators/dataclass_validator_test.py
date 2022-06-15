@@ -7,11 +7,13 @@ Use of this source code is governed by an MIT-style license that can be found in
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Optional
+
 import pytest
 
+from validataclass.dataclasses import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset
 from validataclass.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
     InvalidValidatorOptionException, DataclassValidatorFieldException
-from validataclass.helpers import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset, UnsetValue, OptionalUnset
+from validataclass.helpers import UnsetValue, OptionalUnset
 from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
 

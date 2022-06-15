@@ -688,7 +688,7 @@ See [`datetime.timezone`](https://docs.python.org/3/library/datetime.html#dateti
 
 Additionally the parameter `datetime_range` can be used to specify a range of datetime values that are allowed (e.g. a minimum and
 a maximum datetime, which can be dynamically defined using callables). See the classes `DateTimeRange` and `DateTimeOffsetRange`
-from [`validataclass.helpers.datetime_range`](../src/validataclass/helpers/datetime_range.py) for further information.
+from [`validataclass.helpers`](../src/validataclass/helpers/datetime_range.py) for further information.
 
 **Note:** When using datetime ranges, make sure not to mix datetimes that have timezones with local datetimes because those comparisons
 will raise `TypeError` exceptions. It's recommended either to use only datetimes with defined timezones (for both input values and
@@ -797,6 +797,7 @@ If the pivot is undefined, it will default to the current time (in UTC and witho
 
 ```python
 from datetime import timedelta
+
 from validataclass.helpers import DateTimeOffsetRange
 from validataclass.validators import DateTimeValidator, DateTimeFormat
 

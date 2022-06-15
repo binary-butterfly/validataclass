@@ -239,7 +239,7 @@ Using this function, our dataclass looks like this now:
 from dataclasses import dataclass
 from decimal import Decimal
 
-from validataclass.helpers import validataclass_field
+from validataclass.dataclasses import validataclass_field
 from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator, DataclassValidator
 
 @dataclass
@@ -274,7 +274,7 @@ Here is our dataclass example again, now using the `@validataclass` decorator:
 ```python
 from decimal import Decimal
 
-from validataclass.helpers import validataclass
+from validataclass.dataclasses import validataclass
 from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator, DataclassValidator
 
 @validataclass
@@ -352,7 +352,7 @@ set either to a `Default` object (which we will explain in a moment) or directly
 ```python
 from dataclasses import dataclass
 
-from validataclass.helpers import validataclass_field, Default
+from validataclass.dataclasses import validataclass_field, Default
 from validataclass.validators import IntegerValidator
 
 @dataclass
@@ -374,8 +374,8 @@ code for Python 3.7, it is recommended to omit the parentheses for a more consis
 **Example:**
 
 ```python
-from validataclass.helpers import validataclass, Default
-from validataclass.validators import IntegerValidator, StringValidator
+from validataclass.dataclasses import validataclass, Default
+from validataclass.validators import IntegerValidator
 
 @validataclass
 class ExampleDataclass:
@@ -469,7 +469,8 @@ The following code contains examples for all the various `Default` classes that 
 from datetime import datetime
 from typing import Optional
 
-from validataclass.helpers import validataclass, Default, DefaultUnset, DefaultFactory, NoDefault, OptionalUnset
+from validataclass.dataclasses import validataclass, Default, DefaultFactory, DefaultUnset, NoDefault
+from validataclass.helpers import OptionalUnset
 from validataclass.validators import IntegerValidator, ListValidator, DateTimeValidator
 
 @validataclass
@@ -529,7 +530,7 @@ For example, if your dataclasses all share a certain set of fields, you can defi
 ```python
 from decimal import Decimal
 
-from validataclass.helpers import validataclass
+from validataclass.dataclasses import validataclass
 from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator
 
 @validataclass
@@ -561,7 +562,8 @@ the "modify" dataclass from the "create" dataclass and change all field defaults
 from decimal import Decimal
 from typing import Optional
 
-from validataclass.helpers import validataclass, Default, DefaultUnset, OptionalUnset, OptionalUnsetNone
+from validataclass.dataclasses import validataclass, Default, DefaultUnset
+from validataclass.helpers import OptionalUnset, OptionalUnsetNone
 from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator
 
 @validataclass
@@ -616,8 +618,8 @@ Let's see how this can be done for the datetime example from above:
 ```python
 from datetime import datetime
 
+from validataclass.dataclasses import validataclass
 from validataclass.exceptions import ValidationError
-from validataclass.helpers import validataclass
 from validataclass.validators import DataclassValidator, DateTimeValidator, DateTimeFormat
 
 @validataclass
@@ -676,8 +678,8 @@ Here is another code example for a dataclass with conditionally required fields:
 ```python
 from typing import Optional
 
+from validataclass.dataclasses import validataclass, Default
 from validataclass.exceptions import RequiredValueError, DataclassPostValidationError
-from validataclass.helpers import validataclass, Default
 from validataclass.validators import DataclassValidator, BooleanValidator, IntegerValidator
 
 @validataclass
@@ -736,7 +738,7 @@ called `sum`. This field is not part of input dictionaries, and will be set to t
 ```python
 from dataclasses import field
 
-from validataclass.helpers import validataclass
+from validataclass.dataclasses import validataclass
 from validataclass.validators import DataclassValidator, IntegerValidator
 
 @validataclass
@@ -773,10 +775,10 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional, List
 
+from validataclass.dataclasses import validataclass, Default
 from validataclass.exceptions import ValidationError, DataclassPostValidationError
-from validataclass.helpers import validataclass, Default
-from validataclass.validators import DataclassValidator, ListValidator, IntegerValidator, StringValidator, DecimalValidator, \
-    EnumValidator, DateTimeValidator
+from validataclass.validators import DataclassValidator, ListValidator, IntegerValidator, StringValidator, \
+    DecimalValidator, EnumValidator, DateTimeValidator
 
 class Color(Enum):
     RED = 'red'
