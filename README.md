@@ -4,7 +4,7 @@
 
 Python library for input validation designed for (but not restricted to) JSON-based APIs, neatly integrating with dataclasses.
 
-**Status:** In development / beta.
+**Status:** Beta.
 
 
 ## Installation
@@ -21,7 +21,7 @@ If you add the package to your `requirements.txt`, it is recommended to use [com
 version specifiers to make sure you always get the latest version of the library but without running into breaking changes:
 
 ```shell
-pip install validataclass~=0.5
+pip install validataclass~=0.6
 ```
 
 

@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.6.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.6.0) - 2022-06-15
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.5.0...0.6.0)
+
+This release features a reimplementation of field defaults in validataclasses (for details, see [#63] and [#65]), a bit
+of code restructuring and a new parameter for the `RegexValidator`.
+
+There is a potential **breaking change** and multiple **deprecations**.
+
+
+### Added
+
+- `RegexValidator`: Add parameter `output_template` to generate output strings from a template (by [@lahdjirayhan]). [#61]
+
+### Changed
+
+- Reimplementation of field defaults in validataclasses to be more consistent with regular dataclasses. [#65]
+  - Optional validataclass fields now have proper dataclass default values (additionally to the validataclass-specific
+    `Default` objects).
+  - This means that validataclasses can now be instantiated in the same way as regular dataclasses, without the need of
+    the `ValidataclassMixin.create_with_defaults()` class method.
+  - In Python 3.10 and higher, the new dataclass flag `kw_only=True` is used to allow for required and optional fields
+    to be defined in any order. In older Python versions, a workaround is used instead (every required field will have
+    a `default_factory` that raises an exception if the field is omitted).
+  - **Breaking change:** Due to the `kw_only=True` flag, instantiating validataclass objects using positional arguments
+    (e.g. `MyDataclass(42, 'foo')` is not supported anymore, starting with Python 3.10. It's recommended to use keyword
+    arguments instead (e.g. `MyDataclass(foo=42, bar='foo')`).
+- Moved all dataclass related helpers from `validataclass.helpers` to separate modules in `validataclass.dataclasses`. [#66]
+  - **Please adjust your imports.** Importing from the old location **will** stop working in a future version.
+  - Affected are: The `validataclass` decorator, `validataclass_field()`, `ValidataclassMixin`, `Default`, `DefaultFactory`,
+    `DefaultUnset` and `NoDefault`.
+  - To find all imports that need adjustment, search your code for `validataclass.helpers`. The old imports will emit
+    deprecation warnings now, so it might also help to enable deprecation warnings.
+- The CI pipeline will now fail if the code coverage sinks below 100%. [#65]
+
+### Deprecated
+
+- `ValidataclassMixin`: The `create_with_defaults()` class method is now deprecated as it is no longer needed. [#65]
+  - To create an instance of a validataclass, you can now simply use the regular dataclass constructor, e.g.
+    `MyDataclass(foo=42, ...)` instead of `MyDataclass.create_with_defaults(foo=42, ...)`.
+- Importing dataclass related helpers from `validataclass.helpers` is now deprecated since they have moved (see above). [#66]
+
+[#61]: https://github.com/binary-butterfly/validataclass/pull/61
+[#63]: https://github.com/binary-butterfly/validataclass/issues/63
+[#65]: https://github.com/binary-butterfly/validataclass/pull/65
+[#66]: https://github.com/binary-butterfly/validataclass/pull/66
+
+
 ## [0.5.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.5.0) - 2022-05-12
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.4.0...0.5.0)
