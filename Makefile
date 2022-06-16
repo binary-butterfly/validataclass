@@ -5,7 +5,7 @@ DOCKER_USER = "$(shell id -u):$(shell id -g)"
 
 .PHONY: all venv build \
 	tox test flake8 open-coverage \
-	docker-tox docker-tox-py37 docker-tox-py38 docker-tox-py39 docker-tox-py310 docker-pull \
+	docker-tox docker-tox-py37 docker-tox-py38 docker-tox-py39 docker-tox-py310 docker-tox-all docker-pull \
 	clean clean-dist clean-all
 
 # Default target
@@ -63,6 +63,13 @@ docker-tox-py38: TOX_ARGS="-e clean,py38,py38-report"
 docker-tox-py38: docker-tox
 docker-tox-py37: TOX_ARGS="-e clean,py37,py37-report"
 docker-tox-py37: docker-tox
+
+# Run all tox test suites, but separately to check code coverage individually
+docker-tox-all:
+	make docker-tox-py37
+	make docker-tox-py38
+	make docker-tox-py39
+	make docker-tox-py310
 
 # Pull the latest image of the multi-python Docker image
 docker-pull:
