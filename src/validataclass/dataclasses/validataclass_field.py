@@ -9,7 +9,7 @@ import sys
 from typing import Any, Optional, NoReturn
 
 from validataclass.validators import Validator
-from .defaults import Default, NoDefault, DefaultFactory, DefaultUnset
+from .defaults import Default, NoDefault
 
 __all__ = [
     'validataclass_field',
@@ -64,14 +64,11 @@ def validataclass_field(
         # Add default values to metadata
         metadata['validator_default'] = default
 
-        # Set regular dataclass default (depending on the type of default)
-        if type(default) is Default or default is DefaultUnset:
-            kwargs['default'] = default.get_value()
-        elif type(default) is DefaultFactory:
-            kwargs['default_factory'] = default.factory
-        else:
-            # Fallback to a lambda
+        # Set regular dataclass default or default_factory
+        if default.needs_factory():
             kwargs['default_factory'] = lambda: default.get_value()
+        else:
+            kwargs['default'] = default.get_value()
 
     # Compatibility for Python 3.9 and older: Use a workaround to allow required and optional fields to be defined in
     # any order. (In Python 3.10 the kw_only=True option for dataclasses is introduced, which can be used instead.)

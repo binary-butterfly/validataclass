@@ -20,7 +20,8 @@ def assert_field_default(field: dataclasses.Field, default_value: Any):
     Asserts that a given (vali-)dataclass field has a specified default value.
     """
     # Check regular dataclass defaults
-    assert field.default == default_value
+    assert (field.default == default_value and field.default_factory is dataclasses.MISSING) or \
+           (field.default is dataclasses.MISSING and field.default_factory() == default_value)
 
     # Check defaults in dataclass metadata
     metadata_default = field.metadata.get('validator_default')

@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Optional
+from typing import Optional, List, Dict
 
 import pytest
 
@@ -13,7 +13,7 @@ from tests.dataclasses._helpers import assert_field_default, assert_field_no_def
 from validataclass.dataclasses import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset, NoDefault
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.helpers import OptionalUnset, UnsetValue
-from validataclass.validators import IntegerValidator, StringValidator, Noneable
+from validataclass.validators import IntegerValidator, StringValidator, Noneable, ListValidator, DictValidator
 
 
 class ValidatorDataclassTest:
@@ -187,6 +187,30 @@ class ValidatorDataclassTest:
         # Try to instantiate with the optional field, but still lacking the required field
         with pytest.raises(TypeError, match="required keyword-only argument"):
             UnitTestDataclass(optional_field=42)
+
+    @staticmethod
+    def test_validataclass_with_mutable_defaults():
+        """
+        Create a dataclass using @validataclass and use mutable values (e.g. lists) as defaults. These are not allowed
+        for regular dataclasses and should use default_factory instead.
+        """
+
+        @validataclass
+        class UnitTestDataclass:
+            field_list: List[int] = (ListValidator(IntegerValidator()), Default([]))
+            field_dict: Dict[str, int] = (DictValidator(field_validators={'foo': IntegerValidator()}), Default({'foo': 0}))
+
+        # Try to instantiate the class using the regular constructor
+        obj1 = UnitTestDataclass()
+        obj2 = UnitTestDataclass()
+
+        # Check values
+        assert obj1.field_list == obj2.field_list == []
+        assert obj1.field_dict == obj2.field_dict == {'foo': 0}
+
+        # Check that the list and dict were deepcopied
+        assert obj1.field_list is not obj2.field_list
+        assert obj1.field_dict is not obj2.field_dict
 
     # Subclassing / inheritance
 
