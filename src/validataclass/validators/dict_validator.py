@@ -79,7 +79,7 @@ class DictValidator(Validator):
         """
         Creates a DictValidator.
 
-        At least one of the parameters `field_validators` and `default_validator` is required (both can be conmbined).
+        At least one of the parameters `field_validators` and `default_validator` is required (both can be combined).
         The parameters `required_fields` and `optional_fields` are mutually exclusive (cannot be combined).
         See class documentation (above) for more information.
 

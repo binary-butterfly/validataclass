@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, List
 
 import pytest
 
@@ -14,7 +14,7 @@ from validataclass.dataclasses import validataclass, validataclass_field, Defaul
 from validataclass.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
     InvalidValidatorOptionException, DataclassValidatorFieldException
 from validataclass.helpers import UnsetValue, OptionalUnset
-from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
+from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator, ListValidator
 
 
 # Simple example dataclass
@@ -158,18 +158,24 @@ class DataclassValidatorTest:
 
         @validataclass
         class DataclassWithDefaults:
-            foo: str = (StringValidator(), Default('example default'))
-            bar: int = (IntegerValidator(), DefaultFactory(counter))
-            baz: OptionalUnset[str] = (StringValidator(), DefaultUnset)
+            default_str: str = (StringValidator(), Default('example default'))
+            default_list: List[int] = (ListValidator(IntegerValidator()), Default([]))
+            default_counter: int = (IntegerValidator(), DefaultFactory(counter))
+            default_unset: OptionalUnset[str] = (StringValidator(), DefaultUnset)
 
         validator: DataclassValidator[DataclassWithDefaults] = DataclassValidator(DataclassWithDefaults)
 
-        # Repeat this to check that the counter actually counts up
-        for i in (1, 2, 3):
-            validated_data = validator.validate({})
-            assert validated_data.foo == 'example default'
-            assert validated_data.bar == i
-            assert validated_data.baz is UnsetValue
+        # Validate multiple objects to check that the counter actually counts up
+        validated_objects = {i: validator.validate({}) for i in (1, 2, 3)}
+
+        for i, validated_data in validated_objects.items():
+            assert validated_data.default_str == 'example default'
+            assert validated_data.default_list == []
+            assert validated_data.default_counter == i
+            assert validated_data.default_unset is UnsetValue
+
+        # Verify that the default list was deepcopied
+        assert validated_objects[1].default_list is not validated_objects[2].default_list is not validated_objects[3].default_list
 
     # Tests for more complex and nested validators using dataclasses
 

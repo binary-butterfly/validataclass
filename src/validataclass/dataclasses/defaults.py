@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from copy import deepcopy
+from copy import copy, deepcopy
 from typing import Any, NoReturn, Callable
 
 from validataclass.helpers import UnsetValue, UnsetValueType
@@ -35,8 +35,21 @@ class Default:
     def __repr__(self):
         return f'{type(self).__name__}({self.value!r})'
 
+    def __eq__(self, other):
+        if isinstance(self, type(other)):
+            return self.value == other.value
+        return NotImplemented
+
     def get_value(self) -> Any:
         return deepcopy(self.value)
+
+    def needs_factory(self) -> bool:
+        """
+        Returns True if a dataclass default_factory is needed for this Default object, for example if the value is a
+        mutable object (e.g. a list) that needs to be copied.
+        """
+        # If copying the value results in the identical object, no factory is needed (a shallow copy is sufficient to test this)
+        return copy(self.value) is not self.value
 
 
 class DefaultFactory(Default):
@@ -57,8 +70,16 @@ class DefaultFactory(Default):
     def __repr__(self):
         return f'{type(self).__name__}({self.factory!r})'
 
+    def __eq__(self, other):
+        if isinstance(self, type(other)):
+            return isinstance(other, DefaultFactory) and self.factory == other.factory
+        return NotImplemented
+
     def get_value(self) -> Any:
         return self.factory()
+
+    def needs_factory(self) -> bool:
+        return True
 
 
 # Temporary class to create the DefaultUnset sentinel, class will be deleted afterwards
@@ -75,6 +96,9 @@ class _DefaultUnset(Default):
 
     def get_value(self) -> UnsetValueType:
         return UnsetValue
+
+    def needs_factory(self) -> bool:
+        return False
 
     # For convenience: Allow DefaultUnset to be used as `DefaultUnset()`, returning the sentinel itself.
     def __call__(self):
@@ -98,6 +122,10 @@ class _NoDefault(Default):
 
     def __repr__(self):
         return 'NoDefault'
+
+    def __eq__(self, other):
+        # Nothing is equal to NoDefault except itself
+        return type(self) is type(other)
 
     def get_value(self) -> NoReturn:
         raise ValueError('No default value specified!')
