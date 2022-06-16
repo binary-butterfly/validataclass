@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.6.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.6.1) - 2022-06-16
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.6.0...0.6.1)
+
+This release fixes a **critical bug** introduced in 0.6.0.
+
+### Added
+
+- `Default` objects now support equality comparison (implemented `__eq__`). [#69]
+
+### Fixed
+
+- Fix `Default` objects with mutable values (e.g. lists). [#69]
+
+[#69]: https://github.com/binary-butterfly/validataclass/pull/69
+
+
 ## [0.6.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.6.0) - 2022-06-15
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.5.0...0.6.0)
