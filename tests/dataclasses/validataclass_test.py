@@ -362,7 +362,7 @@ class ValidatorDataclassTest:
         @validataclass
         class BaseA:
             field_a: int = IntegerValidator()
-            field_both: int = IntegerValidator(), Default(1)
+            field_both: int = (IntegerValidator(), Default(1))
 
         @validataclass
         class BaseB:
