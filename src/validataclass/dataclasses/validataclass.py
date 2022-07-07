@@ -150,20 +150,25 @@ def _get_existing_validator_fields(cls) -> Dict[str, _ValidatorField]:
     Returns a dictionary containing all fields (as `_ValidatorField` objects) of an existing validataclass that have a
     validator set in their metadata, or an empty dictionary if the class is not a dataclass (yet).
 
+    Existing dataclass fields are determined by looking at all direct parent classes that are dataclasses themselves.
+    If two (unrelated) base classes define a field with the same name, the most-left class takes precedence (for example,
+    in `class C(B, A)`, the definitions of B take precendence over A).
+
     (Internal helper function.)
     """
-    if not dataclasses.is_dataclass(cls):
-        return {}
-
     validator_fields = {}
 
-    for field in dataclasses.fields(cls):
-        # Ignore fields that don't have a validator in their metadata
-        if field.metadata and 'validator' in field.metadata:
-            validator_fields[field.name] = _ValidatorField(
-                validator=field.metadata.get('validator'),
-                default=field.metadata.get('validator_default', NoDefault),
-            )
+    for base_cls in reversed(cls.__bases__):
+        if not dataclasses.is_dataclass(base_cls):
+            continue
+
+        for field in dataclasses.fields(base_cls):
+            # Ignore fields that don't have a validator in their metadata
+            if field.metadata and 'validator' in field.metadata:
+                validator_fields[field.name] = _ValidatorField(
+                    validator=field.metadata.get('validator'),
+                    default=field.metadata.get('validator_default', NoDefault),
+                )
 
     return validator_fields
 
