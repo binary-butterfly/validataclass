@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.6.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.6.2) - 2022-07-11
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.6.1...0.6.2)
+
+This release fixes a bug with multiple inheritance in validataclasses.
+
+### Fixed
+
+- Fix overriding of existing field properties in validataclasses with multiple inheritance. [#71]
+
+[#71]: https://github.com/binary-butterfly/validataclass/pull/71
+
+
 ## [0.6.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.6.1) - 2022-06-16
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.6.0...0.6.1)
