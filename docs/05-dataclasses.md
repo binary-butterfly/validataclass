@@ -586,6 +586,56 @@ base class.
 Conversely, you can specify a new validator for a field without changing an existing default value. To remove an existing default value
 and make an optional field required, you can simply specify `NoDefault` (e.g. `some_decimal: Decimal = NoDefault`).
 
+Multiple inheritance (i.e. having a class with more than one parent) is also supported and can be used to create **mixins**
+that you can re-use in your validataclasses, even if they already inherit from another base class:
+
+```python
+from decimal import Decimal
+
+from validataclass.dataclasses import validataclass, Default
+from validataclass.validators import IntegerValidator, StringValidator, DecimalValidator
+
+@validataclass
+class BaseA:
+    field_a: int = IntegerValidator(), Default(0)
+
+@validataclass
+class BaseB:  # Note: This is NOT a subclass of BaseA
+    field_b: str = StringValidator()
+
+@validataclass
+class SubClass(BaseB, BaseA):
+    # SubClass will have "field_a" from BaseA, "field_b" from BaseB, and a new field "field_c"
+    field_c: Decimal = DecimalValidator()
+    
+    # You can also override validator and/or default as described above: 
+    field_a: int = Default(42) 
+```
+
+There is one important caveat about multiple inheritance: If two **unrelated** base classes of your dataclass define a
+field with the same name, the base class that is higher in the MRO (Method Resolution Order) takes full precendence over
+the other. Contrary to regular inheritance (e.g. a subclass overrides only the default of a field) there are no partial
+overrides in this case. In the following example, `SubClass` will have the field `field_both` as defined in `BaseB`, so
+it's a `StringValidator` **without** a default value:
+
+```python
+from validataclass.dataclasses import validataclass, Default
+from validataclass.validators import IntegerValidator, StringValidator
+
+@validataclass
+class BaseA:
+    field_both: int = IntegerValidator(), Default(42)
+
+@validataclass
+class BaseB:  # Note: This is NOT a subclass of BaseA
+    field_both: str = StringValidator()
+
+@validataclass
+class SubClass(BaseB, BaseA):
+    # Note: The left-most base class (BaseB) takes precendence over other base classes.
+    pass
+```
+
 
 ## Post-validation
 

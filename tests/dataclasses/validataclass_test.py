@@ -355,6 +355,42 @@ class ValidatorDataclassTest:
         assert fields['non_init'].default == 1
         assert 'validator' not in fields['non_init'].metadata
 
+    @staticmethod
+    def test_validataclass_multiple_inheritance():
+        """ Test that the @validataclass decorator handles multiple inheritance correctly. """
+
+        @validataclass
+        class BaseA:
+            field_a: int = IntegerValidator()
+            field_both: int = (IntegerValidator(), Default(1))
+
+        @validataclass
+        class BaseB:
+            field_b: str = StringValidator()
+            field_both: str = StringValidator()
+
+        @validataclass
+        class SubClass(BaseB, BaseA):
+            # Override the defaults to test that the decorator recognizes all fields of both base classes.
+            # If it does not, a "no validator for field X" error would be raised.
+            field_a: int = Default(42)
+            field_b: Optional[str] = Default(None)
+
+        # Get fields from dataclass
+        fields = get_dataclass_fields(SubClass)
+
+        # Check validators and defaults of overridden fields
+        assert isinstance(fields['field_a'].metadata.get('validator'), IntegerValidator)
+        assert isinstance(fields['field_b'].metadata.get('validator'), StringValidator)
+        assert fields['field_a'].metadata.get('validator_default') == Default(42)
+        assert fields['field_b'].metadata.get('validator_default') == Default(None)
+
+        # For fields defined in both base classes, BaseB should take precedence over BaseA (MRO: SubClass, BaseB, BaseA, object).
+        # Since BaseB does NOT inherit from BaseA, there should NOT be partial overrides in the field, i.e. field_both in
+        # SubClass does not have a default, since the field has no default in BaseB.
+        assert isinstance((fields['field_both'].metadata.get('validator')), StringValidator)
+        assert fields['field_both'].metadata.get('validator_default') is None
+
     # Error cases
 
     @staticmethod
