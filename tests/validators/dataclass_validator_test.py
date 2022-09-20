@@ -94,23 +94,11 @@ class UnitTestContextSensitiveDataclass:
     name: str = UnitTestContextValidator()
     value: Optional[int] = IntegerValidator(), Default(None)
 
-    def __post_validate__(self, *, value_required: bool = False, **kwargs):
+    def __post_validate__(self, *, value_required: bool = False, **_kwargs):
         if value_required and self.value is None:
             raise DataclassPostValidationError(field_errors={
                 'value': RequiredValueError(reason='Value is required in this context.'),
             })
-
-
-# Subclassed DataclassValidator with post_validate() method
-
-class SubclassedDataclassValidator(DataclassValidator[UnitTestDataclass]):
-    dataclass_cls = UnitTestDataclass
-
-    def post_validate(self, validated_object: UnitTestDataclass) -> UnitTestDataclass:
-        # Do some consistency check and raise a ValidationError if necessary
-        if validated_object.amount == 0 and validated_object.weight != 0:
-            raise ValidationError(code='contradictory_values', reason='Amount is 0, but weight is not 0. This does not make sense!')
-        return validated_object
 
 
 class DataclassValidatorTest:
@@ -460,47 +448,6 @@ class DataclassValidatorTest:
                     'code': 'required_value',
                     'reason': 'Value is required in this context.',
                 },
-            },
-        }
-
-    # Tests for subclassed DataclassValidators (with post_validate() method)
-
-    @staticmethod
-    def test_subclassed_dataclass_validator():
-        """ Test subclassing of DataclassValidator. """
-
-        validator = SubclassedDataclassValidator()
-        validated_data = validator.validate({
-            'name': 'banana',
-            'color': 'yellow',
-            'amount': 10,
-            'weight': '1.234',
-        })
-
-        assert type(validated_data) is UnitTestDataclass
-        assert validated_data.name == 'banana'
-        assert validated_data.color == 'yellow'
-        assert validated_data.amount == 10
-        assert validated_data.weight == Decimal('1.234')
-
-    @staticmethod
-    def test_subclassed_dataclass_validator_post_validation_error():
-        """ Test post_validate() checks in subclassed DataclassValidator with errors. """
-
-        validator = SubclassedDataclassValidator()
-        with pytest.raises(DataclassPostValidationError) as exception_info:
-            validator.validate({
-                'name': 'banana',
-                # Inconsistent data: amount is 0, but weight is not 0
-                'amount': 0,
-                'weight': '1.234',
-            })
-
-        assert exception_info.value.to_dict() == {
-            'code': 'post_validation_errors',
-            'error': {
-                'code': 'contradictory_values',
-                'reason': 'Amount is 0, but weight is not 0. This does not make sense!',
             },
         }
 
