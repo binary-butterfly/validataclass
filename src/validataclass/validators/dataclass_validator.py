@@ -144,12 +144,12 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
             raise DataclassValidatorFieldException(f'Default specified for dataclass field "{field.name}" is not of type "Default".')
         return default
 
-    def validate(self, input_data: Any) -> T_Dataclass:
+    def validate(self, input_data: Any, **kwargs) -> T_Dataclass:
         """
         Validate an input dictionary according to the specified dataclass. Returns an instance of the dataclass.
         """
         # Validate raw dictionary using underlying DictValidator
-        validated_dict = super().validate(input_data)
+        validated_dict = super().validate(input_data, **kwargs)
 
         # Fill optional fields with default values
         for field_name, field_default in self.field_defaults.items():

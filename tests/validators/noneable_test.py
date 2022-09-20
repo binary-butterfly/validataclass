@@ -8,6 +8,7 @@ from decimal import Decimal
 
 import pytest
 
+from tests.test_utils import UnitTestContextValidator
 from validataclass.exceptions import ValidationError
 from validataclass.validators import Noneable, DecimalValidator, IntegerValidator
 
@@ -48,6 +49,14 @@ class NoneableTest:
 
         assert type(result) == type(expected_result)
         assert result == expected_result
+
+    @staticmethod
+    def test_noneable_with_context_arguments():
+        """ Test that Noneable passes context arguments down to the wrapped validator. """
+        validator = Noneable(UnitTestContextValidator())
+        assert validator.validate(None) is None
+        assert validator.validate('unittest') == "unittest / {}"
+        assert validator.validate('unittest', foo=42) == "unittest / {'foo': 42}"
 
     @staticmethod
     def test_invalid_not_none_value():

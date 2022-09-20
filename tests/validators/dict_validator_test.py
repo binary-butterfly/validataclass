@@ -7,6 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from decimal import Decimal
 import pytest
 
+from tests.test_utils import UnitTestContextValidator
 from validataclass.exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, InvalidTypeError, RequiredValueError, \
     InvalidValidatorOptionException, ListItemsValidationError
 from validataclass.validators import DictValidator, DecimalValidator, IntegerValidator, StringValidator, Noneable, ListValidator
@@ -306,6 +307,29 @@ class DictValidatorTest:
         assert validated_data == {
             'test_a': Decimal('13.37'),
             'test_b': None,
+        }
+
+    # Tests for DictValidator with context arguments
+
+    @staticmethod
+    def test_with_context_arguments():
+        """ Test that DictValidator passes context arguments down to the default and field validators. """
+        validator = DictValidator(
+            field_validators={'unittest': UnitTestContextValidator(prefix='FIELD')},
+            default_validator=UnitTestContextValidator(prefix='DEFAULT'),
+        )
+        input_dict = {
+            'unittest': 'foo',
+            'foobar': 'bar',
+        }
+
+        assert validator.validate(input_dict) == {
+            'unittest': "[FIELD] foo / {}",
+            'foobar': "[DEFAULT] bar / {}",
+        }
+        assert validator.validate(input_dict, foo=42) == {
+            'unittest': "[FIELD] foo / {'foo': 42}",
+            'foobar': "[DEFAULT] bar / {'foo': 42}",
         }
 
     # Test invalid validator options

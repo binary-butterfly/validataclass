@@ -7,6 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from decimal import Decimal
 import pytest
 
+from tests.test_utils import UnitTestContextValidator
 from validataclass.exceptions import RequiredValueError, InvalidTypeError, ListItemsValidationError, ListLengthError, \
     InvalidValidatorOptionException
 from validataclass.validators import ListValidator, IntegerValidator, StringValidator, DecimalValidator
@@ -93,6 +94,21 @@ class ListValidatorTest:
                 3: {'code': 'invalid_decimal'},
             }
         }
+
+    # Test ListValidator with a context-sensitive item validator
+
+    @staticmethod
+    def test_with_context_arguments():
+        """ Test that ListValidator passes context arguments down to the item validator. """
+        validator = ListValidator(item_validator=UnitTestContextValidator())
+        assert validator.validate(['unit', 'test']) == [
+            "unit / {}",
+            "test / {}",
+        ]
+        assert validator.validate(['unit', 'test'], foo=42) == [
+            "unit / {'foo': 42}",
+            "test / {'foo': 42}",
+        ]
 
     # Check that ListValidator actually discards invalid items
 

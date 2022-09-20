@@ -10,6 +10,7 @@ from typing import Optional, List
 
 import pytest
 
+from tests.test_utils import UnitTestContextValidator
 from validataclass.dataclasses import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset
 from validataclass.exceptions import ValidationError, RequiredValueError, DictFieldsValidationError, DataclassPostValidationError, \
     InvalidValidatorOptionException, DataclassValidatorFieldException
@@ -176,6 +177,26 @@ class DataclassValidatorTest:
 
         # Verify that the default list was deepcopied
         assert validated_objects[1].default_list is not validated_objects[2].default_list is not validated_objects[3].default_list
+
+    # Tests for DataclassValidator with context arguments
+
+    @staticmethod
+    def test_validation_with_context_arguments():
+        """ Test that DataclassValidator passes context arguments down to the field validators. """
+
+        @validataclass
+        class DataclassWithContextSensitiveValidators:
+            field1: str = UnitTestContextValidator(prefix='1')
+            field2: str = UnitTestContextValidator(prefix='2')
+
+        validator = DataclassValidator(DataclassWithContextSensitiveValidators)
+        validated_data = validator.validate({
+            'field1': 'apple',
+            'field2': 'banana',
+        }, foo=42)
+
+        assert validated_data.field1 == "[1] apple / {'foo': 42}"
+        assert validated_data.field2 == "[2] banana / {'foo': 42}"
 
     # Tests for more complex and nested validators using dataclasses
 

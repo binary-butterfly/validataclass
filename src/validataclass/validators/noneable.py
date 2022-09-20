@@ -62,7 +62,7 @@ class Noneable(Validator):
         self.wrapped_validator = validator
         self.default_value = default
 
-    def validate(self, input_data: Any) -> Optional[Any]:
+    def validate(self, input_data: Any, **kwargs) -> Optional[Any]:
         """
         Validate input data.
 
@@ -74,7 +74,7 @@ class Noneable(Validator):
 
         try:
             # Call wrapped validator for all values other than None
-            return self.wrapped_validator.validate(input_data)
+            return self.wrapped_validator.validate_with_context(input_data, **kwargs)
         except InvalidTypeError as error:
             # If wrapped validator raises an InvalidTypeError, add 'none' to its 'expected_types' list and reraise it
             error.add_expected_type(type(None))
