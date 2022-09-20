@@ -63,10 +63,41 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
 
     All fields that do NOT specify a default value (or explicitly use the special value `NoDefault`) are required.
 
-    Post-validation checks can be implemented either as a `__post_init__()` method in the dataclass or by subclassing
-    DataclassValidator and overriding the `post_validate()` method. In both cases, you can either raise
-    `DataclassPostValidationError` exceptions directly or raise normal `ValidationError` exceptions, which will be
-    wrapped inside a `DataclassPostValidationError` automatically.
+    Post-validation checks can be implemented in the dataclass either using the `__post_init__()` special method (which
+    is part of regular dataclasses and thus also works without validataclass) or using a `__post_validate__()` method
+    (which is called by the DataclassValidator after creating the object). The latter also supports *context-sensitive*
+    validation, which means you can pass extra arguments to the `validate()` call that will be passed both to all field
+    validators and to the `__post_validate__()` method (as long as it is defined with a `**kwargs` argument).
+
+    In post-validation you can either raise regular `ValidationError` exceptions, which will be automatically wrapped
+    inside a `DataclassPostValidationError` exception, or raise such an exception directly (in which case you can
+    also specify errors for individual fields, which provides more precise errors to the user).
+
+    Here is an example for such a `__post_validate__()` method that also happens to be context-sensitive:
+
+    ```
+    @validataclass
+    class ExampleDataclass:
+        optional_field: str = StringValidator(), Default('')
+
+        # Note: The method MUST accept arbitrary keyword arguments (**kwargs), not just the parameter you defined,
+        # otherwise no context arguments will be passed to it at all. To avoid "unused parameter" notices, you can
+        # prepend the variable name with an underscore.
+        def __post_validate__(self, *, require_optional_field: bool = False, **_kwargs):
+            if require_optional_field and not self.optional_field:
+                raise DataclassPostValidationError(field_errors={
+                    'value': RequiredValueError(reason='The optional field is required for some reason.'),
+                })
+    ```
+
+    In this example, the field "optional_field" is usually optional, but there are cases where you need the field to be
+    set, which is only determined at runtime, i.e. when calling the validate() method of DataclassValidator. For this
+    you can now set the context argument `require_optional_field` (as defined in the `__post_validate__` method):
+
+    ```
+    validator = DataclassValidator(ExampleDataclass)
+    obj = validator.validate(input_data, require_optional_field=True)
+    ```
     """
 
     # Dataclass type that the validated dictionary will be converted to
