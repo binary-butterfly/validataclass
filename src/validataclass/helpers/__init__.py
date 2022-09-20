@@ -8,12 +8,12 @@ import importlib
 import warnings
 
 from .datetime_range import BaseDateTimeRange, DateTimeRange, DateTimeOffsetRange
-from .unset_value import UnsetValue, UnsetValueType, OptionalUnset, OptionalUnsetNone
+from .unset_value import UnsetValue, UnsetValueType, OptionalUnset, OptionalUnsetNone, unset_to_none
 
 # Defining __all__ is necessary here because of the definition of __getattr__() below.
 __all__ = [
     'BaseDateTimeRange', 'DateTimeRange', 'DateTimeOffsetRange',
-    'UnsetValue', 'UnsetValueType', 'OptionalUnset', 'OptionalUnsetNone',
+    'UnsetValue', 'UnsetValueType', 'OptionalUnset', 'OptionalUnsetNone', 'unset_to_none',
 ]
 
 

@@ -11,7 +11,10 @@ __all__ = [
     'UnsetValueType',
     'OptionalUnset',
     'OptionalUnsetNone',
+    'unset_to_none',
 ]
+
+T = TypeVar('T')
 
 
 # Class to create the UnsetValue sentinel object
@@ -45,8 +48,17 @@ UnsetValue = UnsetValueType()
 UnsetValueType.__new__ = lambda cls: UnsetValue
 
 # Type alias OptionalUnset[T] for fields with DefaultUnset (similar to Optional[T] but using UnsetValueType instead of NoneType)
-T = TypeVar('T')
 OptionalUnset = Union[T, UnsetValueType]
 
 # Type alias OptionalUnsetNone[T] for fields that can be None or UnsetValue (equivalent to OptionalUnset[Optional[T]])
 OptionalUnsetNone = OptionalUnset[Optional[T]]
+
+
+# Small helper function for easier conversion of UnsetValue to None
+def unset_to_none(value: OptionalUnset[T]) -> Optional[T]:
+    """
+    Converts `UnsetValue` to `None`.
+
+    Returns `None` if the given value is `UnsetValue`, otherwise the value is returned unmodified.
+    """
+    return None if value is UnsetValue else value

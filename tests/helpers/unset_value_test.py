@@ -8,7 +8,7 @@ from copy import copy
 
 import pytest
 
-from validataclass.helpers import UnsetValue, UnsetValueType
+from validataclass.helpers import UnsetValue, UnsetValueType, unset_to_none
 
 
 class UnsetValueTest:
@@ -46,3 +46,16 @@ class UnsetValueTest:
         """ Test that nothing is equal to UnsetValue (except itself). """
         assert other_value != UnsetValue
         assert UnsetValue != other_value
+
+
+def test_unset_to_none_with_unset_value():
+    """ Test the unset_to_none() helper function with UnsetValue as input. """
+    assert unset_to_none(UnsetValue) is None
+
+
+@pytest.mark.parametrize(
+    'value', [None, '', 'banana', 0, 42, [], {}]
+)
+def test_unset_to_none_with_any_value(value):
+    """ Test the unset_to_none() helper function with input that is not UnsetValue. """
+    assert unset_to_none(value) is value
