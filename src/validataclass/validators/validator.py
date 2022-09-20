@@ -43,8 +43,7 @@ class Validator(ABC):
         Use this method only if you want/need to pass context arguments to a validator and don't know for sure that the
         validator accepts keyword arguments (e.g. because you don't know the class of the validator).
         """
-        validate_spec = inspect.getfullargspec(self.validate)
-        if validate_spec.varkw is not None:
+        if inspect.getfullargspec(self.validate).varkw is not None:
             return self.validate(input_data, **kwargs)  # noqa (unexpected argument)
         else:
             return self.validate(input_data)

@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
+import inspect
 from typing import Any, Optional, TypeVar, Generic, Dict
 
 from validataclass.dataclasses import Default, NoDefault
@@ -159,6 +160,15 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
         # Try to create dataclass object from validated dictionary and catch exceptions that may be raised by a __post_init__() method
         try:
             validated_object = self.dataclass_cls(**validated_dict)
+
+            # Post validation using the custom __post_validate__() method in the dataclass (if defined)
+            if hasattr(validated_object, '__post_validate__'):
+                # Only pass context arguments if __post_validate__() accepts them
+                if inspect.getfullargspec(validated_object.__post_validate__).varkw is not None:
+                    validated_object.__post_validate__(**kwargs)
+                else:
+                    validated_object.__post_validate__()
+
             return self.post_validate(validated_object)
         except DataclassPostValidationError as error:
             # Error already has correct exception type, just reraise

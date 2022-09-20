@@ -47,6 +47,9 @@ class UnitTestNestedDataclass:
 
 @validataclass
 class UnitTestPostInitDataclass:
+    """
+    Dataclass with a non-init field that is set in a `__post_init__()` method (which also does some post-validation).
+    """
     # Normal validated fields
     base: str = StringValidator()
     count: int = IntegerValidator()
@@ -63,6 +66,39 @@ class UnitTestPostInitDataclass:
 
         # Set non-init field
         self.result = self.count * self.base
+
+
+# Dataclasses with __post_validate__() method (with and without context-sensitive validation)
+
+@validataclass
+class UnitTestPostValidationDataclass:
+    """
+    Dataclass to test post-validation using the `__post_validate__()` method.
+    """
+    start: int = IntegerValidator()
+    end: int = IntegerValidator()
+
+    def __post_validate__(self):
+        if self.start > self.end:
+            raise ValidationError(code='invalid_range', reason='"start" must be smaller than or equal to "end".')
+
+
+@validataclass
+class UnitTestContextSensitiveDataclass:
+    """
+    Dataclass to test context-sensitive post-validation.
+
+    The class has a field "name" that is always required, and a field "value" which usually is optional, but required
+    when the context argument "value_required" is set.
+    """
+    name: str = UnitTestContextValidator()
+    value: Optional[int] = IntegerValidator(), Default(None)
+
+    def __post_validate__(self, *, value_required: bool = False, **kwargs):
+        if value_required and self.value is None:
+            raise DataclassPostValidationError(field_errors={
+                'value': RequiredValueError(reason='Value is required in this context.'),
+            })
 
 
 # Subclassed DataclassValidator with post_validate() method
@@ -349,6 +385,83 @@ class DataclassValidatorTest:
                 'a': 1,
                 'b': 0,
             })
+
+    # Test dataclasses with __post_validate__() method (with and without context-sensitive validation)
+
+    @staticmethod
+    def test_dataclass_with_post_validate():
+        """ Validate dataclass with __post_validate__() method. """
+        validator: DataclassValidator[UnitTestPostValidationDataclass] = DataclassValidator(UnitTestPostValidationDataclass)
+        validated_data = validator.validate({
+            'start': 3,
+            'end': 4,
+        })
+
+        assert validated_data.start == 3
+        assert validated_data.end == 4
+
+    @staticmethod
+    def test_dataclass_with_post_validate_invalid():
+        """ Validate dataclass with __post_validate__() method, with invalid input. """
+        validator: DataclassValidator[UnitTestPostValidationDataclass] = DataclassValidator(UnitTestPostValidationDataclass)
+
+        with pytest.raises(DataclassPostValidationError) as exception_info:
+            validator.validate({
+                'start': 3,
+                'end': 2,
+            })
+
+        assert exception_info.value.to_dict() == {
+            'code': 'post_validation_errors',
+            'error': {
+                'code': 'invalid_range',
+                'reason': '"start" must be smaller than or equal to "end".',
+            },
+        }
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'validate_kwargs, input_data, expected_value',
+        [
+            # No context arguments
+            ({}, {'name': 'banana'}, None),
+            ({}, {'name': 'banana', 'value': 13}, 13),
+
+            # Context argument "value_required"
+            ({'value_required': False}, {'name': 'banana'}, None),
+            ({'value_required': False}, {'name': 'banana', 'value': 13}, 13),
+            ({'value_required': True}, {'name': 'banana', 'value': 13}, 13),
+
+            # Test that all context arguments are passed to other validators as well
+            ({'value_required': False, 'foo': 42}, {'name': 'banana'}, None),
+        ]
+    )
+    def test_dataclass_with_context_sensitive_post_validate(validate_kwargs, input_data, expected_value):
+        """ Validate dataclass with a context-sensitive __post_validate__() method. """
+        validator: DataclassValidator[UnitTestContextSensitiveDataclass] = DataclassValidator(UnitTestContextSensitiveDataclass)
+        validated_data = validator.validate(input_data, **validate_kwargs)
+
+        assert validated_data.name == f"banana / {validate_kwargs}"
+        assert validated_data.value == expected_value
+
+    @staticmethod
+    def test_dataclass_with_context_sensitive_post_validate_invalid():
+        """ Validate dataclass with a context-sensitive __post_validate__() method, with invalid input. """
+        validator: DataclassValidator[UnitTestContextSensitiveDataclass] = DataclassValidator(UnitTestContextSensitiveDataclass)
+
+        # Without context arguments
+        with pytest.raises(DataclassPostValidationError) as exception_info:
+            validator.validate({'name': 'banana'}, value_required=True)
+
+        assert exception_info.value.to_dict() == {
+            'code': 'post_validation_errors',
+            'field_errors': {
+                'value': {
+                    'code': 'required_value',
+                    'reason': 'Value is required in this context.',
+                },
+            },
+        }
 
     # Tests for subclassed DataclassValidators (with post_validate() method)
 
