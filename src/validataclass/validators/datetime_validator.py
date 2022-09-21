@@ -87,6 +87,11 @@ class DateTimeValidator(StringValidator):
     2021-12-31T12:34:56+02:00 | valid          | valid            |             |            |
     ```
 
+    Regardless of the specified format, the validator always accepts input strings with milli- and microseconds (e.g.
+    "2021-12-31T12:34:56.123" or "2021-12-31T12:34:56.123456"). This cannot be changed currently. However, you can set
+    the option `discard_milliseconds=True`, which will discard the milli- and microseconds of the output datetime (both
+    of the examples would then result in the same datetime as "2021-12-31T12:34:56").
+
     The parameter 'local_timezone' can be used to set the timezone for datetime strings that don't specify a timezone. For example, if
     'local_timezone' is set to a UTC+3 timezone, the string "2021-12-31T12:34:56" will be treated like "2021-12-31T12:34:56+03:00".
     Similarly, to interpret datetimes without timezone as UTC, set `local_timezone=datetime.timezone.utc`. If 'local_timezone' is not
@@ -175,6 +180,9 @@ class DateTimeValidator(StringValidator):
     # Precompiled regular expression for the specified datetime string format
     datetime_format_regex: re.Pattern
 
+    # Whether to discard milli- and microseconds in the output datetime
+    discard_milliseconds: bool = False
+
     # Timezone to use for datetime strings without a specified timezone (None: no default timezone info in datetime)
     local_timezone: Optional[tzinfo] = None
 
@@ -188,6 +196,7 @@ class DateTimeValidator(StringValidator):
         self,
         datetime_format: DateTimeFormat = DateTimeFormat.ALLOW_TIMEZONE,
         *,
+        discard_milliseconds: bool = False,
         local_timezone: Optional[tzinfo] = None,
         target_timezone: Optional[tzinfo] = None,
         datetime_range: Optional[BaseDateTimeRange] = None,
@@ -204,6 +213,7 @@ class DateTimeValidator(StringValidator):
 
         Parameters:
             datetime_format: `DateTimeFormat`, specifies the accepted string formats (default: `ALLOW_TIMEZONE`)
+            discard_milliseconds: `bool`, if set, milli- and microseconds will be set to 0 in the output datetime (default: False)
             local_timezone: `tzinfo`, specifies the default timezone to set for datetime strings without timezone info (default: None)
             target_timezone: `tzinfo`, if specified, all datetimes will be converted to this timezone (default: None)
             datetime_range: `BaseDateTimeRange` (subclasses), specifies the range of allowed values (default: None)
@@ -218,6 +228,7 @@ class DateTimeValidator(StringValidator):
 
         # Save parameters
         self.datetime_format = datetime_format
+        self.discard_milliseconds = discard_milliseconds
         self.local_timezone = local_timezone
         self.target_timezone = target_timezone
         self.datetime_range = datetime_range
@@ -245,6 +256,10 @@ class DateTimeValidator(StringValidator):
             datetime_obj = datetime.fromisoformat(datetime_string)
         except ValueError:
             raise InvalidDateTimeError(datetime_format_str=self.datetime_format.format_str)
+
+        # Discard milli- and microseconds (if enabled)
+        if self.discard_milliseconds:
+            datetime_obj = datetime_obj.replace(microsecond=0)
 
         # Set timezone to local_timezone if no timezone is specified
         if datetime_obj.tzinfo is None and self.local_timezone is not None:

@@ -227,6 +227,31 @@ class DateTimeValidatorTest:
             'datetime_format': datetime_format_str,
         }
 
+    # Test DateTimeValidator with discard_milliseconds parameter
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_string, expected_datetime', [
+            # Without timezone
+            ('2021-09-01T12:34:56', datetime(2021, 9, 1, 12, 34, 56)),
+            ('2021-09-01T12:34:56.000', datetime(2021, 9, 1, 12, 34, 56)),
+            ('2021-09-01T12:34:56.123', datetime(2021, 9, 1, 12, 34, 56)),
+            ('2021-09-01T12:34:56.999999', datetime(2021, 9, 1, 12, 34, 56)),
+
+            # With timezone
+            ('2021-09-01T12:34:56+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
+            ('2021-09-01T12:34:56.000+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
+            ('2021-09-01T12:34:56.123+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
+            ('2021-09-01T12:34:56.999999+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
+        ]
+    )
+    def test_with_discard_milliseconds(input_string, expected_datetime):
+        """ Test DateTimeValidator with discard_milliseconds set to True. """
+        validator = DateTimeValidator(DateTimeFormat.ALLOW_TIMEZONE, discard_milliseconds=True)
+        validated_datetime = validator.validate(input_string)
+        assert validated_datetime == expected_datetime
+        assert validated_datetime.microsecond == 0
+
     # Test DateTimeValidator with local_timezone parameter
 
     @staticmethod

@@ -674,6 +674,11 @@ Example input               | `ALLOW_TIMEZONE` | `REQUIRE_TIMEZONE` | `REQUIRE_U
 `2021-12-31T12:34:56+02:00` | valid            | valid              |               |              |
 
 
+Regardless of the specified format, the validator always accepts input strings with milli- and microseconds (e.g.
+"2021-12-31T12:34:56.123" or "2021-12-31T12:34:56.123456"). This cannot be changed currently. However, you can set the
+option `discard_milliseconds=True`, which will discard the milli- and microseconds of the output datetime (both of the
+examples would then result in the same datetime as "2021-12-31T12:34:56").
+
 The parameter `local_timezone` can be used to set the timezone for datetime strings that don't specify a timezone. For example, if
 `local_timezone` is set to a UTC+3 timezone, the string `"2021-12-31T12:34:56"` will be treated like `"2021-12-31T12:34:56+03:00"`.
 Similarly, to interpret datetimes without timezone as UTC, set `local_timezone=datetime.timezone.utc`. If `local_timezone` is not
