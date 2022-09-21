@@ -4,7 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import List
+from typing import Any, List
+
+from validataclass.validators import Validator
 
 
 def unpack_params(*args) -> List[tuple]:
@@ -69,3 +71,22 @@ def unpack_params(*args) -> List[tuple]:
 
 # This is a sentinel object used in parametrized tests to represent "this parameter should not be set"
 UNSET_PARAMETER = object()
+
+
+# Test validator that parses context arguments
+class UnitTestContextValidator(Validator):
+    """
+    Context-sensitive string validator, only for unit testing.
+
+    Returns the input string followed by a dump of the context arguments, optionally with a prefix string.
+    """
+
+    # Prefix that is prepended to the output to distinguish multiple validators in tests
+    prefix: str
+
+    def __init__(self, *, prefix: str = ''):
+        self.prefix = f'[{prefix}] ' if prefix else ''
+
+    def validate(self, input_data: Any, **kwargs) -> str:
+        self._ensure_type(input_data, str)
+        return f'{self.prefix}{input_data} / {kwargs}'

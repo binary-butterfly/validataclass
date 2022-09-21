@@ -40,12 +40,12 @@ class DateValidator(StringValidator):
         # Initialize StringValidator without any parameters
         super().__init__()
 
-    def validate(self, input_data: Any) -> date:
+    def validate(self, input_data: Any, **kwargs) -> date:
         """
         Validate input as a valid date string and convert it to a `datetime.date` object.
         """
         # First, validate input data as string
-        date_string = super().validate(input_data)
+        date_string = super().validate(input_data, **kwargs)
 
         # Try to create date object from string (only accepts "YYYY-MM-DD")
         try:

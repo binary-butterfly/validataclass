@@ -107,7 +107,7 @@ class FloatToDecimalValidator(DecimalValidator):
         if allow_strings:
             self.allowed_types.append(str)
 
-    def validate(self, input_data: Any) -> Decimal:
+    def validate(self, input_data: Any, **kwargs) -> Decimal:
         """
         Validate input data as a float (optionally also as integer or string), then convert it to a Decimal object.
         """
@@ -122,4 +122,4 @@ class FloatToDecimalValidator(DecimalValidator):
         input_str = str(input_data)
 
         # Parse decimal strings using the base DecimalValidator
-        return super().validate(input_str)
+        return super().validate(input_str, **kwargs)

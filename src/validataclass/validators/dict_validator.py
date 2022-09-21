@@ -122,7 +122,7 @@ class DictValidator(Validator):
         if optional_fields is not None:
             self.required_fields = self.required_fields - set(optional_fields)
 
-    def validate(self, input_data: Any) -> dict:
+    def validate(self, input_data: Any, **kwargs) -> dict:
         """
         Validate input data. Returns a validated dict.
         """
@@ -154,7 +154,7 @@ class DictValidator(Validator):
 
             # Run field validator and catch validation errors
             try:
-                validated_dict[key] = field_validator.validate(value)
+                validated_dict[key] = field_validator.validate_with_context(value, **kwargs)
             except ValidationError as error:
                 field_errors[key] = error
 

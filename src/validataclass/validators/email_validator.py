@@ -54,12 +54,12 @@ class EmailValidator(StringValidator):
         # Initialize StringValidator with some length requirements
         super().__init__(min_length=1, max_length=256)
 
-    def validate(self, input_data: Any) -> str:
+    def validate(self, input_data: Any, **kwargs) -> str:
         """
         Validate that input is a valid email address string. Returns unmodified string.
         """
         # Validate input data as string
-        input_email = super().validate(input_data)
+        input_email = super().validate(input_data, **kwargs)
 
         # Validate string with regular expression
         regex_match = self.email_regex.fullmatch(input_email)

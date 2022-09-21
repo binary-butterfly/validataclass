@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from tests.test_utils import unpack_params
+from tests.test_utils import unpack_params, UnitTestContextValidator
 
 
 class UnpackParamsTest:
@@ -54,3 +54,18 @@ class UnpackParamsTest:
             ('baz', 'BAZ', 2, 'b'),
             ('baz', 'BAZ', 3, 'c'),
         ]
+
+
+class UnitTestContextValidatorTest:
+    """ Tests for the UnitTestContextValidator helper validator. """
+
+    @staticmethod
+    def test_validator():
+        validator = UnitTestContextValidator()
+        assert validator.validate('banana') == 'banana / {}'
+        assert validator.validate('banana', foo=42, bar=[]) == "banana / {'foo': 42, 'bar': []}"
+
+    @staticmethod
+    def test_validator_with_prefix():
+        validator = UnitTestContextValidator(prefix='UNITTEST')
+        assert validator.validate('banana', foo=42, bar=[]) == "[UNITTEST] banana / {'foo': 42, 'bar': []}"

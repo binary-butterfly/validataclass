@@ -62,7 +62,7 @@ class AnyOfValidator(Validator):
         self.allowed_values = allowed_values
         self.allowed_types = allowed_types
 
-    def validate(self, input_data: Any) -> Any:
+    def validate(self, input_data: Any, **kwargs) -> Any:
         """
         Validate that input is in the list of allowed values. Returns the value unmodified.
         """

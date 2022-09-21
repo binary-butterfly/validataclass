@@ -128,12 +128,12 @@ class UrlValidator(StringValidator):
         self.allow_userinfo = allow_userinfo
         self.allow_empty = allow_empty
 
-    def validate(self, input_data: Any) -> str:
+    def validate(self, input_data: Any, **kwargs) -> str:
         """
         Validate that input is a valid URL string. Returns unmodified string.
         """
         # Validate input data as string
-        input_url = super().validate(input_data)
+        input_url = super().validate(input_data, **kwargs)
 
         # Short-circuit: check if the string is empty and return it if allow_empty is True
         if input_url == "" and self.allow_empty:

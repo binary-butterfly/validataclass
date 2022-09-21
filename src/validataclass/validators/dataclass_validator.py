@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
+import inspect
 from typing import Any, Optional, TypeVar, Generic, Dict
 
 from validataclass.dataclasses import Default, NoDefault
@@ -62,10 +63,41 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
 
     All fields that do NOT specify a default value (or explicitly use the special value `NoDefault`) are required.
 
-    Post-validation checks can be implemented either as a `__post_init__()` method in the dataclass or by subclassing
-    DataclassValidator and overriding the `post_validate()` method. In both cases, you can either raise
-    `DataclassPostValidationError` exceptions directly or raise normal `ValidationError` exceptions, which will be
-    wrapped inside a `DataclassPostValidationError` automatically.
+    Post-validation checks can be implemented in the dataclass either using the `__post_init__()` special method (which
+    is part of regular dataclasses and thus also works without validataclass) or using a `__post_validate__()` method
+    (which is called by the DataclassValidator after creating the object). The latter also supports *context-sensitive*
+    validation, which means you can pass extra arguments to the `validate()` call that will be passed both to all field
+    validators and to the `__post_validate__()` method (as long as it is defined with a `**kwargs` argument).
+
+    In post-validation you can either raise regular `ValidationError` exceptions, which will be automatically wrapped
+    inside a `DataclassPostValidationError` exception, or raise such an exception directly (in which case you can
+    also specify errors for individual fields, which provides more precise errors to the user).
+
+    Here is an example for such a `__post_validate__()` method that also happens to be context-sensitive:
+
+    ```
+    @validataclass
+    class ExampleDataclass:
+        optional_field: str = StringValidator(), Default('')
+
+        # Note: The method MUST accept arbitrary keyword arguments (**kwargs), not just the parameter you defined,
+        # otherwise no context arguments will be passed to it at all. To avoid "unused parameter" notices, you can
+        # prepend the variable name with an underscore.
+        def __post_validate__(self, *, require_optional_field: bool = False, **_kwargs):
+            if require_optional_field and not self.optional_field:
+                raise DataclassPostValidationError(field_errors={
+                    'value': RequiredValueError(reason='The optional field is required for some reason.'),
+                })
+    ```
+
+    In this example, the field "optional_field" is usually optional, but there are cases where you need the field to be
+    set, which is only determined at runtime, i.e. when calling the validate() method of DataclassValidator. For this
+    you can now set the context argument `require_optional_field` (as defined in the `__post_validate__` method):
+
+    ```
+    validator = DataclassValidator(ExampleDataclass)
+    obj = validator.validate(input_data, require_optional_field=True)
+    ```
     """
 
     # Dataclass type that the validated dictionary will be converted to
@@ -144,22 +176,31 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
             raise DataclassValidatorFieldException(f'Default specified for dataclass field "{field.name}" is not of type "Default".')
         return default
 
-    def validate(self, input_data: Any) -> T_Dataclass:
+    def _pre_validate(self, input_data: Any, **kwargs) -> dict:
         """
-        Validate an input dictionary according to the specified dataclass. Returns an instance of the dataclass.
+        Pre-validation steps: Validates the input as a dictionary and fills in the default values.
         """
         # Validate raw dictionary using underlying DictValidator
-        validated_dict = super().validate(input_data)
+        validated_dict = super().validate(input_data, **kwargs)
 
         # Fill optional fields with default values
         for field_name, field_default in self.field_defaults.items():
             if field_name not in validated_dict:
                 validated_dict[field_name] = field_default.get_value()
 
-        # Try to create dataclass object from validated dictionary and catch exceptions that may be raised by a __post_init__() method
+        return validated_dict
+
+    def validate(self, input_data: Any, **kwargs) -> T_Dataclass:
+        """
+        Validate an input dictionary according to the specified dataclass. Returns an instance of the dataclass.
+        """
+        # Pre-validate the raw dictionary and fill in default values
+        validated_dict = self._pre_validate(input_data, **kwargs)
+
+        # Try to create dataclass object from validated dictionary and catch exceptions that may be raised in post-validation
         try:
             validated_object = self.dataclass_cls(**validated_dict)
-            return self.post_validate(validated_object)
+            return self._post_validate(validated_object, **kwargs)
         except DataclassPostValidationError as error:
             # Error already has correct exception type, just reraise
             raise error
@@ -168,12 +209,17 @@ class DataclassValidator(DictValidator, Generic[T_Dataclass]):
             raise DataclassPostValidationError(error=error)
         # Ignore all non-ValidationError exceptions (these are either errors in the code or should be handled properly by the user)
 
-    # noinspection PyMethodMayBeStatic
-    def post_validate(self, validated_object: T_Dataclass) -> T_Dataclass:
+    @staticmethod
+    def _post_validate(validated_object: T_Dataclass, **kwargs) -> T_Dataclass:
         """
-        Run post-validation checks on the validated dataclass instance. Returns the dataclass instance.
+        Post-validation steps: Calls the `__post_validate__()` method on the dataclass object (if it is defined).
+        """
+        # Post validation using the custom __post_validate__() method in the dataclass (if defined)
+        if hasattr(validated_object, '__post_validate__'):
+            # Only pass context arguments if __post_validate__() accepts them
+            if inspect.getfullargspec(validated_object.__post_validate__).varkw is not None:
+                validated_object.__post_validate__(**kwargs)
+            else:
+                validated_object.__post_validate__()
 
-        This method does nothing, but can be overridden by subclasses to implement user-defined checks (and optionally modify the
-        instance). Exceptions raised in this method will be caught in `validate()` and handled as DataclassPostValidationErrors.
-        """
         return validated_object

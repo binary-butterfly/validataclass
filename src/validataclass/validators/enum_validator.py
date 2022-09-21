@@ -80,12 +80,12 @@ class EnumValidator(AnyOfValidator):
         # Initialize base AnyOfValidator
         super().__init__(allowed_values=any_of_values, allowed_types=allowed_types)
 
-    def validate(self, input_data: Any) -> Enum:
+    def validate(self, input_data: Any, **kwargs) -> Enum:
         """
         Validate input to be a valid value of the specified Enum. Returns the Enum member.
         """
         # Validate input using the AnyOfValidator first
-        input_data = super().validate(input_data)
+        input_data = super().validate(input_data, **kwargs)
 
         # Try to convert value to enum member
         try:

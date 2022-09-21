@@ -639,31 +639,34 @@ class SubClass(BaseB, BaseA):
 
 ## Post-validation
 
-Post-validation is everything that happens **after** all fields have been validated individually, but **before** the `DataclassValidator`
-returns the dataclass object.
+Post-validation is everything that happens **after** all fields have been validated individually, but **before** the
+`DataclassValidator` returns the dataclass object.
 
-For example, you could implement additional validation criteria that depend on the values of multiple fields of the dataclass. One common
-use case for this are fields that are optional by default, but can be **required** under certain conditions, e.g. fields A and B are not
-required, but if one of them exists, the other must exist too (or conversely, only one of the fields is allowed to be set at the same
-time).
+For example, you could implement additional validation criteria that depend on the values of multiple fields of the
+dataclass. One common use case for this are fields that are optional by default, but can be **required** under certain
+conditions, e.g. fields A and B are not required, but if one of them exists, the other must exist too (or conversely,
+only one of the fields is allowed to be set at the same time).
 
-Another use case are "integrity constraints". Imagine you have a dataclass with two datetime fields `begin_time` and `end_time` that
-specify the start and end of a time interval. You might want to ensure that `begin_time <= end_time` is always true, because a time
-interval cannot end before it starts. This cannot be done using the field validators alone, so you need to do this integrity check
-**post validation**.
+Another use case are "integrity constraints". Imagine you have a dataclass with two datetime fields `begin_time` and
+`end_time` that specify the start and end of a time interval. You might want to ensure that `begin_time <= end_time` is
+always true, because a time interval cannot end before it starts. This cannot be done using the field validators alone,
+so you need to do this integrity check **post validation**.
 
-Of course, you can do any sort of post-validation on a validated object after it was returned by the `DataclassValidator`. But a more
-elegant way is to **integrate** the post-validation logic into the validator and/or dataclass itself.
+Of course, you can do any sort of post-validation on a validated object after it was returned by the `DataclassValidator`.
+But a more elegant way is to **integrate** the post-validation logic into the `DataclassValidator` and dataclass itself.
 
-There are two ways to do this: One way is to **subclass** the `DataclassValidator` for your dataclass and override the `post_validate()`
-method (which by default doesn't do anything with the object). Another way is to use the `__post_init__()` special method of dataclasses.
-We will only demonstrate the latter for now, because it's a bit more easy (doesn't require subclassing the validator).
+There are two ways to implement post-validation in a validataclass: First, there is the `__post_init__()` special method
+which is automatically called as part of the `__init__()` method of a dataclass. It is a feature of regular dataclasses,
+so this post-validation is also applied when instantiating the dataclass without using validataclass.
 
-Dataclasses can have the special method `__post_init__()` which will be automatically called after the `__init__()` special method.
-It does not receive any arguments (unless so called `InitVar` fields are used, which are currently unsupported by this library), but it
-can access the objects fields as usual with `self.field_name`.
+The other way is to implement the `__post_validate__()` method. This method is called by the `DataclassValidator` right
+after creating the object. It is a feature of validataclass, so it is **not** called when instantiating the dataclass
+manually (although you can of course just call `obj.__post_validate__()` manually as well).
 
-Let's see how this can be done for the datetime example from above:
+The `__post_validate__()` method additionally supports another special feature: **context-sensitive validation**, which
+will be discussed shortly.
+
+This example implements the datetime post-validation example from above:
 
 ```python
 from datetime import datetime
@@ -678,7 +681,8 @@ class ExampleClass:
     begin_time: datetime = DateTimeValidator(DateTimeFormat.REQUIRE_UTC)
     end_time: datetime = DateTimeValidator(DateTimeFormat.REQUIRE_UTC)
 
-    def __post_init__(self):
+    # Note: In this case, __post_init__() would look exactly the same.
+    def __post_validate__(self):
         # Ensure that begin_time is always before end_time
         if self.begin_time > self.end_time:
             raise ValidationError(
@@ -740,7 +744,7 @@ class ExampleClass:
     # This field is required only if enable_something is True. Otherwise it will be ignored.
     some_value: Optional[int] = IntegerValidator(), Default(None)
 
-    def __post_init__(self):
+    def __post_validate__(self):
         # If enable_something is True, ensure that some_value is set!
         if self.enable_something is True and self.some_value is None:
             raise DataclassPostValidationError(field_errors={
@@ -770,6 +774,111 @@ The `DataclassPostValidationError` from this example will look like this after c
         }
     }
 }
+```
+
+
+### Context-sensitive post-validation
+
+As mentioned earlier, the `__post_validate__()` method supports a nice feature called **context-sensitive validation**.
+
+In general, this means that the validation can depend on the **context** it is used in. Usually, the output of a
+validator is always determined by a) the options set at the time the validator was created and b) the input value.
+Context-sensitive validation means that you pass additional parameters to the validator at runtime, i.e. at the time
+the `validate()` method is called to validate a piece of input.
+
+These so called **context arguments** are passed to the `validate()` call as arbitrary keyword arguments. Whether and
+how the validator actually uses these arguments depends on the implementation of the validator. Most validators don't
+do anything with it except for passing it to sub-validators (e.g. the `ListValidator` passes the context arguments to
+the specified item validator).
+
+The `DataclassValidator` supports these context arguments and uses them in two ways: First, it passes them as they are
+to any field validator (which might pass them to other validators as well). Second, it also passes them to the
+`__post_validate__()` method of the dataclass.
+
+However, for this to work, the method MUST accept arbitrary keyword arguments, i.e. it needs to be declared with a
+`**kwargs` parameter (the parameter name doesn't matter). You can of course declare specific keyword arguments that you
+want to use for post-validation (make sure to define them as optional!), but you still need to accept any other keyword
+argument as well, otherwise the context arguments will not be passed to the method at all.
+
+Example:
+
+```python
+from typing import Optional
+
+from validataclass.dataclasses import validataclass, Default
+from validataclass.exceptions import RequiredValueError, DataclassPostValidationError
+from validataclass.validators import DataclassValidator, BooleanValidator, IntegerValidator
+
+@validataclass
+class ContextSensitiveExampleClass:
+    # This field is optional, unless the context says otherwise.
+    some_value: Optional[int] = IntegerValidator(), Default(None)
+
+    # Note: Prefix the kwargs parameter with an underscore to avoid "unused parameter" notices.
+    def __post_validate__(self, *, require_some_value: bool = False, **_kwargs):
+        # If require_some_value was set at validation time, ensure that some_value is set!
+        if require_some_value and self.some_value is None:
+            raise DataclassPostValidationError(field_errors={
+                'some_value': RequiredValueError(reason='Must be set in this context.'),
+            })
+
+# Create a validator for this dataclass
+validator = DataclassValidator(ContextSensitiveExampleClass)
+
+# Without context arguments: The field is optional.
+validator.validate({})                  # -> ContextSensitiveExampleClass(some_value=None)
+validator.validate({"some_value": 42})  # -> ContextSensitiveExampleClass(some_value=42)
+
+# With the context argument "require_some_value" set: The field is now required!
+validator.validate({}, require_some_value=True)                  # will raise a DataclassPostValidationError
+validator.validate({"some_value": 42}, require_some_value=True)  # -> ContextSensitiveExampleClass(some_value=42)
+```
+
+**One important note about the `validate()` method:**
+
+For backwards compatibility, `Validator` classes currently are **not** required to accept arbitrary keyword arguments.
+Custom validators that were created before this feature was implemented (version 0.7.0) will not support this, so
+calling their `validate()` method with keyword arguments will raise an error.
+
+To avoid this, there is a helper method that wraps the `validate()` call: `Validator.validate_with_context()` will check
+whether the validator class supports context arguments, then call the `validate()` method either with or without them.
+
+In cases where you don't know whether your validator class already supports context arguments (especially when writing
+generic code that can use arbitrary validators), you should therefore use the `validate_with_context()` method.
+
+Example:
+
+```python
+from validataclass.validators import Validator
+
+validator: Validator = ...  # This can be any validator class
+input_data = ...
+
+validated_data = validator.validate_with_context(input_data, my_context_var=42)
+```
+
+This method will become obsolete and eventually removed in the future (possibly in version 1.0.0), when every validator
+class will be required to support context arguments.
+
+**Therefore, you should upgrade your custom validator classes to support context arguments, and also to pass them to
+any underlying base validator.**
+
+To do this, simply add a `**kwargs` argument to your `validate()` call. For example:
+
+```python
+from typing import Any
+from validataclass.validators import StringValidator
+
+class UppercaseStringValidator(StringValidator):
+    # BEFORE:
+    # def validate(self, input_data: Any) -> str:
+    #     validated_str = super().validate(input_data)
+    #     return validated_str.upper()
+    
+    # AFTER: 
+    def validate(self, input_data: Any, **kwargs) -> str:
+        validated_str = super().validate(input_data, **kwargs)
+        return validated_str.upper()
 ```
 
 

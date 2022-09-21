@@ -56,7 +56,9 @@ class ListValidator(Validator):
     discard_invalid: bool = False
 
     def __init__(
-        self, item_validator: Validator, *,
+        self,
+        item_validator: Validator,
+        *,
         min_length: Optional[int] = None,
         max_length: Optional[int] = None,
         discard_invalid: bool = False
@@ -85,7 +87,7 @@ class ListValidator(Validator):
         self.max_length = max_length
         self.discard_invalid = discard_invalid
 
-    def validate(self, input_data: Any) -> list:
+    def validate(self, input_data: Any, **kwargs) -> list:
         """
         Validate input data. Returns a validated list.
         """
@@ -103,7 +105,7 @@ class ListValidator(Validator):
         # Apply item_validator to all list items and collect validation errors
         for index, item in enumerate(input_data):
             try:
-                validated_list.append(self.item_validator.validate(item))
+                validated_list.append(self.item_validator.validate_with_context(item, **kwargs))
             except ValidationError as error:
                 validation_errors[index] = error
 
