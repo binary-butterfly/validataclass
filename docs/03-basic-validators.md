@@ -838,7 +838,8 @@ These values can potentially be of any type, although strings and integers are p
 The `AnyOfValidator` is defined with a simple list of allowed values and accepts only values that are part of this list.
 The values will be returned unmodified.
 
-The list of allowed values may contain mixed types (e.g. `['banana', 123, True, None]`).
+The list of allowed values may contain mixed types (e.g. `['banana', 123, True, None]`). Also the allowed values can be
+specified with any iterable, not just as a list (e.g. as a set or tuple).
 
 Like most other validators, the validator will first check the type of input data and will raise an `InvalidTypeError` for types that
 are not allowed. Those allowed types will be automatically determined from the list of values by default (e.g. with `['foo', 'bar', 'baz']`
