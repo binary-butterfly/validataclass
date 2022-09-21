@@ -88,7 +88,7 @@ class IntegerValidator(Validator):
         self.max_value = max_value
         self.allow_strings = allow_strings
 
-    def validate(self, input_data: Any) -> int:
+    def validate(self, input_data: Any, **kwargs) -> int:
         """
         Validate type (and optionally value) of input data. Returns unmodified integer.
         """

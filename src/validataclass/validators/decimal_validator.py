@@ -119,12 +119,12 @@ class DecimalValidator(StringValidator):
                 raise InvalidValidatorOptionException('Parameter "output_places" cannot be negative.')
             self.output_quantum = Decimal('0.1') ** output_places
 
-    def validate(self, input_data: Any) -> Decimal:
+    def validate(self, input_data: Any, **kwargs) -> Decimal:
         """
         Validate input data as a string, convert it to a Decimal object and check optional constraints.
         """
         # First, validate input data as string
-        decimal_string = super().validate(input_data)
+        decimal_string = super().validate(input_data, **kwargs)
 
         # Validate string with a regular expression
         if not self.decimal_regex.fullmatch(decimal_string):

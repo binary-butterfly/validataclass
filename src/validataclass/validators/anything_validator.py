@@ -137,7 +137,7 @@ class AnythingValidator(Validator):
 
         return list(allowed_types)
 
-    def validate(self, input_data: Any) -> Any:
+    def validate(self, input_data: Any, **kwargs) -> Any:
         """
         Validate input data. Accepts anything (or only specific types) and returns data unmodified.
         """

@@ -225,12 +225,12 @@ class DateTimeValidator(StringValidator):
         # Precompile regular expression for datetime format
         self.datetime_format_regex = re.compile(self.datetime_format.regex_str)
 
-    def validate(self, input_data: Any) -> datetime:
+    def validate(self, input_data: Any, **kwargs) -> datetime:
         """
         Validate input as a valid datetime string and convert it to a `datetime.datetime` object.
         """
         # First, validate input data as string
-        datetime_string = super().validate(input_data)
+        datetime_string = super().validate(input_data, **kwargs)
 
         # Validate string format with a regular expression
         if not self.datetime_format_regex.fullmatch(datetime_string):

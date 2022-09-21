@@ -92,12 +92,12 @@ class TimeValidator(StringValidator):
         self.time_format = time_format
         self.time_format_regex = re.compile(self.time_format.regex_str)
 
-    def validate(self, input_data: Any) -> time:
+    def validate(self, input_data: Any, **kwargs) -> time:
         """
         Validate input as a valid time string and convert it to a `datetime.time` object.
         """
         # First, validate input data as string
-        time_string = super().validate(input_data)
+        time_string = super().validate(input_data, **kwargs)
 
         # Validate string format with a regular expression
         if not self.time_format_regex.fullmatch(time_string):

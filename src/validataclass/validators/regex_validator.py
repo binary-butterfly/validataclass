@@ -131,14 +131,14 @@ class RegexValidator(StringValidator):
         self.custom_error_class = custom_error_class
         self.custom_error_code = custom_error_code
 
-    def validate(self, input_data: Any) -> str:
+    def validate(self, input_data: Any, **kwargs) -> str:
         """
         Validate input as string and match full string against regular expression.
 
         Returns unmodified string, unless when output template was supplied.
         """
         # Validate input with base StringValidator (checks length requirements)
-        output = super().validate(input_data)
+        output = super().validate(input_data, **kwargs)
 
         # Match full string against Regex pattern
         match = self.regex_pattern.fullmatch(input_data)

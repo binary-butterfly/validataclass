@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import inspect
+import warnings
 from abc import ABC, abstractmethod
 from typing import Any, Union, List
 
@@ -20,11 +21,28 @@ class Validator(ABC):
     Base class for building extendable validator classes that validate, sanitize and transform input.
     """
 
+    def __init_subclass__(cls, **kwargs):
+        # Check if subclasses are future-proof
+        if inspect.getfullargspec(cls.validate).varkw is None:
+            warnings.warn(
+                "Validator classes will be required to accept arbitrary keyword arguments in their validate() method "
+                f"in the future. Please add **kwargs to the list of parameters of {cls.__name__}.validate().",
+                DeprecationWarning
+            )
+
+        super().__init_subclass__(**kwargs)
+
     @abstractmethod  # pragma: nocover
-    def validate(self, input_data: Any):
+    def validate(self, input_data: Any, **kwargs):
         """
-        Validates any input data with the given Validator class.
-        Returns sanitized data or raises a `ValidationError` (or any subclass).
+        Validates input data. Returns sanitized data or raises a `ValidationError` (or any subclass).
+
+        This method must be implemented in validator class.
+
+        Note: When implementing a validator class, make sure to add `**kwargs` to the method parameters. This base
+        method currently does not have this parameter for compatibility reasons. However, this will change in the
+        future, making it mandatory for a Validator subclass to accept arbitrary keyword arguments (which can be used
+        for context-sensitive validation).
         """
         raise NotImplementedError()
 

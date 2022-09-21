@@ -92,7 +92,7 @@ class UnitTestContextSensitiveDataclass:
     when the context argument "value_required" is set.
     """
     name: str = UnitTestContextValidator()
-    value: Optional[int] = IntegerValidator(), Default(None)
+    value: Optional[int] = (IntegerValidator(), Default(None))
 
     def __post_validate__(self, *, value_required: bool = False, **_kwargs):
         if value_required and self.value is None:
