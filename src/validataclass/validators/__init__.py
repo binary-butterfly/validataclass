@@ -22,7 +22,7 @@ from .reject_validator import RejectValidator
 # Extended type validators
 from .any_of_validator import AnyOfValidator
 from .big_integer_validator import BigIntegerValidator
-from .enum_validator import EnumValidator
+from .enum_validator import EnumValidator, T_Enum
 from .decimal_validator import DecimalValidator
 from .float_to_decimal_validator import FloatToDecimalValidator
 from .numeric_validator import NumericValidator
@@ -34,6 +34,6 @@ from .email_validator import EmailValidator
 from .url_validator import UrlValidator
 
 # Composite type validators
-from .list_validator import ListValidator
+from .list_validator import ListValidator, T_ListItem
 from .dict_validator import DictValidator
 from .dataclass_validator import DataclassValidator, T_Dataclass

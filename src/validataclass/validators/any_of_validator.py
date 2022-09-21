@@ -4,10 +4,10 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Union, List
+from typing import Any, Iterable, List, Optional, Union
 
-from .validator import Validator
 from validataclass.exceptions import ValueNotAllowedError, InvalidValidatorOptionException
+from .validator import Validator
 
 __all__ = [
     'AnyOfValidator',
@@ -16,11 +16,13 @@ __all__ = [
 
 class AnyOfValidator(Validator):
     """
-    Validator that checks an input value against a specified list of allowed values. If the value is contained in the list, the value
-    is returned unmodified.
+    Validator that checks an input value against a specified list of allowed values. If the value is contained in the
+    list, the value is returned unmodified.
 
-    The types allowed for input data will be automatically determined from the list of allowed values by default, unless explicitly
-    specified with the parameter 'allowed_types'.
+    The allowed values can be specified with any iterable (e.g. a list, a set, a tuple, a generator expression, ...).
+
+    The types allowed for input data will be automatically determined from the list of allowed values by default, unless
+    explicitly specified with the parameter 'allowed_types'.
 
     Examples:
 
@@ -40,27 +42,28 @@ class AnyOfValidator(Validator):
     # Types allowed for input data (set by parameter or autodetermined from allowed_values)
     allowed_types: List[type] = None
 
-    def __init__(self, allowed_values: List[Any], *, allowed_types: Union[type, List[type]] = None):
+    def __init__(self, allowed_values: Iterable[Any], *, allowed_types: Optional[Union[type, Iterable[type]]] = None):
         """
         Create an AnyOfValidator with a specified list of allowed values.
 
         Parameters:
-            allowed_values: List of values (of any type) allowed as input (required)
-            allowed_types: List of types allowed for input data (default: None, autodetermine types from allowed_values)
+            allowed_values: List (or any other iterable) of values that are allowed as input (required)
+            allowed_types: Types that are allowed for input data (default: None, autodetermine types from allowed_values)
         """
+        # Save list of allowed values
+        self.allowed_values = list(allowed_values)
+
         # Determine allowed data types from allowed values unless allowed_types is set
         if allowed_types is None:
-            allowed_types = list(set(type(value) for value in allowed_values))
-        elif type(allowed_types) is not list:
-            allowed_types = [allowed_types]
+            self.allowed_types = list(set(type(value) for value in self.allowed_values))
+        elif not isinstance(allowed_types, Iterable):
+            self.allowed_types = [allowed_types]
+        else:
+            self.allowed_types = list(allowed_types)
 
         # Check that list of allowed types is not empty
-        if len(allowed_types) == 0:
+        if len(self.allowed_types) == 0:
             raise InvalidValidatorOptionException('Parameter "allowed_types" is an empty list (or types could not be autodetermined).')
-
-        # Save parameters
-        self.allowed_values = allowed_values
-        self.allowed_types = allowed_types
 
     def validate(self, input_data: Any, **kwargs) -> Any:
         """

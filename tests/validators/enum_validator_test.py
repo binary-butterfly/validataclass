@@ -155,6 +155,20 @@ class EnumValidatorTest:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
 
+    @staticmethod
+    def test_string_enum_allowed_values_as_set():
+        """ Test EnumValidator with string based Enum that disallows a certain value. """
+        # Also tests using enum members in allowed_values
+        validator = EnumValidator(UnitTestStringEnum, allowed_values=set(UnitTestStringEnum) - {UnitTestStringEnum.STRAWBERRY})
+
+        # Check allowed values
+        assert validator.validate('red apple') is UnitTestStringEnum.APPLE_RED
+        assert validator.validate('green apple') is UnitTestStringEnum.APPLE_GREEN
+
+        # Check disallowed value
+        with pytest.raises(ValueNotAllowedError):
+            validator.validate('strawberry')
+
     # Test EnumValidator with explicit allowed_types parameter
 
     @staticmethod
