@@ -884,12 +884,17 @@ The `EnumValidator` is an extended `AnyOfValidator` that uses `Enum` classes ins
 
 It accepts the **values** of the Enum and converts the input value to the according enum **member**.
 
-By default all values in the Enum are accepted as input. This can be optionally restricted by specifying the `allowed_values`
-parameter, which will override the list of allowed values. Values in this list that are not valid for the Enum will be silently
-ignored though.
+By default all values in the Enum are accepted as input. This can be optionally restricted by specifying the
+`allowed_values` parameter, which will override the list of allowed values. Values in this list that are not valid for
+the Enum will be silently ignored.
 
-The types allowed for input data will be automatically determined from the allowed Enum values by default, unless explicitly
-specified with the parameter `allowed_types`.
+If you just want to disallow certain values without manually specifying all of the allowed values, you can specify the
+`allowed_values` parameter as a set and use some set magic. For example, `allowed_values=set(MyEnum) - {MyEnum.BadValue}`
+would allow all values of `MyEnum` except for `MyEnum.BadValue`.
+
+
+The types allowed for input data will be automatically determined from the allowed Enum values by default, unless
+explicitly specified with the parameter `allowed_types`.
 
 **Examples:**
 
@@ -935,6 +940,12 @@ validator.validate('pineapple')   # will raise ValueNotAllowedError (value is no
 
 # Restrict allowed values using the Enum instead of strings
 validator = EnumValidator(ExampleStringEnum, allowed_values=[ExampleStringEnum.APPLE, ExampleStringEnum.BANANA])
+validator.validate('apple')       # will return ExampleStringEnum.APPLE
+validator.validate('banana')      # will return ExampleStringEnum.BANANA
+validator.validate('strawberry')  # will raise ValueNotAllowedError
+
+# Disallow a specific value without manually listing all allowed values
+validator = EnumValidator(ExampleStringEnum, allowed_values=set(ExampleStringEnum) - {ExampleStringEnum.STRAWBERRY})
 validator.validate('apple')       # will return ExampleStringEnum.APPLE
 validator.validate('banana')      # will return ExampleStringEnum.BANANA
 validator.validate('strawberry')  # will raise ValueNotAllowedError
