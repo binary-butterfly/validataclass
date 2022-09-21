@@ -9,6 +9,8 @@ import sys
 from collections import namedtuple
 from typing import Union, Dict
 
+from typing_extensions import dataclass_transform
+
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.validators import Validator
 from .defaults import Default, NoDefault
@@ -22,6 +24,10 @@ __all__ = [
 _ValidatorField = namedtuple('_ValidatorField', ['validator', 'default'])
 
 
+@dataclass_transform(
+    kw_only_default=True,
+    field_specifiers=(dataclasses.field, dataclasses.Field, validataclass_field),
+)
 def validataclass(cls=None, **kwargs):
     """
     Decorator that turns a normal class into a DataclassValidator-compatible dataclass.
