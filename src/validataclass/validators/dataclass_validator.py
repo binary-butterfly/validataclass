@@ -22,7 +22,7 @@ __all__ = [
 T_Dataclass = TypeVar('T_Dataclass')
 
 
-class DataclassValidator(DictValidator, Generic[T_Dataclass]):
+class DataclassValidator(Generic[T_Dataclass], DictValidator):
     """
     Validator that converts dictionaries to instances of user-defined dataclasses with validated fields.
 

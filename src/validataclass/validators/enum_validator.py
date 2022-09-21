@@ -5,17 +5,21 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from enum import Enum, EnumMeta
-from typing import Any, Type, Union, List
+from typing import Any, Generic, List, Type, TypeVar, Union
 
-from .any_of_validator import AnyOfValidator
 from validataclass.exceptions import InvalidValidatorOptionException, ValueNotAllowedError
+from .any_of_validator import AnyOfValidator
 
 __all__ = [
     'EnumValidator',
+    'T_Enum',
 ]
 
+# Type variable for type hints in DataclassValidator
+T_Enum = TypeVar('T_Enum', bound=Enum)
 
-class EnumValidator(AnyOfValidator):
+
+class EnumValidator(Generic[T_Enum], AnyOfValidator):
     """
     Validator that uses an Enum class to parse input values to members of that enumeration.
 
@@ -80,7 +84,7 @@ class EnumValidator(AnyOfValidator):
         # Initialize base AnyOfValidator
         super().__init__(allowed_values=any_of_values, allowed_types=allowed_types)
 
-    def validate(self, input_data: Any, **kwargs) -> Enum:
+    def validate(self, input_data: Any, **kwargs) -> T_Enum:
         """
         Validate input to be a valid value of the specified Enum. Returns the Enum member.
         """

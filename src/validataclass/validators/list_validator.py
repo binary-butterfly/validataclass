@@ -4,17 +4,21 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any, Generic, List, Optional, TypeVar
 
-from .validator import Validator
 from validataclass.exceptions import ValidationError, ListItemsValidationError, ListLengthError, InvalidValidatorOptionException
+from .validator import Validator
 
 __all__ = [
     'ListValidator',
+    'T_ListItem',
 ]
 
+# Type variable for type hints in DataclassValidator
+T_ListItem = TypeVar('T_ListItem')
 
-class ListValidator(Validator):
+
+class ListValidator(Generic[T_ListItem], Validator):
     """
     Validator for lists that validates list items with a specified item validator.
 
@@ -87,7 +91,7 @@ class ListValidator(Validator):
         self.max_length = max_length
         self.discard_invalid = discard_invalid
 
-    def validate(self, input_data: Any, **kwargs) -> list:
+    def validate(self, input_data: Any, **kwargs) -> List[T_ListItem]:
         """
         Validate input data. Returns a validated list.
         """
