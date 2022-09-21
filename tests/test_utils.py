@@ -8,6 +8,7 @@ from typing import Any, List
 
 from validataclass.validators import Validator
 
+
 def unpack_params(*args) -> List[tuple]:
     """
     Returns a list containing tuples build from the arguments. Arguments that are lists are "unpacked" by combining the other elements
