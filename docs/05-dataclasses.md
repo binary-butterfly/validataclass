@@ -607,9 +607,9 @@ class BaseB:  # Note: This is NOT a subclass of BaseA
 class SubClass(BaseB, BaseA):
     # SubClass will have "field_a" from BaseA, "field_b" from BaseB, and a new field "field_c"
     field_c: Decimal = DecimalValidator()
-    
-    # You can also override validator and/or default as described above: 
-    field_a: int = Default(42) 
+
+    # You can also override validator and/or default as described above:
+    field_a: int = Default(42)
 ```
 
 There is one important caveat about multiple inheritance: If two **unrelated** base classes of your dataclass define a
@@ -874,8 +874,8 @@ class UppercaseStringValidator(StringValidator):
     # def validate(self, input_data: Any) -> str:
     #     validated_str = super().validate(input_data)
     #     return validated_str.upper()
-    
-    # AFTER: 
+
+    # AFTER:
     def validate(self, input_data: Any, **kwargs) -> str:
         validated_str = super().validate(input_data, **kwargs)
         return validated_str.upper()
