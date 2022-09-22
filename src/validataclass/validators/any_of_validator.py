@@ -28,6 +28,11 @@ class AnyOfValidator(Validator):
     the value will always be returned as it is defined in the list of allowed values (e.g. if the allowed values contain
     "Apple", then "APPLE" and "apple" will be valid input too, but in all cases "Apple" will be returned).
 
+    If the input value is not valid (but has the correct type), a ValueNotAllowedError (code='value_not_allowed') will
+    be raised. This error will include the list of allowed values (as "allowed_values"), as long as this list is not
+    longer than 20 items. (This limit is defined in the attribute `max_allowed_values_in_validation_error`, which cannot
+    be changed via parameters as of now, but can be changed by subclassing the validator and changing the value.)
+
     Examples:
 
     ```
@@ -43,6 +48,9 @@ class AnyOfValidator(Validator):
     Valid input: All values contained in allowed_values
     Output: Value as defined in allowed_values
     """
+
+    # If the list of allowed values is longer than this value, do not include allowed values in ValueNotAllowedError
+    max_allowed_values_in_validation_error: int = 20
 
     # Values allowed as input
     allowed_values: List[Any] = None
@@ -101,7 +109,11 @@ class AnyOfValidator(Validator):
             if self._compare_values(input_data, allowed_value):
                 return allowed_value
 
-        raise ValueNotAllowedError()
+        # Invalid input (only include list of allowed values in validation error if the list is not too long)
+        if len(self.allowed_values) <= self.max_allowed_values_in_validation_error:
+            raise ValueNotAllowedError(allowed_values=self.allowed_values)
+        else:
+            raise ValueNotAllowedError()
 
     def _compare_values(self, input_value: Any, allowed_value: Any) -> bool:
         """

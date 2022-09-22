@@ -60,7 +60,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestStringEnum)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['red apple', 'green apple', 'strawberry'],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1, 1.234, True, ['red apple']])
@@ -91,7 +94,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestIntegerEnum)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': [1, 42, 13],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', ['red apple', 'RED', 1.234, True, [1]])
@@ -121,7 +127,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestMixedEnum)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['foo', 42],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1.234, True, [1], ['foo']])
@@ -153,7 +162,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestStringEnum, allowed_values=['red apple', UnitTestStringEnum.APPLE_GREEN, 'banana'])
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['red apple', 'green apple'],
+        }
 
     @staticmethod
     def test_string_enum_allowed_values_as_set():
@@ -235,7 +247,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestStringEnum, allowed_values=allowed_values, case_insensitive=case_insensitive)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['red apple', 'green apple', 'strawberry'] if allowed_values is None else ['strawberry'],
+        }
 
     # Invalid validator parameters
 
@@ -262,6 +277,5 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestStringEnum)
         validator.allowed_values.append('bananana')
 
-        with pytest.raises(ValueNotAllowedError) as exception_info:
+        with pytest.raises(ValueNotAllowedError):
             validator.validate('bananana')
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}

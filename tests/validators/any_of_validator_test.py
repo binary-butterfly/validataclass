@@ -38,7 +38,10 @@ class AnyOfValidatorTest:
         validator = AnyOfValidator(['red apple', 'green apple', 'strawberry'])
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['red apple', 'green apple', 'strawberry'],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1, 1.234, True, ['red apple']])
@@ -70,7 +73,11 @@ class AnyOfValidatorTest:
         validator = AnyOfValidator({1, -2, 42})
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+
+        # Sets are unordered, so checking the exception dictionary is a bit more annoying here
+        exception_dict = exception_info.value.to_dict()
+        assert exception_dict['code'] == 'value_not_allowed'
+        assert sorted(exception_dict['allowed_values']) == [-2, 1, 42]
 
     @staticmethod
     @pytest.mark.parametrize('input_data', ['banana', 1.234, True, [1]])
@@ -101,7 +108,10 @@ class AnyOfValidatorTest:
         validator = AnyOfValidator(allowed_values=('strawberry', 42, None))
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['strawberry', 42, None],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1.234, True, False, [1], ['strawberry']])
@@ -135,7 +145,10 @@ class AnyOfValidatorTest:
         # Check against "false positives" (e.g. don't confuse integer 1 with boolean True, or 0 with False)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(invalid_input)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': value_list,
+        }
 
     # Test AnyOfValidator with explicit allowed_types parameter
 
@@ -210,6 +223,27 @@ class AnyOfValidatorTest:
         validator = AnyOfValidator(allowed_values=['Strawberry', 42], case_insensitive=case_insensitive)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['Strawberry', 42],
+        }
+
+    # Tests for validation errors
+
+    @staticmethod
+    def test_value_not_allowed_error_with_too_many_allowed_values():
+        """ Test that AnyOfValidator does not include list of allowed values in validation error if too long. """
+        validator = AnyOfValidator(allowed_values=range(100))
+
+        # Valid input
+        assert validator.validate(0) == 0
+        assert validator.validate(99) == 99
+
+        # Invalid input
+        with pytest.raises(ValueNotAllowedError) as exception_info:
+            validator.validate(100)
+
+        # Validation error should NOT contain "allowed_values"
         assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
 
     # Invalid validator parameters

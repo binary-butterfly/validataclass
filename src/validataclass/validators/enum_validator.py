@@ -38,6 +38,10 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
 
     By default, strings will be matched case-sensitively. To change this, set `case_insensitive=True`.
 
+    If the input value is not valid (but has the correct type), a ValueNotAllowedError (code='value_not_allowed') will
+    be raised. This error will include the list of allowed values (as "allowed_values"), as long as this list is not
+    longer than 20 items. (See `AnyOfValidator`.)
+
     Examples:
 
     ```

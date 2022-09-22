@@ -845,11 +845,15 @@ value will always be returned as it is defined in the list of allowed values (e.
 The list of allowed values may contain mixed types (e.g. `['banana', 123, True, None]`). Also the allowed values can be
 specified with any iterable, not just as a list (e.g. as a set or tuple).
 
-Like most other validators, the validator will first check the type of input data and will raise an `InvalidTypeError` for types that
-are not allowed. Those allowed types will be automatically determined from the list of values by default (e.g. with `['foo', 'bar', 'baz']`
-only strings will be accepted, while the mixed type example from above will accept all of `str`, `int`, `bool` and `NoneType`).
+Like most other validators, the validator will first check the type of input data and will raise an `InvalidTypeError`
+for types that are not allowed. Those allowed types will be automatically determined from the list of values by default
+(e.g. with `['foo', 'bar', 'baz']` only strings will be accepted, while the mixed type example from above will accept
+all of `str`, `int`, `bool` and `NoneType`).
 
 Optionally the allowed types can be explicitly specified using the parameter `allowed_types`.
+
+If the input value is not valid (but has the correct type), a `ValueNotAllowedError` will be raised. This error will
+include the list of allowed values (as "allowed_values"), as long as this list is not longer than 20 items.
 
 **Examples:**
 
@@ -906,6 +910,9 @@ would allow all values of `MyEnum` except for `MyEnum.BadValue`.
 
 The types allowed for input data will be automatically determined from the allowed Enum values by default, unless
 explicitly specified with the parameter `allowed_types`.
+
+If the input value is not valid (but has the correct type), a `ValueNotAllowedError` will be raised. This error will
+include the list of allowed values (as "allowed_values"), as long as this list is not longer than 20 items.
 
 **Examples:**
 
