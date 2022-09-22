@@ -836,7 +836,11 @@ These values can potentially be of any type, although strings and integers are p
 ### AnyOfValidator
 
 The `AnyOfValidator` is defined with a simple list of allowed values and accepts only values that are part of this list.
-The values will be returned unmodified.
+The values will be returned as defined in the list.
+
+By default, strings will be matched case-sensitively. To change this, set `case_insensitive=True`. In that case, the
+value will always be returned as it is defined in the list of allowed values (e.g. if the allowed values contain
+"Apple", then "APPLE" and "apple" will be valid input too, but in all cases "Apple" will be returned).
 
 The list of allowed values may contain mixed types (e.g. `['banana', 123, True, None]`). Also the allowed values can be
 specified with any iterable, not just as a list (e.g. as a set or tuple).
@@ -858,6 +862,12 @@ validator.validate('banana')      # will return 'banana'
 validator.validate('strawberry')  # will return 'strawberry'
 validator.validate('pineapple')   # will raise ValueNotAllowedError()
 validator.validate(1)             # will raise InvalidTypeError(expected_type='str')
+
+# Accept strings with case-insensitive matching
+validator = AnyOfValidator(['Apple', 'Banana', 'Strawberry'], case_insensitive=True)
+validator.validate('apple')       # will return 'Apple'
+validator.validate('bAnAnA')      # will return 'Banana'
+validator.validate('STRAWBERRY')  # will return 'Strawberry'
 
 # Accept a list of values of mixed types
 validator = AnyOfValidator(['banana', 123, True, None])
@@ -884,6 +894,8 @@ The `EnumValidator` is an extended `AnyOfValidator` that uses `Enum` classes ins
 
 It accepts the **values** of the Enum and converts the input value to the according enum **member**.
 
+Strings will be matched case-sensitively by default. To change this, set `case_insensitive=True`.
+
 By default all values in the Enum are accepted as input. This can be optionally restricted by specifying the
 `allowed_values` parameter, which will override the list of allowed values. Values in this list that are not valid for
 the Enum will be silently ignored.
@@ -891,7 +903,6 @@ the Enum will be silently ignored.
 If you just want to disallow certain values without manually specifying all of the allowed values, you can specify the
 `allowed_values` parameter as a set and use some set magic. For example, `allowed_values=set(MyEnum) - {MyEnum.BadValue}`
 would allow all values of `MyEnum` except for `MyEnum.BadValue`.
-
 
 The types allowed for input data will be automatically determined from the allowed Enum values by default, unless
 explicitly specified with the parameter `allowed_types`.
@@ -922,6 +933,12 @@ validator.validate('banana')      # will return ExampleStringEnum.BANANA
 validator.validate('strawberry')  # will return ExampleStringEnum.STRAWBERRY
 validator.validate('pineapple')   # will raise ValueNotAllowedError
 validator.validate(123)           # will raise InvalidTypeError(expected_type='str')
+
+# Accept all values of the ExampleStringEnum with case-insensitive string matching
+validator = EnumValidator(ExampleStringEnum, case_insensitive=True)
+validator.validate('Apple')       # will return ExampleStringEnum.APPLE
+validator.validate('bAnAnA')      # will return ExampleStringEnum.BANANA
+validator.validate('STRAWBERRY')  # will return ExampleStringEnum.STRAWBERRY
 
 # Default: Accept all values of the ExampleIntegerEnum
 validator = EnumValidator(ExampleIntegerEnum)
