@@ -17,12 +17,16 @@ To install it using [pip](https://pip.pypa.io/en/stable/getting-started/), just 
 pip install validataclass
 ```
 
-If you add the package to your `requirements.txt`, it is recommended to use [compatible release](https://www.python.org/dev/peps/pep-0440/#compatible-release)
+If you add the package to your dependencies, it is recommended to use [compatible release](https://www.python.org/dev/peps/pep-0440/#compatible-release)
 version specifiers to make sure you always get the latest version of the library but without running into breaking changes:
 
 ```shell
-pip install validataclass~=0.6
+pip install validataclass~=0.7
 ```
+
+However, keep in mind that the library still is in its beta phase (as indicated by the major version of 0). There can
+and will be smaller breaking changes between 0.x minor versions, but we will try to keep them at a minimum and save them
+for the release of version 1.0.0.
 
 
 ## Usage

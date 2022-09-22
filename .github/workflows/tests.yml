@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: success() || failure()
         with:
-          # This will add every pytest_VERSION.yml to the same artifact file
+          # This will add every pytest_VERSION.xml to the same artifact file
           name: pytest-results
           path: reports/pytest_${{ matrix.python-version }}.xml
 

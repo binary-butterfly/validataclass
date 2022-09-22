@@ -6,6 +6,88 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.7.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.7.0) - 2022-09-22
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.6.2...0.7.0)
+
+This release mainly introduces **context-sensitive (post-)validation**. There are some more additions planned for this
+feature (e.g. dependencies between dataclass fields), but for now we have a solid base.
+
+It also features a handful of smaller additions and changes, see below.
+
+There is a potential **breaking change** (which probably won't affect anybody), and a sort of **deprecation** that
+**will** affect most custom validators in the future, so make sure to upgrade your validators as explained below.
+
+### Added
+
+- Basic support for **context-sensitive validation**. [#77]
+  - All built-in validators now support arbitrary keyword arguments (so called **context arguments**) in the `validate()`
+    method. These can be used to change the behavior of a validator at validation time based on some kind of application
+    context. Most validators don't do anything with them except passing them down to child validators (e.g. to the item
+    validators in a `ListValidator`, etc.), but you can implement custom validators that use them.
+  - To keep compatibility with custom validators that do not accept context arguments yet, a **provisional** helper
+    method `validate_with_context()` was added to the base `Validator` class. This method simply calls the `validate()`
+    method, but checks whether it supports context arguments. If yes, context arguments are passed to `validate()`,
+    else `validate()` is called without any extra arguments. This method will become obsolete and eventually removed in
+    the future, and should only be used in cases where it is unsure whether a validator supports context arguments.
+- Context-sensitive **post-validation in dataclasses**. [#77]
+  - The `DataclassValidator` will now call the method `__post_validate__()` on your dataclass instances if you have
+    defined this method. Additionally, if the method accepts arbitrary keyword arguments (i.e. `**kwargs`, although the
+    name of this parameter doesn't matter), all context arguments will be passed to it.
+  - You can use this to implement context-sensitive post-validation. For example, if you implement a `PATCH` endpoint in
+    a REST API, you could have fields that are sometimes optional and sometimes required, depending on a property of the
+    object the user wants to update. You can now fetch the object before calling `validate()`, then pass the object (or
+    just the property) as a context argument to `validate()`, and then access it in `__post_validate__()` to implement a
+    context-sensitive field requirement check.
+  - The `__post_init__()` method of regular dataclasses can still be used for post-validation as before. It cannot be
+    used context-sensitively, though, because we cannot pass arbitrary keyword arguments to it.
+- `DateTimeValidator`: Add parameter `discard_milliseconds` to discard the milli- and microseconds of datetimes. [#79]
+- `AnyOfValidator` and `EnumValidator`: Add parameter `case_insensitive` for case-insensitive string matching. [#81]
+- New helper function `unset_to_none()` (returns `None` if value is `UnsetValue`). [#76]
+
+### Changed
+
+- All built-in validators now support context arguments in the `validate()` method. See above. [#77]
+- The `validate()` method of the `DataclassValidator` was restructured a bit for easier extendability. (This may be
+  subject of additional changes in the future, though.) [#77]
+- The `@validataclass` decorator is now marked as a "data class transform" using the `@dataclass_transform` decorator
+  as specified in [PEP 681](https://peps.python.org/pep-0681/). [#78]
+  - Since this decorator was only introduced in Python 3.11, we use the [typing-extensions](https://pypi.org/project/typing-extensions/)
+    library which backports new typing features like this.
+- `ListValidator` and `EnumValidator` are now defined as generic classes for better type hinting. [#80]
+- `AnyOfValidator` and `EnumValidator` now accept `allowed_values` and `allowed_types` as any iterable. [#80]
+- `AnyOfValidator` and `EnumValidator`: The `ValueNotAllowedError` now lists all allowed values (unless they are more than 20). [#81]
+
+### Deprecated
+
+- Validator classes that do not accept context arguments are now deprecated. [#77]
+  - When defining a `Validator` subclass, the `__init_subclass__()` method will check whether your `validate()` method
+    accepts arbitrary keyword arguments. If not, a `DeprecationWarning` will be issued.
+  - Existing custom validators will keep working for now, but this compatibility will be removed in version 1.0.
+  - To update your custom validators, simply add `**kwargs` to the parameter list of `validate()`. If your validator
+    class is based on an existing validator, make sure to pass the context arguments down to the `validate()` of your
+    base class as well, i.e. `super().validate(input_data, **kwargs)`.
+
+### Removed
+
+- **Breaking change:** The `post_validate()` method of the `DataclassValidator` was **removed**. [#77]
+  - (This should not to be confused with the new `__post_validate__()`, however, which is a method of dataclasses, not
+    of the validator itself.)
+  - This method was removed because a) post-validation using either `__post_init__()` or the new `__post_validate__()`
+    method in the dataclass should be preferred, b) the validator was restructured in a way that makes this method
+    redundant, and c) it was probably never used anyway.
+  - If you do need post-validation as part of a subclassed `DataclassValidator`, you can extend either `validate()` or
+    the new `_post_validate()` private method (but make sure to extend, not override it, since it also handles the call
+    of the dataclass's `__post_validate__()` method).
+
+[#76]: https://github.com/binary-butterfly/validataclass/pull/76
+[#77]: https://github.com/binary-butterfly/validataclass/pull/77
+[#78]: https://github.com/binary-butterfly/validataclass/pull/78
+[#79]: https://github.com/binary-butterfly/validataclass/pull/79
+[#80]: https://github.com/binary-butterfly/validataclass/pull/80
+[#81]: https://github.com/binary-butterfly/validataclass/pull/81
+
+
 ## [0.6.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.6.2) - 2022-07-11
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.6.1...0.6.2)
