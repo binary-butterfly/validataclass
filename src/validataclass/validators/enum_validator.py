@@ -36,6 +36,12 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
     The types allowed for input data will be automatically determined from the allowed Enum values by default, unless
     explicitly specified with the parameter `allowed_types`.
 
+    By default, strings will be matched case-sensitively. To change this, set `case_insensitive=True`.
+
+    If the input value is not valid (but has the correct type), a ValueNotAllowedError (code='value_not_allowed') will
+    be raised. This error will include the list of allowed values (as "allowed_values"), as long as this list is not
+    longer than 20 items. (See `AnyOfValidator`.)
+
     Examples:
 
     ```
@@ -67,6 +73,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
         *,
         allowed_values: Optional[Iterable[Any]] = None,
         allowed_types: Optional[Union[type, Iterable[type]]] = None,
+        case_insensitive: bool = False,
     ):
         """
         Create a EnumValidator for a specified Enum class, optionally with a restricted list of allowed values.
@@ -75,6 +82,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
             enum_cls: Enum class to use for validation (required)
             allowed_values: List (or iterable) of values from the Enum that are accepted (default: None, all Enum values allowed)
             allowed_types: List (or iterable) of types allowed for input data (default: None, autodetermine types from enum values)
+            case_insensitive: If set, strings will be matched case-insensitively (default: False)
         """
         # Ensure parameter is an Enum class
         if not isinstance(enum_cls, EnumMeta):
@@ -94,7 +102,11 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
             any_of_values = enum_values
 
         # Initialize base AnyOfValidator
-        super().__init__(allowed_values=any_of_values, allowed_types=allowed_types)
+        super().__init__(
+            allowed_values=any_of_values,
+            allowed_types=allowed_types,
+            case_insensitive=case_insensitive,
+        )
 
     def validate(self, input_data: Any, **kwargs) -> T_Enum:
         """

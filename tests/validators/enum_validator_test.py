@@ -54,13 +54,16 @@ class EnumValidatorTest:
         assert validator.validate('strawberry') is UnitTestStringEnum.STRAWBERRY
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'bananana', 'APPLE_RED'])
+    @pytest.mark.parametrize('input_data', ['', 'bananana', 'APPLE_RED', 'STRAWBERRY'])
     def test_string_enum_invalid_value(input_data):
         """ Test EnumValidator with string based Enum with invalid enum values. """
         validator = EnumValidator(UnitTestStringEnum)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['red apple', 'green apple', 'strawberry'],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1, 1.234, True, ['red apple']])
@@ -91,7 +94,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestIntegerEnum)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': [1, 42, 13],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', ['red apple', 'RED', 1.234, True, [1]])
@@ -121,7 +127,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestMixedEnum)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['foo', 42],
+        }
 
     @staticmethod
     @pytest.mark.parametrize('input_data', [1.234, True, [1], ['foo']])
@@ -153,7 +162,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestStringEnum, allowed_values=['red apple', UnitTestStringEnum.APPLE_GREEN, 'banana'])
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['red apple', 'green apple'],
+        }
 
     @staticmethod
     def test_string_enum_allowed_values_as_set():
@@ -193,6 +205,53 @@ class EnumValidatorTest:
             'expected_type': expected_type_str,
         }
 
+    # Test EnumValidator with case-insensitive option
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'case_insensitive, allowed_values, input_data, expected_result',
+        [
+            # Case-sensitive matching
+            (False, None, 'red apple', UnitTestStringEnum.APPLE_RED),
+            (False, [UnitTestStringEnum.STRAWBERRY], 'strawberry', UnitTestStringEnum.STRAWBERRY),
+
+            # Case-insensitive matching
+            (True, None, 'red apple', UnitTestStringEnum.APPLE_RED),
+            (True, None, 'RED apple', UnitTestStringEnum.APPLE_RED),
+            (True, [UnitTestStringEnum.STRAWBERRY], 'strawberry', UnitTestStringEnum.STRAWBERRY),
+            (True, [UnitTestStringEnum.STRAWBERRY], 'Strawberry', UnitTestStringEnum.STRAWBERRY),
+            (True, [UnitTestStringEnum.STRAWBERRY], 'STRAWBERRY', UnitTestStringEnum.STRAWBERRY),
+        ]
+    )
+    def test_case_insensitive_valid(case_insensitive, allowed_values, input_data, expected_result):
+        """ Test EnumValidator with case-sensitive and case-insensitive string matching, valid input. """
+        validator = EnumValidator(UnitTestStringEnum, allowed_values=allowed_values, case_insensitive=case_insensitive)
+        assert validator.validate(input_data) is expected_result
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'case_insensitive, allowed_values, input_data',
+        [
+            # Case-sensitive matching
+            (False, None, 'RED APPLE'),
+            (False, [UnitTestStringEnum.STRAWBERRY], 'red apple'),
+            (False, [UnitTestStringEnum.STRAWBERRY], 'STRAWberry'),
+
+            # Case-insensitive matching
+            (True, None, 'banana'),
+            (True, [UnitTestStringEnum.STRAWBERRY], 'red apple'),
+        ]
+    )
+    def test_case_insensitive_invalid(case_insensitive, allowed_values, input_data):
+        """ Test EnumValidator with case-sensitive and case-insensitive string matching, invalid input. """
+        validator = EnumValidator(UnitTestStringEnum, allowed_values=allowed_values, case_insensitive=case_insensitive)
+        with pytest.raises(ValueNotAllowedError) as exception_info:
+            validator.validate(input_data)
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': ['red apple', 'green apple', 'strawberry'] if allowed_values is None else ['strawberry'],
+        }
+
     # Invalid validator parameters
 
     @staticmethod
@@ -218,6 +277,5 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestStringEnum)
         validator.allowed_values.append('bananana')
 
-        with pytest.raises(ValueNotAllowedError) as exception_info:
+        with pytest.raises(ValueNotAllowedError):
             validator.validate('bananana')
-        assert exception_info.value.to_dict() == {'code': 'value_not_allowed'}
