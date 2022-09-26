@@ -31,7 +31,7 @@ def validataclass(cls: Type[_T]) -> Type[_T]:
 
 
 @overload
-def validataclass(cls: type(None) = None, **kwargs) -> Callable[[Type[_T]], Type[_T]]:
+def validataclass(cls: None = None, **kwargs) -> Callable[[Type[_T]], Type[_T]]:
     ...
 
 
@@ -80,25 +80,20 @@ def validataclass(cls: Optional[Type[_T]] = None, **kwargs) -> Union[Type[_T], C
     parameters are necessary. In Python 3.10 and upwards, the argument `kw_only=True` will be used by default.
     """
 
-    # In Python 3.10 and higher, we use kw_only=True by default to allow for required and optional fields in any order.
-    # In older Python versions, we use a workaround by setting default_factory to a function that raises an exception
-    # for required fields.
-    if sys.version_info >= (3, 10):  # pragma: ignore-py-lt-310
-        kwargs.setdefault('kw_only', True)
-    else:  # pragma: ignore-py-gte-310
-        pass
+    def decorator(_cls: Type[_T]) -> Type[_T]:
+        # In Python 3.10 and higher, we use kw_only=True by default to allow for required and optional fields in any order.
+        # In older Python versions, we use a workaround by setting default_factory to a function that raises an exception
+        # for required fields.
+        if sys.version_info >= (3, 10):  # pragma: ignore-py-lt-310
+            kwargs.setdefault('kw_only', True)
+        else:  # pragma: ignore-py-gte-310
+            pass
 
-    def wrap(_cls: Type[_T]) -> Type[_T]:
         _prepare_dataclass_metadata(_cls)
-        return dataclasses.dataclass(_cls, **kwargs)  # noqa (weird PyCharm warning)
+        return dataclasses.dataclass(**kwargs)(_cls)
 
-    # Check if decorator is called as @validataclass or @validataclass(**kwargs)
-    if cls is None:
-        # With parenthesis (and optional keyword arguments)
-        return wrap
-
-    # Called as @validataclass without arguments
-    return wrap(cls)
+    # Wrap actual decorator if called with parentheses
+    return decorator if cls is None else decorator(cls)
 
 
 def _prepare_dataclass_metadata(cls) -> None:
