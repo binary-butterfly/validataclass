@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.7.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.7.1) - 2022-09-26
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.7.0...0.7.1)
+
+This small patch release improves type hinting for the `@validataclass` decorator and the `DataclassValidation`.
+
+### Changed
+
+- `DataclassValidator`: The exact type of the validator (e.g. `DataclassValidator[MyDataclass]`) and thus the return
+  type of `validate()` is now auto-deduced from the constructor arguments without an explicit type annotation. [#84]
+- The `@validataclass` decorator has (hopefully correct) type annotations now. [#84]
+
+[#84]: https://github.com/binary-butterfly/validataclass/pull/84
+
+
 ## [0.7.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.7.0) - 2022-09-22
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.6.2...0.7.0)

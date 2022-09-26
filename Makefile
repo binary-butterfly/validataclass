@@ -88,6 +88,7 @@ docker-pull:
 
 # Cleanup
 # -------
+
 .PHONY: clean
 clean:
 	rm -rf .coverage .pytest_cache reports src/validataclass/_version.py
