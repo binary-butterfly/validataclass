@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import sys
 from collections import namedtuple
-from typing import Union, Dict
+from typing import Callable, Dict, Optional, Type, TypeVar, Union, overload
 
 from typing_extensions import dataclass_transform
 
@@ -22,13 +22,24 @@ __all__ = [
 
 # Internal types
 _ValidatorField = namedtuple('_ValidatorField', ['validator', 'default'])
+_T = TypeVar('_T')
+
+
+@overload
+def validataclass(cls: Type[_T]) -> Type[_T]:
+    ...
+
+
+@overload
+def validataclass(cls: type(None) = None, **kwargs) -> Callable[[Type[_T]], Type[_T]]:
+    ...
 
 
 @dataclass_transform(
     kw_only_default=True,
     field_specifiers=(dataclasses.field, dataclasses.Field, validataclass_field),
 )
-def validataclass(cls=None, **kwargs):
+def validataclass(cls: Optional[Type[_T]] = None, **kwargs) -> Union[Type[_T], Callable[[Type[_T]], Type[_T]]]:
     """
     Decorator that turns a normal class into a DataclassValidator-compatible dataclass.
 
@@ -77,7 +88,7 @@ def validataclass(cls=None, **kwargs):
     else:  # pragma: ignore-py-gte-310
         pass
 
-    def wrap(_cls):
+    def wrap(_cls: Type[_T]) -> Type[_T]:
         _prepare_dataclass_metadata(_cls)
         return dataclasses.dataclass(_cls, **kwargs)  # noqa (weird PyCharm warning)
 

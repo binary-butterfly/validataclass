@@ -107,7 +107,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_valid():
         """ Validate a dictionary as a dataclass, using valid data. """
-        validator: DataclassValidator[UnitTestDataclass] = DataclassValidator(UnitTestDataclass)
+        validator = DataclassValidator(UnitTestDataclass)
         validated_data = validator.validate({
             'name': 'banana',
             'color': 'yellow',
@@ -126,7 +126,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_invalid_none():
         """ Test a DataclassValidator with 'None' as input. """
-        validator: DataclassValidator[UnitTestDataclass] = DataclassValidator(UnitTestDataclass)
+        validator = DataclassValidator(UnitTestDataclass)
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
         assert exception_info.value.to_dict() == {'code': 'required_value'}
@@ -134,7 +134,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_invalid():
         """ Test a DataclassValidator with invalid and missing data. """
-        validator: DataclassValidator[UnitTestDataclass] = DataclassValidator(UnitTestDataclass)
+        validator = DataclassValidator(UnitTestDataclass)
 
         with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
@@ -156,7 +156,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_optional_field():
         """ Test optional fields in dataclasses. """
-        validator: DataclassValidator[UnitTestDataclass] = DataclassValidator(UnitTestDataclass)
+        validator = DataclassValidator(UnitTestDataclass)
         validated_data = validator.validate({
             'name': 'apple',
             'amount': 3,
@@ -188,7 +188,7 @@ class DataclassValidatorTest:
             default_counter: int = (IntegerValidator(), DefaultFactory(counter))
             default_unset: OptionalUnset[str] = (StringValidator(), DefaultUnset)
 
-        validator: DataclassValidator[DataclassWithDefaults] = DataclassValidator(DataclassWithDefaults)
+        validator = DataclassValidator(DataclassWithDefaults)
 
         # Validate multiple objects to check that the counter actually counts up
         validated_objects = {i: validator.validate({}) for i in (1, 2, 3)}
@@ -227,7 +227,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_nested_dataclasses_valid():
         """ Validate nested dataclasses. """
-        validator: DataclassValidator[UnitTestNestedDataclass] = DataclassValidator(UnitTestNestedDataclass)
+        validator = DataclassValidator(UnitTestNestedDataclass)
         validated_data = validator.validate({
             'name': 'something with bananas',
             'test_fruit': {
@@ -256,7 +256,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_nested_dataclasses_invalid():
         """ Validate nested dataclasses with invalid data. """
-        validator: DataclassValidator[UnitTestNestedDataclass] = DataclassValidator(UnitTestNestedDataclass)
+        validator = DataclassValidator(UnitTestNestedDataclass)
 
         with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
@@ -288,7 +288,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_with_post_init():
         """ Validate dataclasses with non-init fields and a __post_init__() method. """
-        validator: DataclassValidator[UnitTestPostInitDataclass] = DataclassValidator(UnitTestPostInitDataclass)
+        validator = DataclassValidator(UnitTestPostInitDataclass)
         validated_data = validator.validate({
             'base': 'meow',
             'count': 3,
@@ -301,7 +301,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_with_post_init_field_errors():
         """ Validate dataclasses with non-init fields and a __post_init__() method that raises a DataclassPostValidationError. """
-        validator: DataclassValidator[UnitTestPostInitDataclass] = DataclassValidator(UnitTestPostInitDataclass)
+        validator = DataclassValidator(UnitTestPostInitDataclass)
 
         with pytest.raises(DataclassPostValidationError) as exception_info:
             validator.validate({
@@ -333,7 +333,7 @@ class DataclassValidatorTest:
                 if self.a + self.b + self.c != 0:
                     raise ValidationError(code='example_error', reason='Sum of a, b, c must always be zero!')
 
-        validator: DataclassValidator[PostInitDataclass] = DataclassValidator(PostInitDataclass)
+        validator = DataclassValidator(PostInitDataclass)
 
         with pytest.raises(DataclassPostValidationError) as exception_info:
             validator.validate({
@@ -365,7 +365,7 @@ class DataclassValidatorTest:
                 # Real code should always explicitly check the value of b and raise a real ValidationError!
                 self.c = self.a / self.b
 
-        validator: DataclassValidator[PostInitDataclass] = DataclassValidator(PostInitDataclass)
+        validator = DataclassValidator(PostInitDataclass)
 
         with pytest.raises(ZeroDivisionError):
             # Let's cause a divide-by-zero error!
@@ -379,7 +379,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_with_post_validate():
         """ Validate dataclass with __post_validate__() method. """
-        validator: DataclassValidator[UnitTestPostValidationDataclass] = DataclassValidator(UnitTestPostValidationDataclass)
+        validator = DataclassValidator(UnitTestPostValidationDataclass)
         validated_data = validator.validate({
             'start': 3,
             'end': 4,
@@ -391,7 +391,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_with_post_validate_invalid():
         """ Validate dataclass with __post_validate__() method, with invalid input. """
-        validator: DataclassValidator[UnitTestPostValidationDataclass] = DataclassValidator(UnitTestPostValidationDataclass)
+        validator = DataclassValidator(UnitTestPostValidationDataclass)
 
         with pytest.raises(DataclassPostValidationError) as exception_info:
             validator.validate({
@@ -426,7 +426,7 @@ class DataclassValidatorTest:
     )
     def test_dataclass_with_context_sensitive_post_validate(validate_kwargs, input_data, expected_value):
         """ Validate dataclass with a context-sensitive __post_validate__() method. """
-        validator: DataclassValidator[UnitTestContextSensitiveDataclass] = DataclassValidator(UnitTestContextSensitiveDataclass)
+        validator = DataclassValidator(UnitTestContextSensitiveDataclass)
         validated_data = validator.validate(input_data, **validate_kwargs)
 
         assert validated_data.name == f"banana / {validate_kwargs}"
@@ -435,7 +435,7 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_with_context_sensitive_post_validate_invalid():
         """ Validate dataclass with a context-sensitive __post_validate__() method, with invalid input. """
-        validator: DataclassValidator[UnitTestContextSensitiveDataclass] = DataclassValidator(UnitTestContextSensitiveDataclass)
+        validator = DataclassValidator(UnitTestContextSensitiveDataclass)
 
         # Without context arguments
         with pytest.raises(DataclassPostValidationError) as exception_info:
@@ -476,8 +476,7 @@ class DataclassValidatorTest:
         """ Test that a DataclassValidator cannot be created with an *instance* of a dataclass. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             dataclass_instance = UnitTestDataclass(name='bluenana', color='blue', amount=3, weight=Decimal('1.234'))
-            # Note: Type checkers will obviously complain about this line, the 'noqa' silences this warning.
-            DataclassValidator(dataclass_instance)  # noqa
+            DataclassValidator(dataclass_instance)
 
         assert str(exception_info.value) == 'Parameter "dataclass_cls" is a dataclass instance, but must be a dataclass type.'
 

@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import inspect
-from typing import Any, Optional, TypeVar, Generic, Dict
+from typing import Any, Dict, Generic, Optional, Type, TypeVar
 
 from validataclass.dataclasses import Default, NoDefault
 from validataclass.exceptions import ValidationError, DataclassValidatorFieldException, DataclassPostValidationError, \
@@ -101,12 +101,12 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
     """
 
     # Dataclass type that the validated dictionary will be converted to
-    dataclass_cls: type = None
+    dataclass_cls: Type[T_Dataclass] = None
 
     # Field default values
     field_defaults: Dict[str, Default] = None
 
-    def __init__(self, dataclass_cls: Optional[type] = None):
+    def __init__(self, dataclass_cls: Optional[Type[T_Dataclass]] = None) -> None:
         # For easier subclassing: If 'self.dataclass_cls' is already set (e.g. as class member in a subclass), use this as the default.
         if dataclass_cls is None:
             dataclass_cls = getattr(self, 'dataclass_cls', None)
@@ -119,7 +119,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         if not isinstance(dataclass_cls, type):
             raise InvalidValidatorOptionException('Parameter "dataclass_cls" is a dataclass instance, but must be a dataclass type.')
 
-        self.dataclass_cls = dataclass_cls
+        self.dataclass_cls = dataclass_cls  # noqa (PyCharm thinks the type is incompatible, which is nonsense)
         self.field_defaults = {}
 
         # Collect field validators and required fields for the DictValidator by examining the dataclass fields
