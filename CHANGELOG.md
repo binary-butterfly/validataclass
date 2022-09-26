@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.7.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.7.2) - 2022-09-26
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.7.1...0.7.2)
+
+This patch fix a bug with the type hinting for `@validataclass` and `DataclassValidator` introduced in 0.7.1.
+
+### Fixed
+
+- Fixed typehints of `@validataclass` decorator. Auto-deduction in `DataclassValidator` should work now. [#85]
+
+[#85]: https://github.com/binary-butterfly/validataclass/pull/85
+
+
 ## [0.7.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.7.1) - 2022-09-26
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.7.0...0.7.1)
