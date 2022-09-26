@@ -15,6 +15,9 @@ plugins =
 show_missing = True
 skip_empty = True
 skip_covered = True
+exclude_lines =
+    pragma: nocover
+    @overload
 
 [html]
 directory = reports/coverage_html/
