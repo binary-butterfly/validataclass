@@ -26,17 +26,20 @@ class EmailValidator(StringValidator):
     Please note that this validator is a bit opinionated and simplified in that it does *not* allow every email address that technically
     is valid according to the RFCs. For example, it does neither allow internationalized email addresses (although this might be changed
     in the future), nor oddities like quoted strings as local part or comments, because most mail software does not support those anyway
-    and/or might break with those adresses.
+    and/or might break with those addresses.
 
-    Currently this validator has no parameters.
+    Set the parameter `allow_empty=True` to allow empty strings, e.g. '' or ' '.
 
     Example:
 
     ```
     EmailValidator()
+
+    # Accepts also empty strings
+    EmailValidator(allow_empty=True)
     ```
 
-    Valid input: email address as `str`
+    Valid input: email address as `str` (also empty strings if `allow_empty=True`)
     Output: `str`
     """
 
@@ -47,12 +50,26 @@ class EmailValidator(StringValidator):
         (?P<domain> [^@?]+ )
     ''', re.IGNORECASE | re.VERBOSE)
 
-    def __init__(self):
+    # Whether to accept empty strings
+    allow_empty: bool = False
+
+    def __init__(self, *,
+                 allow_empty: bool = False,):
         """
         Create a `EmailValidator`.
+
+        Parameters:
+            allow_empty: Boolean, if True, empty strings are accepted as valid email addresses (default: False)
         """
+        self.allow_empty = allow_empty
+
+        min_length = 1
+        # Allow string with length 0 if `allow_empty=True`
+        if allow_empty:
+            min_length = 0
+
         # Initialize StringValidator with some length requirements
-        super().__init__(min_length=1, max_length=256)
+        super().__init__(min_length=min_length, max_length=256)
 
     def validate(self, input_data: Any, **kwargs) -> str:
         """
@@ -60,6 +77,10 @@ class EmailValidator(StringValidator):
         """
         # Validate input data as string
         input_email = super().validate(input_data, **kwargs)
+
+        # Allow empty strings (also strings consisting only of spaces) if `allow_empty=True`
+        if self.allow_empty and input_email.strip() == "":
+            return input_email
 
         # Validate string with regular expression
         regex_match = self.email_regex.fullmatch(input_email)
