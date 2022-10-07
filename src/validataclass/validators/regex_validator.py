@@ -42,7 +42,7 @@ class RegexValidator(StringValidator):
     By default only "safe" singleline strings are allowed (i.e. no non-printable characters). See the `StringValidator`
     options `unsafe` and `multiline` for more details.
 
-    Set the parameter `allow_empty=True` to allow empty strings, e.g. '' or ' '.
+    Set the parameter `allow_empty=True` to allow empty strings ('').
 
     Examples:
 
@@ -152,14 +152,15 @@ class RegexValidator(StringValidator):
         # Validate input with base StringValidator (checks length requirements)
         output = super().validate(input_data, **kwargs)
 
+        # Find out if allow_empty parameter set and relevant
+        if self.allow_empty and output == "":
+            return output
+
         # Match full string against Regex pattern
         match = self.regex_pattern.fullmatch(input_data)
 
-        # Find out if allow_empty parameter set and relevant
-        allow_empty_relevant = self.allow_empty and input_data.strip() == ""
-
-        # Raise error if match not found and allow empty not set or data is not empty string
-        if not match and not allow_empty_relevant:
+        # Raise error if match not found
+        if not match:
             raise self.custom_error_class(code=self.custom_error_code)
 
         # Expand template if output_template was supplied

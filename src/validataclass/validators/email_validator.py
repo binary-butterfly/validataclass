@@ -28,7 +28,7 @@ class EmailValidator(StringValidator):
     in the future), nor oddities like quoted strings as local part or comments, because most mail software does not support those anyway
     and/or might break with those addresses.
 
-    Set the parameter `allow_empty=True` to allow empty strings, e.g. '' or ' '.
+    Set the parameter `allow_empty=True` to allow empty strings ('').
 
     Example:
 
@@ -63,10 +63,8 @@ class EmailValidator(StringValidator):
         """
         self.allow_empty = allow_empty
 
-        min_length = 1
         # Allow string with length 0 if `allow_empty=True`
-        if allow_empty:
-            min_length = 0
+        min_length = 0 if allow_empty else 1
 
         # Initialize StringValidator with some length requirements
         super().__init__(min_length=min_length, max_length=256)
@@ -79,7 +77,7 @@ class EmailValidator(StringValidator):
         input_email = super().validate(input_data, **kwargs)
 
         # Allow empty strings (also strings consisting only of spaces) if `allow_empty=True`
-        if self.allow_empty and input_email.strip() == "":
+        if self.allow_empty and input_email == "":
             return input_email
 
         # Validate string with regular expression

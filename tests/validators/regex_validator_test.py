@@ -72,13 +72,7 @@ class RegexValidatorTest:
     @staticmethod
     @pytest.mark.parametrize(
         'regex_pattern, valid_input_list', [
-            (r'', ['', ' ']),
-            (r'banana', ['', ' ']),
-            (r'^banana$', ['', ' ']),
-            (r'.*', ['', ' ']),
-            (r'[0-9]+', ['', ' ']),
-            (r'[0-9]+.*', ['', ' ']),
-            (r'\w+\.(png|jpg)', ['', ' ']),
+            (r'banana', ['', 'banana']),
         ]
     )
     def test_allow_empty_valid(regex_pattern, valid_input_list):
@@ -92,11 +86,7 @@ class RegexValidatorTest:
     @staticmethod
     @pytest.mark.parametrize(
         'regex_pattern, invalid_input_list', [
-            (r'banana', ['', ' ']),
-            (r'^banana$', ['', ' ']),
-            (r'[0-9]+', ['', ' ']),
-            (r'[0-9]+.*', ['', ' ']),
-            (r'\w+\.(png|jpg)', ['', ' ']),
+            (r'banana', [''])
         ]
     )
     def test_allow_empty_invalid(regex_pattern, invalid_input_list):
