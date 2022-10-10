@@ -68,6 +68,37 @@ class RegexValidatorTest:
         for valid_input in valid_input_list:
             assert validator.validate(valid_input) == valid_input
 
+    # Test optional allow_empty parameter
+    @staticmethod
+    @pytest.mark.parametrize(
+        'regex_pattern, valid_input_list', [
+            (r'banana', ['', 'banana']),
+        ]
+    )
+    def test_allow_empty_valid(regex_pattern, valid_input_list):
+        """ Test RegexValidator with parameter allow_empty set to True and empty strings as input. """
+        precompiled_pattern = re.compile(regex_pattern)
+        validator = RegexValidator(precompiled_pattern, allow_empty=True)
+
+        for valid_input in valid_input_list:
+            assert validator.validate(valid_input) == valid_input
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'regex_pattern, invalid_input_list', [
+            (r'banana', [''])
+        ]
+    )
+    def test_allow_empty_invalid(regex_pattern, invalid_input_list):
+        """ Test RegexValidator with parameter allow_empty not set and empty strings as input. """
+        precompiled_pattern = re.compile(regex_pattern)
+        validator = RegexValidator(precompiled_pattern)
+
+        for invalid_input in invalid_input_list:
+            with pytest.raises(RegexMatchError) as exception_info:
+                validator.validate(invalid_input)
+            assert exception_info.value.to_dict() == {'code': 'invalid_string_format'}
+
     @staticmethod
     @pytest.mark.parametrize(
         'regex_pattern, invalid_input_list', [

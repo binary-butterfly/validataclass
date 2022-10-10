@@ -42,6 +42,8 @@ class RegexValidator(StringValidator):
     By default only "safe" singleline strings are allowed (i.e. no non-printable characters). See the `StringValidator`
     options `unsafe` and `multiline` for more details.
 
+    Set the parameter `allow_empty=True` to allow empty strings ('').
+
     Examples:
 
     ```
@@ -72,6 +74,9 @@ class RegexValidator(StringValidator):
         code = 'invalid_hex_number'
 
     RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_class=InvalidHexNumberError)
+
+    # Accepts also empty strings
+    RegexValidator(r'[0-9a-fA-F]+', allow_empty=True)
     ```
 
     Valid input: Any `str` that matches the regex
@@ -90,6 +95,9 @@ class RegexValidator(StringValidator):
     # Custom error code to use in the regex match exception (use default if None)
     custom_error_code: Optional[str]
 
+    # Whether to accept empty strings
+    allow_empty: bool = False
+
     def __init__(
         self,
         pattern: Union[re.Pattern, str],
@@ -97,6 +105,7 @@ class RegexValidator(StringValidator):
         *,
         custom_error_class: Type[ValidationError] = RegexMatchError,
         custom_error_code: Optional[str] = None,
+        allow_empty: bool = False,
         **kwargs,
     ):
         """
@@ -110,6 +119,7 @@ class RegexValidator(StringValidator):
             output_template: Optional `str`, template to be used in output, will be supplied to match.expand() (default: None)
             custom_error_class: Subclass of `ValidationError` raised when regex matching fails (default: RegexMatchError)
             custom_error_code: Optional `str`, overrides the default error code in the regex match exception (default: None)
+            allow_empty: Boolean, if True, empty strings are accepted as valid (default: False)
         """
         # Initialize base StringValidator (may set min_length/max_length via kwargs)
         super().__init__(**kwargs)
@@ -131,6 +141,8 @@ class RegexValidator(StringValidator):
         self.custom_error_class = custom_error_class
         self.custom_error_code = custom_error_code
 
+        self.allow_empty = allow_empty
+
     def validate(self, input_data: Any, **kwargs) -> str:
         """
         Validate input as string and match full string against regular expression.
@@ -139,6 +151,10 @@ class RegexValidator(StringValidator):
         """
         # Validate input with base StringValidator (checks length requirements)
         output = super().validate(input_data, **kwargs)
+
+        # Find out if allow_empty parameter set and relevant
+        if self.allow_empty and output == "":
+            return output
 
         # Match full string against Regex pattern
         match = self.regex_pattern.fullmatch(input_data)

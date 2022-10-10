@@ -44,6 +44,22 @@ class EmailValidatorTest:
             'max_length': 256,
         }
 
+    # Test optional allow_empty parameter
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'input_string', [
+            # Empty strings
+            '',
+            # Regular addresses
+            'a@example.com',
+        ]
+    )
+    def test_allow_empty_valid(input_string):
+        """ Check that EmailValidator returns empty string if boolean parameter allow_empty=True. """
+        validator = EmailValidator(allow_empty=True)
+        assert validator.validate(input_string) == input_string
+
     @staticmethod
     def test_invalid_string_too_long():
         """ Check that EmailValidator raises exceptions for strings that are too long. """
