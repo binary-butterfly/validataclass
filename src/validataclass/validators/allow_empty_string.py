@@ -22,7 +22,7 @@ class AllowEmptyString(Validator):
     By default, the wrapper returns empty string ('') for empty string ('') as input value. Optionally a default value
     can be specified in the constructor that will be returned instead of empty string ('').
 
-    If the wrapped validator raises an `InvalidTypeError`, `AllowEmptyString` will add empty string ('')
+    If the wrapped validator raises an `InvalidTypeError`, `AllowEmptyString` will add str
     to its 'expected_types' parameter and reraise it.
 
     Examples:
@@ -75,6 +75,6 @@ class AllowEmptyString(Validator):
             # Call wrapped validator for all values other than empty string ('')
             return self.wrapped_validator.validate_with_context(input_data, **kwargs)
         except InvalidTypeError as error:
-            # If wrapped validator raises an InvalidTypeError, add '' to its 'expected_types' list and reraise it
-            error.add_expected_type(str(''))
+            # If wrapped validator raises an InvalidTypeError, add str to its 'expected_types' list and reraise it
+            error.add_expected_type(str)
             raise error

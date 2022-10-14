@@ -57,6 +57,7 @@ A much more useful distinction is to categorize the validators according to thei
   - `NoneToUnsetValue`: Like `Noneable`, but converts `None` to `UnsetValue`
   - `AnythingValidator`: Accepts any input without validation (optionally with type restrictions)
   - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
+  - `AllowEmptyString`: Wraps another validator but allows the input to be empty string `('')`
 
 
 These are a lot of different validators (and there will be even more in future versions) and many of them have a lot of parameters, so we
@@ -169,6 +170,9 @@ By default, valid input strings are returned unmodified. Alternatively, you can 
 [`re.Match.expand`](https://docs.python.org/3/library/re.html#re.Match.expand), i.e. backreferences to regex groups
 will be replaced with the groups' contents.
 
+To allow empty strings as input, you can set the `allow_empty` parameter to `True` (defaults to `False`).
+
+
 **Examples:**
 
 ```python
@@ -213,6 +217,9 @@ class InvalidHexNumberError(ValidationError):
 
 validator = RegexValidator(re.compile(r'[0-9a-f]+'), custom_error_class=InvalidHexNumberError)
 validator.validate("banana")  # will raise a InvalidHexNumberError with its defined error code
+
+validator_empty_string = RegexValidator(r'[0-9a-fA-F]+', allow_empty=True)
+validator_empty_string.validate('') # will return "" (empty string)
 ```
 
 
@@ -225,7 +232,7 @@ is valid according to the RFCs. For example, it does neither allow international
 in the future), nor oddities like quoted strings as local part or comments, because most mail software does not support those anyway
 and/or might break with those adresses.
 
-Currently this validator has no parameters.
+Currently this validator has parameter `allow_empty`. To allow empty strings as input, you can set the `allow_empty` parameter to `True` (defaults to `False`).
 
 **Example:**
 
@@ -235,6 +242,9 @@ from validataclass.validators import EmailValidator
 validator = EmailValidator()
 validator.validate("foo@example.com")  # will return "foo@example.com"
 validator.validate("banana")           # will return InvalidEmailError(reason='Invalid email address format.')
+
+validator_empty_string = EmailValidator(allow_empty=True)
+validator_empty_string.validate('')    # will return "" (empty string)
 ```
 
 
@@ -1206,6 +1216,34 @@ validator.validate('foo')  # raises CustomValidationError (with its default code
 # Use the custom exception class but with a custom reason
 validator = RejectValidator(error_class=CustomValidationError, error_reason='This field cannot be changed.')
 validator.validate('foo')  # raises CustomValidationError with reason='This field cannot be changed.'
+```
+
+
+### AllowEmptyString
+
+The `AllowEmptyString` validator wraps another validator and additionally allows empty string `('')` as an input value.
+
+Some validators do not allow empty string as input. To allow the value to be an empty string, the AllowEmptyString wrapper can be used.
+
+It first checks if the input value is empty string, in which case it simply returns empty string. In all other cases the input will be passed to the wrapped validator as if it was used without AllowEmptyString.
+
+Optionally a custom default value can be specified with the default parameter. If set, the AllowEmptyString validator returns this default value instead of an empty string when the input value is empty string.
+
+Additionally, if the wrapped validator raises an InvalidTypeError, the wrapper will add "str" to the expected_types parameter of the exception (in case "str" is not already in expected_types).
+
+**Examples:**
+
+```python
+from validataclass.validators import AllowEmptyString, BooleanValidator
+
+# Accepts an empty string
+validator = AllowEmptyString(BooleanValidator())
+validator.validate(True)  # will return True (bool)
+validator.validate('')    # will return '' (empty string)
+
+validator = AllowEmptyString(BooleanValidator(), default='no value given!')
+validator.validate(True)  # will return True (bool)
+validator.validate('')    # will return string "no value given"
 ```
 
 

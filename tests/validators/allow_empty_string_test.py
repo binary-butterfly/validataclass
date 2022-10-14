@@ -53,7 +53,7 @@ class AllowEmptyStringTest:
     def test_allow_empty_string_with_context_arguments():
         """ Test that AllowEmptyString passes context arguments down to the wrapped validator. """
         validator = AllowEmptyString(UnitTestContextValidator())
-        assert validator.validate('') is ''
+        assert validator.validate('') == ''
         assert validator.validate('unittest') == "unittest / {}"
         assert validator.validate('unittest', foo=42) == "unittest / {'foo': 42}"
 
@@ -67,13 +67,14 @@ class AllowEmptyStringTest:
 
     @staticmethod
     def test_invalid_type_contains_empty_string():
-        """ Test that AllowEmptyString adds '' to the expected_types parameter if the wrapped validator raises an InvalidTypeError. """
+        """ Test that AllowEmptyString adds str to the expected_types parameter if the wrapped validator raises an InvalidTypeError. """
         validator = AllowEmptyString(DecimalValidator())
         with pytest.raises(ValidationError) as exception_info:
             validator.validate(123)
+        print(exception_info.value.to_dict())
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
-            'expected_types': ['', 'str'],
+            'expected_type': 'str',
         }
 
     @staticmethod
