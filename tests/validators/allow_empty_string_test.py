@@ -68,13 +68,12 @@ class AllowEmptyStringTest:
     @staticmethod
     def test_invalid_type_contains_empty_string():
         """ Test that AllowEmptyString adds str to the expected_types parameter if the wrapped validator raises an InvalidTypeError. """
-        validator = AllowEmptyString(DecimalValidator())
+        validator = AllowEmptyString(IntegerValidator())
         with pytest.raises(ValidationError) as exception_info:
-            validator.validate(123)
-        print(exception_info.value.to_dict())
+            validator.validate('unittest')
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
-            'expected_type': 'str',
+            'expected_types': ['int', 'str'],
         }
 
     @staticmethod
