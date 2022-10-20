@@ -118,9 +118,10 @@ class InvalidTypeError(ValidationError):
 
     def add_expected_type(self, new_type: Union[type, str]) -> None:
         """
-        Adds a type to 'expected_types' in an existing InvalidTypeError exception.
+        Adds a type in to 'expected_types' in an existing InvalidTypeError exception. Checks for duplicates in 'expected_types'.
         """
-        self.expected_types.append(self._type_to_string(new_type))
+        if self._type_to_string(new_type) not in self.expected_types:
+            self.expected_types.append(self._type_to_string(new_type))
 
     def to_dict(self):
         base_dict = super().to_dict()

@@ -130,3 +130,15 @@ class InvalidTypeErrorTest:
         # Check error after adding types
         assert repr(error) == "InvalidTypeError(code='invalid_type', expected_types=['banana', 'float', 'int'])"
         assert error.to_dict() == {'code': 'invalid_type', 'expected_types': ['banana', 'float', 'int']}
+
+    @staticmethod
+    def test_add_duplicate_to_expected_types():
+        """ Tests adding duplicate to InvalidTypeError with `add_expected_types()` should not add new expected type. """
+        error = InvalidTypeError(expected_types=[int, str])
+
+        # Add duplicate additional types
+        error.add_expected_type(int)
+
+        # Check 'int' is not added to error
+        assert repr(error) == "InvalidTypeError(code='invalid_type', expected_types=['int', 'str'])"
+        assert error.to_dict() == {'code': 'invalid_type', 'expected_types': ['int', 'str']}
