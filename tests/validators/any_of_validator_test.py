@@ -181,6 +181,19 @@ class AnyOfValidatorTest:
                 **expected_type_dict,
             }
 
+    @staticmethod
+    def test_empty_allowed_values_with_allowed_types():
+        """ Test AnyOfValidator with an empty list of allowed values (requires explicit allowed_types). """
+        validator = AnyOfValidator([], allowed_types=[str])
+
+        # There can't be any valid input for this validator (in that way it acts like a RejectValidator with a different error)
+        with pytest.raises(ValueNotAllowedError) as exception_info:
+            validator.validate('banana')
+        assert exception_info.value.to_dict() == {
+            'code': 'value_not_allowed',
+            'allowed_values': [],
+        }
+
     # Test AnyOfValidator with case-insensitive option
 
     @staticmethod
@@ -249,8 +262,15 @@ class AnyOfValidatorTest:
     # Invalid validator parameters
 
     @staticmethod
+    def test_empty_allowed_values_requires_allowed_types():
+        """ Test that AnyOfValidator raises exception when allowed_values is empty and no allowed_types are specified. """
+        with pytest.raises(InvalidValidatorOptionException) as exception_info:
+            AnyOfValidator([])
+        assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+
+    @staticmethod
     def test_empty_allowed_types():
-        """ Check that AnyOfValidator raises exception when allowed_types is empty. """
+        """ Test that AnyOfValidator raises exception when allowed_types is empty. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             AnyOfValidator([1, 2, 3], allowed_types=[])
         assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
