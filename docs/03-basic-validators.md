@@ -57,6 +57,7 @@ A much more useful distinction is to categorize the validators according to thei
   - `NoneToUnsetValue`: Like `Noneable`, but converts `None` to `UnsetValue`
   - `AnythingValidator`: Accepts any input without validation (optionally with type restrictions)
   - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
+  - `DiscardValidator`: Discards any input and returns a predefined value
   - `AllowEmptyString`: Wraps another validator but allows the input to be empty string `('')`
 
 
@@ -1150,7 +1151,7 @@ validator.validate({13: 12})  # returns {13: 12}
 
 ### RejectValidator
 
-The `RejectValidator` is a special validator rejects any input with a validation error.
+The `RejectValidator` is a special validator that rejects any input with a validation error.
 
 This validator can be used for example in dataclasses to define a field that may never be set, or to override an
 existing field in a subclassed dataclass that may not be set in this subclass. Keep in mind that in a dataclass
@@ -1216,6 +1217,42 @@ validator.validate('foo')  # raises CustomValidationError (with its default code
 # Use the custom exception class but with a custom reason
 validator = RejectValidator(error_class=CustomValidationError, error_reason='This field cannot be changed.')
 validator.validate('foo')  # raises CustomValidationError with reason='This field cannot be changed.'
+```
+
+
+### DiscardValidator
+
+The `DiscardValidator` is a special validator that discards any input and always returns a predefined value.
+
+This validator accepts any input of any type, similar to the `AnythingValidator`, but ignores the input entirely and
+always returns a predefined value instead.
+
+By default, the returned value is `None`. This can be changed using the `output_value` parameter.
+
+This validator should never raise any validation errors, since it doesn't validate anything.
+
+**Examples:**
+
+```python
+from validataclass.validators import DiscardValidator, Noneable
+
+# Accepts anything, always returns None
+validator = DiscardValidator()
+validator.validate(None)  # returns None
+validator.validate(42)    # returns None
+validator.validate('')    # returns None
+
+# Accepts anything, always returns the string "discarded"
+validator = DiscardValidator(output_value="discarded")
+validator.validate(None)  # returns "discarded"
+validator.validate(42)    # returns "discarded"
+validator.validate('')    # returns "discarded"
+
+# Use Noneable to allow None, and replace any other input with the string "discarded"
+validator = Noneable(DiscardValidator(output_value="discarded"))
+validator.validate(None)  # returns None
+validator.validate(42)    # returns "discarded"
+validator.validate('')    # returns "discarded"
 ```
 
 
