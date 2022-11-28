@@ -18,6 +18,7 @@ from .noneable import Noneable
 from .none_to_unset_value import NoneToUnsetValue
 from .anything_validator import AnythingValidator
 from .reject_validator import RejectValidator
+from .discard_validator import DiscardValidator
 from .allow_empty_string import AllowEmptyString
 
 # Extended type validators
