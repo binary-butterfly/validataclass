@@ -474,15 +474,23 @@ The `DecimalValidator` accepts decimal numbers **as strings** (e.g. `"1.234"`) a
 Only allows finite numbers in regular decimal notation (e.g. `"1.234"`, `"-42"`, `".00"`, ...), but no other values that
 are accepted by `decimal.Decimal` (e.g. no `Infinity` or `NaN` and no scientific notation).
 
-Optionally a number range (minimum/maximum value either as `Decimal`, integer or decimal string), minimum/maximum number
-of decimal places and a fixed number of decimal places in the output value can be specified.
+Optionally a number range (minimum/maximum value as `Decimal`, integer or decimal string) can be specified using the
+parameters `min_value` and `max_value`, as well as a minimum/maximum number of decimal places in the input using
+`min_places` and `max_places`.
 
-A fixed number of output places will result in rounding according to the current decimal context (see `decimal.getcontext()`),
-by default this means that `"1.49"` will be rounded to `1` and `"1.50"` to `2`.
+You can also specify how many decimal places the output value should have using `output_places`. If this parameter
+is set, the output value will always have the specified amount of decimal places. If rounding is necessary, a
+rounding mode as defined by the `decimal` module (https://docs.python.org/3/library/decimal.html#rounding-modes) is
+used, which can be specified with the `rounding` parameter.
+
+The rounding mode defaults to `decimal.ROUND_HALF_UP`, which basically means that digits 0 to 4 are rounded down and
+digits 5 to 9 are rounded up (e.g. with `output_places=1`, "1.149" would be rounded to "1.1" and "1.150" would be
+rounded to "1.2"). Alternatively, set `rounding=None` to use the rounding mode set by the current decimal context.
 
 **Examples:**
 
 ```python
+import decimal
 from decimal import Decimal
 
 from validataclass.validators import DecimalValidator
@@ -515,6 +523,13 @@ validator.validate("1.23")       # will return Decimal('1.230')
 validator.validate("0.1234")     # will return Decimal('0.123')
 validator.validate("0.1235")     # will return Decimal('0.124')
 validator.validate("100000.00")  # will return Decimal('100000.000')
+
+# Use a different rounding mode to always round numbers up (i.e. away from zero)
+validator = DecimalValidator(output_places=2, rounding=decimal.ROUND_UP)
+validator.validate("1.0")     # will return Decimal('1.00')
+validator.validate("1.001")   # will return Decimal('1.01')
+validator.validate("1.009")   # will return Decimal('1.01')
+validator.validate("-1.001")  # will return Decimal('-1.01')
 ```
 
 
@@ -533,8 +548,8 @@ If you want to accept all three numeric input types (integers, floats and decima
 basically is just a `FloatToDecimalValidator` with those two options always enabled.
 
 Like the `DecimalValidator` it supports the optional parameters `min_value` and `max_value` (specified as `Decimal`,
-decimal strings, floats or integers), as well as `output_places`. However, it **does not** support the `min_places` and
-max_places` parameters (those are technically not possible with floats)!
+decimal strings, floats or integers), as well as `output_places` and `rounding`. However, it **does not** support the
+`min_places` and max_places` parameters (those are technically not possible with floats)!
 
 **Note:** Due to the way that floats work, the resulting decimals can have inaccuracies! It is recommended to use
 `DecimalValidator` with decimal strings instead of floats as input whenever possible. This validator mainly exists for
@@ -582,7 +597,7 @@ always enabled, and is intended as a shortcut.
 
 Like the `FloatToDecimalValidator`, the `NumericValidator` supports the optional parameters `min_value` and `max_value`
 to specify the allowed value range, as well as `output_places` to set a fixed number of decimal places in the output
-value.
+value and `rounding` to set the rounding mode.
 
 **Examples:**
 

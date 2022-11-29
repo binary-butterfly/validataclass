@@ -4,6 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+import decimal
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Any, Optional, Union
@@ -23,10 +24,18 @@ class DecimalValidator(StringValidator):
     Only allows finite numbers in regular decimal notation (e.g. '1.234', '-42', '.00', ...), but no other values that
     are accepted by `decimal.Decimal` (e.g. no 'Infinity' or 'NaN' and no scientific notation).
 
-    Optionally a number range (minimum/maximum value as `Decimal`, integer or decimal string), minimum/maximum number of
-    decimal places and a fixed number of decimal places in the output value can be specified. A fixed number of output
-    places will result in rounding according to the current decimal context (see `decimal.getcontext()`), by default
-    this means that "1.49" will be rounded to "1" and "1.50" to "2".
+    Optionally a number range (minimum/maximum value as `Decimal`, integer or decimal string) can be specified using the
+    parameters `min_value` and `max_value`, as well as a minimum/maximum number of decimal places in the input using
+    `min_places` and `max_places`.
+
+    You can also specify how many decimal places the output value should have using `output_places`. If this parameter
+    is set, the output value will always have the specified amount of decimal places. If rounding is necessary, a
+    rounding mode as defined by the `decimal` module (https://docs.python.org/3/library/decimal.html#rounding-modes) is
+    used, which can be specified with the `rounding` parameter.
+
+    The rounding mode defaults to `decimal.ROUND_HALF_UP`, which basically means that digits 0 to 4 are rounded down and
+    digits 5 to 9 are rounded up (e.g. with `output_places=1`, "1.149" would be rounded to "1.1" and "1.150" would be
+    rounded to "1.2"). Alternatively, set `rounding=None` to use the rounding mode set by the current decimal context.
 
     Examples:
 
@@ -48,6 +57,9 @@ class DecimalValidator(StringValidator):
 
     # As above, but only allow 2 or less decimal places in input (e.g. '1' -> '1.00', '1.23' -> '1.23' but '1.234' raises an exception)
     DecimalValidator(max_places=2, output_places=2)
+
+    # Two output places, but always round up (e.g. '1.001' -> '1.01')
+    DecimalValidator(output_places=2, rounding=decimal.ROUND_UP)
     ```
 
     Valid input: `str` in decimal notation
@@ -65,6 +77,9 @@ class DecimalValidator(StringValidator):
     # Quantum used in `.quantize()` to set a fixed number of decimal places (from constructor argument output_places)
     output_quantum: Optional[Decimal] = None
 
+    # Rounding mode (constant from decimal module)
+    rounding: Optional[str] = None
+
     # Precompiled regular expression for decimal values
     decimal_regex: re.Pattern = re.compile(r'[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)')
 
@@ -75,10 +90,11 @@ class DecimalValidator(StringValidator):
         min_places: Optional[int] = None,
         max_places: Optional[int] = None,
         output_places: Optional[int] = None,
+        rounding: Optional[str] = decimal.ROUND_HALF_UP,
     ):
         """
-        Create a DecimalValidator with optional value range, optional minimum/maximum number of decimal places and optional number
-        of decimal places in output value.
+        Create a DecimalValidator with optional value range, optional minimum/maximum number of decimal places and
+        optional number of decimal places in output value.
 
         Parameters:
             min_value: Decimal, integer or string, specifies lowest allowed value (default: None, no minimum value)
@@ -86,6 +102,7 @@ class DecimalValidator(StringValidator):
             min_places: Integer, minimum number of decimal places an input value must have (default: None, no minimum places)
             max_places: Integer, maximum number of decimal places an input value must have (default: None, no maximum places)
             output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
+            rounding: Rounding mode for numbers that need to be rounded (default: decimal.ROUND_HALF_UP)
         """
         # Restrict string length
         super().__init__(max_length=40)
@@ -112,6 +129,7 @@ class DecimalValidator(StringValidator):
         self.max_value = max_value
         self.min_places = min_places
         self.max_places = max_places
+        self.rounding = rounding
 
         # Set output "quantum" (the output decimal will have the same number of decimal places as this value)
         if output_places is not None:
@@ -151,6 +169,6 @@ class DecimalValidator(StringValidator):
 
         # Set fixed number of decimal places (if wanted)
         if self.output_quantum is not None:
-            return decimal_out.quantize(self.output_quantum)
+            return decimal_out.quantize(self.output_quantum, rounding=self.rounding)
         else:
             return decimal_out
