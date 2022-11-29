@@ -15,7 +15,7 @@ __all__ = [
     'T_Enum',
 ]
 
-# Type variable for type hints in DataclassValidator
+# Type variable for type hints in EnumValidator
 T_Enum = TypeVar('T_Enum', bound=Enum)
 
 
@@ -36,7 +36,10 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
     The types allowed for input data will be automatically determined from the allowed Enum values by default, unless
     explicitly specified with the parameter `allowed_types`.
 
-    By default, strings will be matched case-sensitively. To change this, set `case_insensitive=True`.
+    By default, strings will be matched *case-insensitively*. To change this, set `case_sensitive=True`.
+
+    NOTE: Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter "case_insensitive"
+    still exists for compatibility, but is deprecated now and will be removed in a future version.
 
     If the input value is not valid (but has the correct type), a ValueNotAllowedError (code='value_not_allowed') will
     be raised. This error will include the list of allowed values (as "allowed_values"), as long as this list is not
@@ -67,13 +70,16 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
     # Enum class used to determine the list of allowed values
     enum_cls: Type[Enum]
 
+    # TODO: For version 1.0, remove the old parameter "case_insensitive" completely and set a real default value for the
+    #  new "case_sensitive" parameter. (See base AnyOfValidator.)
     def __init__(
         self,
         enum_cls: Type[Enum],
         *,
         allowed_values: Optional[Iterable[Any]] = None,
         allowed_types: Optional[Union[type, Iterable[type]]] = None,
-        case_insensitive: bool = False,
+        case_sensitive: Optional[bool] = None,
+        case_insensitive: Optional[bool] = None,
     ):
         """
         Create a EnumValidator for a specified Enum class, optionally with a restricted list of allowed values.
@@ -82,7 +88,8 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
             enum_cls: Enum class to use for validation (required)
             allowed_values: List (or iterable) of values from the Enum that are accepted (default: None, all Enum values allowed)
             allowed_types: List (or iterable) of types allowed for input data (default: None, autodetermine types from enum values)
-            case_insensitive: If set, strings will be matched case-insensitively (default: False)
+            case_sensitive: If set, strings will be matched case-sensitively (default: True)
+            case_insensitive: DEPRECATED. Validator is case-insensitive by default, use case_sensitive to change this.
         """
         # Ensure parameter is an Enum class
         if not isinstance(enum_cls, EnumMeta):
@@ -105,6 +112,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
         super().__init__(
             allowed_values=any_of_values,
             allowed_types=allowed_types,
+            case_sensitive=case_sensitive,
             case_insensitive=case_insensitive,
         )
 

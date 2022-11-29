@@ -194,52 +194,83 @@ class AnyOfValidatorTest:
             'allowed_values': [],
         }
 
-    # Test AnyOfValidator with case-insensitive option
+    # Test AnyOfValidator with case-sensitive option
 
     @staticmethod
     @pytest.mark.parametrize(
-        'case_insensitive, input_data, expected_result',
+        'case_sensitive, input_data, expected_result',
         [
             # Case-sensitive matching
-            (False, 'Strawberry', 'Strawberry'),
-            (False, 42, 42),
-
-            # Case-insensitive matching
             (True, 'Strawberry', 'Strawberry'),
-            (True, 'STRAWBERRY', 'Strawberry'),
-            (True, 'strawberry', 'Strawberry'),
             (True, 42, 42),
+
+            # Case-insensitive matching (default)
+            (False, 'Strawberry', 'Strawberry'),
+            (False, 'STRAWBERRY', 'Strawberry'),
+            (False, 'strawberry', 'Strawberry'),
+            (False, 42, 42),
         ]
     )
-    def test_case_insensitive_valid(case_insensitive, input_data, expected_result):
+    def test_case_sensitive_valid(case_sensitive, input_data, expected_result):
         """ Test AnyOfValidator with case-sensitive and case-insensitive string matching, valid input. """
-        validator = AnyOfValidator(allowed_values=['Strawberry', 42], case_insensitive=case_insensitive)
+        validator = AnyOfValidator(allowed_values=['Strawberry', 42], case_sensitive=case_sensitive)
         assert validator.validate(input_data) == expected_result
 
     @staticmethod
     @pytest.mark.parametrize(
-        'case_insensitive, input_data',
+        'case_sensitive, input_data',
         [
             # Case-sensitive matching
-            (False, 'strawberry'),
-            (False, 'banana'),
-            (False, 13),
-
-            # Case-insensitive matching
-            (True, 'straw_berry'),
+            (True, 'strawberry'),
+            (True, 'STRAWBERRY'),
             (True, 'banana'),
             (True, 13),
+
+            # Case-insensitive matching (default)
+            (False, 'straw_berry'),
+            (False, 'banana'),
+            (False, 13),
         ]
     )
-    def test_case_insensitive_invalid(case_insensitive, input_data):
+    def test_case_sensitive_invalid(case_sensitive, input_data):
         """ Test AnyOfValidator with case-sensitive and case-insensitive string matching, invalid input. """
-        validator = AnyOfValidator(allowed_values=['Strawberry', 42], case_insensitive=case_insensitive)
+        validator = AnyOfValidator(allowed_values=['Strawberry', 42], case_sensitive=case_sensitive)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
             'allowed_values': ['Strawberry', 42],
         }
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'case_insensitive, valid_input, invalid_input',
+        [
+            # Case-insensitive matching
+            (True, ['Strawberry', 'strawberry', 'STRAWBERRY'], ['banana']),
+
+            # Case-sensitive matching
+            (False, ['Strawberry'], ['strawberry', 'STRAWBERRY', 'banana']),
+        ]
+    )
+    def test_deprecated_case_insensitive(case_insensitive, valid_input, invalid_input):
+        """ Test AnyOfValidator with deprecated case_insensitive parameter, which should issue a deprecation warning. """
+        with pytest.deprecated_call():
+            # This should issue a DeprecationWarning for the case_insensitive parameter, but continue without problems
+            validator = AnyOfValidator(allowed_values=['Strawberry'], case_insensitive=case_insensitive)
+
+        # Valid input
+        for input_data in valid_input:
+            assert validator.validate(input_data) == 'Strawberry'
+
+        # Invalid input
+        for input_data in invalid_input:
+            with pytest.raises(ValueNotAllowedError) as exception_info:
+                validator.validate(input_data)
+            assert exception_info.value.to_dict() == {
+                'code': 'value_not_allowed',
+                'allowed_values': ['Strawberry'],
+            }
 
     # Tests for validation errors
 
@@ -274,3 +305,20 @@ class AnyOfValidatorTest:
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             AnyOfValidator([1, 2, 3], allowed_types=[])
         assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'case_sensitive, case_insensitive',
+        [
+            (True, True),
+            (True, False),
+            (False, True),
+            (False, False),
+        ]
+    )
+    def test_case_insensitive_parameter_mutually_exclusive(case_sensitive, case_insensitive):
+        """ Test that the parameters "case_sensitive" and "case_insensitive" (deprecated) cannot be set at the same time. """
+        with pytest.raises(InvalidValidatorOptionException) as exception_info:
+            AnyOfValidator(['banana'], case_sensitive=case_sensitive, case_insensitive=case_insensitive)
+        assert str(exception_info.value) == \
+               'Parameters "case_sensitive" and "case_insensitive" (now deprecated) are mutually exclusive.'

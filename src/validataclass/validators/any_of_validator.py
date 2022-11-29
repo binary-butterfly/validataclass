@@ -4,6 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+import warnings
 from typing import Any, Iterable, List, Optional, Union
 
 from validataclass.exceptions import ValueNotAllowedError, InvalidValidatorOptionException
@@ -24,9 +25,13 @@ class AnyOfValidator(Validator):
     The types allowed for input data will be automatically determined from the list of allowed values by default, unless
     explicitly specified with the parameter 'allowed_types'.
 
-    By default, strings will be matched case-sensitively. To change this, set `case_insensitive=True`. In that case,
-    the value will always be returned as it is defined in the list of allowed values (e.g. if the allowed values contain
-    "Apple", then "APPLE" and "apple" will be valid input too, but in all cases "Apple" will be returned).
+    By default, strings will be matched *case-insensitively*. To change this, set `case_sensitive=True`. The returned
+    value will always be as defined in the list of allowed values (e.g. if the allowed values contain "Apple" and the
+    validator is case-insensitive, then "APPLE" and "apple" will be valid input too, but in all cases "Apple" will be
+    returned).
+
+    NOTE: Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter "case_insensitive"
+    still exists for compatibility, but is deprecated now and will be removed in a future version.
 
     If the input value is not valid (but has the correct type), a ValueNotAllowedError (code='value_not_allowed') will
     be raised. This error will include the list of allowed values (as "allowed_values"), as long as this list is not
@@ -36,11 +41,11 @@ class AnyOfValidator(Validator):
     Examples:
 
     ```
-    # Accepts "apple", "banana", "strawberry" (but not "APPLE" or "Banana")
+    # Accepts "apple", "banana", "strawberry" in any capitalization (e.g. "APPLE" is accepted, but returns "apple")
     AnyOfValidator(['apple', 'banana', 'strawberry'])
 
-    # Accepts the same values, but case-insensitively. Always returns the defined string (e.g. "apple" -> "Apple").
-    AnyOfValidator(['Apple', 'Banana', 'Strawberry'], case_insensitive=True)
+    # Accepts the same values, but case-sensitively (e.g. "APPLE" is not accepted, only "apple" is)
+    AnyOfValidator(['Apple', 'Banana', 'Strawberry'], case_sensitive=True)
     ```
 
     See also: `EnumValidator` (same principle but using Enum classes instead of raw value lists)
@@ -58,15 +63,16 @@ class AnyOfValidator(Validator):
     # Types allowed for input data (set by parameter or autodetermined from allowed_values)
     allowed_types: List[type] = None
 
-    # Check strings case-insensitively
-    case_insensitive: bool = False
+    # If set, strings will be matched case-sensitively
+    case_sensitive: bool = False
 
     def __init__(
         self,
         allowed_values: Iterable[Any],
         *,
         allowed_types: Optional[Union[type, Iterable[type]]] = None,
-        case_insensitive: bool = False,
+        case_sensitive: Optional[bool] = None,
+        case_insensitive: Optional[bool] = None,
     ):
         """
         Create an AnyOfValidator with a specified list of allowed values.
@@ -74,7 +80,8 @@ class AnyOfValidator(Validator):
         Parameters:
             allowed_values: List (or any other iterable) of values that are allowed as input (required)
             allowed_types: Types that are allowed for input data (default: None, autodetermine types from allowed_values)
-            case_insensitive: If set, strings will be matched case-insensitively (default: False)
+            case_sensitive: If set, strings will be matched case-sensitively (default: True)
+            case_insensitive: DEPRECATED. Validator is case-insensitive by default, use case_sensitive to change this.
         """
         # Save list of allowed values
         self.allowed_values = list(allowed_values)
@@ -91,7 +98,24 @@ class AnyOfValidator(Validator):
         if len(self.allowed_types) == 0:
             raise InvalidValidatorOptionException('Parameter "allowed_types" is an empty list (or types could not be autodetermined).')
 
-        self.case_insensitive = case_insensitive
+        # Changed in 0.8.0: The old "case_insensitive" parameter is now deprecated and replaced by a new parameter
+        # "case_sensitive", which is True by default.
+        # TODO: For version 1.0, remove the old parameter completely and set a real default value for the new parameter.
+        if case_sensitive is not None and case_insensitive is not None:
+            raise InvalidValidatorOptionException(
+                'Parameters "case_sensitive" and "case_insensitive" (now deprecated) are mutually exclusive.'
+            )
+        elif case_insensitive is not None:
+            warnings.warn(
+                'The parameter "case_insensitive" is deprecated since version 0.8.0 and will be removed in the future. '
+                'The AnyOfValidator and EnumValidator are now case-insensitive by default. To change this, set the new '
+                'parameter "case_sensitive=False" instead.',
+                DeprecationWarning
+            )
+            case_sensitive = not case_insensitive
+
+        # Set case_sensitive parameter, defaulting to True.
+        self.case_sensitive = case_sensitive if case_sensitive is not None else True
 
     def validate(self, input_data: Any, **kwargs) -> Any:
         """
@@ -124,8 +148,8 @@ class AnyOfValidator(Validator):
         if type(input_value) is not type(allowed_value):
             return False
 
-        # Compare strings case-insensitively (if option is set)
-        if type(input_value) is str and self.case_insensitive:
+        # Compare strings case-insensitively (unless case_sensitive option is set)
+        if type(input_value) is str and not self.case_sensitive:
             return input_value.lower() == allowed_value.lower()
         else:
             return input_value == allowed_value
