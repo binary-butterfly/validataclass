@@ -23,12 +23,14 @@ class EmailValidator(StringValidator):
     """
     Validator for email addresses.
 
-    Please note that this validator is a bit opinionated and simplified in that it does *not* allow every email address that technically
-    is valid according to the RFCs. For example, it does neither allow internationalized email addresses (although this might be changed
-    in the future), nor oddities like quoted strings as local part or comments, because most mail software does not support those anyway
-    and/or might break with those addresses.
+    Please note that this validator is a bit opinionated and simplified in that it does *not* allow every email address
+    that technically is valid according to the RFCs. For example, it does neither allow internationalized email
+    addresses (although this might be changed in the future), nor oddities like quoted strings as local part or comments,
+    because most mail software does not support those anyway and/or might break with those addresses.
 
-    Set the parameter `allow_empty=True` to allow empty strings ('').
+    Set the parameter `allow_empty=True` to allow empty strings as input.
+
+    By default, the maximum string length is set to 256 characters. This can be changed with the `max_length` parameter.
 
     Example:
 
@@ -53,13 +55,18 @@ class EmailValidator(StringValidator):
     # Whether to accept empty strings
     allow_empty: bool = False
 
-    def __init__(self, *,
-                 allow_empty: bool = False,):
+    def __init__(
+        self,
+        *,
+        allow_empty: bool = False,
+        max_length: int = 256,
+    ):
         """
         Create a `EmailValidator`.
 
         Parameters:
             allow_empty: Boolean, if True, empty strings are accepted as valid email addresses (default: False)
+            max_length: Integer, maximum length of input string (default: 256)
         """
         self.allow_empty = allow_empty
 
@@ -67,7 +74,7 @@ class EmailValidator(StringValidator):
         min_length = 0 if allow_empty else 1
 
         # Initialize StringValidator with some length requirements
-        super().__init__(min_length=min_length, max_length=256)
+        super().__init__(min_length=min_length, max_length=max_length)
 
     def validate(self, input_data: Any, **kwargs) -> str:
         """

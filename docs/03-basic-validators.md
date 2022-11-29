@@ -228,24 +228,31 @@ validator_empty_string.validate('') # will return "" (empty string)
 
 The `EmailValidator` validates email addresses as strings and returns them unmodified.
 
-Please note that this validator is a bit opinionated and simplified in that it does **not** allow every email address that technically
-is valid according to the RFCs. For example, it does neither allow internationalized email addresses (although this might be changed
-in the future), nor oddities like quoted strings as local part or comments, because most mail software does not support those anyway
-and/or might break with those adresses.
+Please note that this validator is a bit opinionated and simplified in that it does **not** allow every email address
+that technically is valid according to the RFCs. For example, it does neither allow internationalized email addresses
+(although this might be changed in the future), nor oddities like quoted strings as local part or comments, because most
+mail software does not support those anyway and/or might break with those adresses.
 
-Currently this validator has parameter `allow_empty`. To allow empty strings as input, you can set the `allow_empty` parameter to `True` (defaults to `False`).
+By default, the validator does not accept empty strings as input. To allow them, set the parameter `allow_empty=True`.
+
+Also, the default maximum string length is set to 256 characters (which would be a really long, but still valid email
+address), which can be changed using the `max_length` parameter.
 
 **Example:**
 
 ```python
 from validataclass.validators import EmailValidator
 
+# Default email validator
 validator = EmailValidator()
 validator.validate("foo@example.com")  # will return "foo@example.com"
-validator.validate("banana")           # will return InvalidEmailError(reason='Invalid email address format.')
+validator.validate("banana")           # will raise InvalidEmailError(reason='Invalid email address format.')
+validator.validate("")                 # will raise StringTooShortError(min_length=1, max_length=256)
 
-validator_empty_string = EmailValidator(allow_empty=True)
-validator_empty_string.validate('')    # will return "" (empty string)
+# Allow empty strings as input
+validator = EmailValidator(allow_empty=True)
+validator.validate("foo@example.com")  # will return "foo@example.com"
+validator.validate("")                 # will return "" (empty string)
 ```
 
 
