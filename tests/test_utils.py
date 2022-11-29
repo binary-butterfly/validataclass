@@ -4,7 +4,8 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, List
+from decimal import Decimal
+from typing import Any, List, Union
 
 from validataclass.validators import Validator
 
@@ -71,6 +72,14 @@ def unpack_params(*args) -> List[tuple]:
 
 # This is a sentinel object used in parametrized tests to represent "this parameter should not be set"
 UNSET_PARAMETER = object()
+
+
+def assert_decimal(actual: Decimal, expected: Union[Decimal, str]) -> None:
+    """
+    Assert that `actual` is of type `Decimal` and has the same decimal value (string comparison) as `expected`.
+    """
+    assert type(actual) is Decimal
+    assert str(actual) == str(expected)
 
 
 # Test validator that parses context arguments

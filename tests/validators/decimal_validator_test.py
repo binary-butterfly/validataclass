@@ -4,11 +4,12 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+import decimal
 from decimal import Decimal
 
 import pytest
 
-from tests.test_utils import unpack_params
+from tests.test_utils import assert_decimal, unpack_params
 from validataclass.exceptions import RequiredValueError, InvalidTypeError, InvalidDecimalError, NumberRangeError, \
     DecimalPlacesError, InvalidValidatorOptionException
 from validataclass.validators import DecimalValidator
@@ -21,7 +22,8 @@ class DecimalValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_decimal_str', [
+        'input_data, expected_decimal_str',
+        [
             ('0', '0'),
             ('1.234', '1.234'),
             ('-0.001', '-0.001'),
@@ -34,9 +36,7 @@ class DecimalValidatorTest:
     def test_valid_decimal(input_data, expected_decimal_str):
         """ Test DecimalValidator with valid input strings. """
         validator = DecimalValidator()
-        decimal = validator.validate(input_data)
-        assert type(decimal) is Decimal
-        assert str(decimal) == expected_decimal_str
+        assert_decimal(validator.validate(input_data), expected_decimal_str)
 
     @staticmethod
     def test_invalid_none():
@@ -110,9 +110,7 @@ class DecimalValidatorTest:
     def test_decimal_value_range_valid(min_value, max_value, input_data):
         """ Test DecimalValidator with range requirements with valid decimal strings. """
         validator = DecimalValidator(min_value=min_value, max_value=max_value)
-        decimal = validator.validate(input_data)
-        assert type(decimal) is Decimal
-        assert str(decimal) == input_data.lstrip('+').rstrip('.')
+        assert_decimal(validator.validate(input_data), input_data.lstrip('+').rstrip('.'))
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -216,9 +214,7 @@ class DecimalValidatorTest:
     def test_min_max_places_valid(min_places, max_places, input_data):
         """ Test DecimalValidator with a minimum and/or maximum number of decimal places with valid decimal strings. """
         validator = DecimalValidator(min_places=min_places, max_places=max_places)
-        decimal = validator.validate(input_data)
-        assert type(decimal) is Decimal
-        assert str(decimal) == input_data.rstrip('.')
+        assert_decimal(validator.validate(input_data), input_data.rstrip('.'))
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -271,11 +267,12 @@ class DecimalValidatorTest:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == expected_error_dict
 
-    # Test output_places parameter
+    # Test output_places and rounding parameters
 
     @staticmethod
     @pytest.mark.parametrize(
-        'output_places, input_data, expected_output', [
+        'output_places, input_data, expected_output',
+        [
             # output_places=0
             (0, '0', '0'),
             (0, '-42', '-42'),
@@ -301,12 +298,52 @@ class DecimalValidatorTest:
             (9, '1.234', '1.234000000')
         ]
     )
-    def test_output_places(output_places, input_data, expected_output):
-        """ Test DecimalValidator with output_places parameter (fixed number of decimal places in output value). """
+    def test_output_places_default_rounding(output_places, input_data, expected_output):
+        """ Test DecimalValidator with a fixed number of output places and the default rounding mode (ROUND_HALF_UP). """
         validator = DecimalValidator(output_places=output_places)
-        decimal = validator.validate(input_data)
-        assert type(decimal) is Decimal
-        assert str(decimal) == expected_output
+        assert_decimal(validator.validate(input_data), expected_output)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'rounding, input_data, expected_output',
+        [
+            # Round towards zero
+            (decimal.ROUND_DOWN, '1.00', '1.0'),
+            (decimal.ROUND_DOWN, '1.05', '1.0'),
+            (decimal.ROUND_DOWN, '1.09', '1.0'),
+            (decimal.ROUND_DOWN, '-1.09', '-1.0'),
+
+            # Round away from zero
+            (decimal.ROUND_UP, '1.00', '1.0'),
+            (decimal.ROUND_UP, '1.01', '1.1'),
+            (decimal.ROUND_UP, '1.09', '1.1'),
+            (decimal.ROUND_UP, '-1.01', '-1.1'),
+
+            # Round towards -Infinity
+            (decimal.ROUND_FLOOR, '1.00', '1.0'),
+            (decimal.ROUND_FLOOR, '1.09', '1.0'),
+            (decimal.ROUND_FLOOR, '-1.01', '-1.1'),
+
+            # Round to nearest with ties going to nearest even integer (used by decimal.DefaultContext)
+            (decimal.ROUND_HALF_EVEN, '1.04', '1.0'),
+            (decimal.ROUND_HALF_EVEN, '1.05', '1.0'),
+            (decimal.ROUND_HALF_EVEN, '1.14', '1.1'),
+            (decimal.ROUND_HALF_EVEN, '1.15', '1.2'),
+        ]
+    )
+    def test_with_different_rounding_modes(rounding, input_data, expected_output):
+        """ Test DecimalValidator with a fixed number of output places and different rounding modes. """
+        validator = DecimalValidator(output_places=1, rounding=rounding)
+        assert_decimal(validator.validate(input_data), expected_output)
+
+    @staticmethod
+    def test_with_rounding_mode_from_decimal_context():
+        """ Test DecimalValidator with rounding=None to use the rounding mode of the decimal context. """
+        validator = DecimalValidator(output_places=1, rounding=None)
+        with decimal.localcontext() as ctx:
+            ctx.rounding = decimal.ROUND_CEILING
+            assert_decimal(validator.validate('1.01'), '1.1')
+            assert_decimal(validator.validate('-1.09'), '-1.0')
 
     # Invalid validator parameters
 

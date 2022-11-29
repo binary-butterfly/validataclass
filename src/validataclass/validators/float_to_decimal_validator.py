@@ -4,6 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+import decimal
 import math
 from decimal import Decimal
 from typing import Any, Optional, Union, List
@@ -20,9 +21,9 @@ class FloatToDecimalValidator(DecimalValidator):
     """
     Validator that converts float values (IEEE 754) to `decimal.Decimal` objects. Sub class of `DecimalValidator`.
 
-    Optionally a number range can be specified using the parameters 'min_value' and 'max_value' (specified as `Decimal`,
-    decimal strings, floats or integers), as well as a fixed number of decimal places in the output value using
-    'output_places'. These parameters will be passed to the underlying `DecimalValidator`.
+    Optionally the parameters `min_value` and `max_value` (allowed number range), `output_places` (fixed number of
+    decimal places in the output value) and `rounding` (rounding mode as defined in the `decimal` module) can be
+    specified, which will be passed to the underlying `DecimalValidator`.
 
     By default, only floats are allowed as input type. Set `allow_integers=True` to also accept integers as input (e.g.
     `1` results in a `Decimal('1')`). Furthermore, with `allow_strings=True` the validator will also accept decimal
@@ -71,21 +72,23 @@ class FloatToDecimalValidator(DecimalValidator):
         min_value: Optional[Union[Decimal, str, float, int]] = None,
         max_value: Optional[Union[Decimal, str, float, int]] = None,
         output_places: Optional[int] = None,
+        rounding: Optional[str] = decimal.ROUND_HALF_UP,
         allow_integers: bool = False,
         allow_strings: bool = False,
     ):
         """
         Create a FloatToDecimalValidator with optional value range and optional number of decimal places in output value.
 
-        The parameters 'min_value', 'max_value' and 'output_places' are passed to the underlying DecimalValidator.
+        The parameters `min_value`, `max_value`, `output_places` and `rounding` are passed to the underlying DecimalValidator.
 
-        The parameters 'allow_integers' and 'allow_strings' can be used to extend the allowed input types. Strings, if
+        The parameters `allow_integers` and `allow_strings` can be used to extend the allowed input types. Strings, if
         accepted, will be simply passed to the DecimalValidator.
 
         Parameters:
             min_value: Decimal, str, float or int, specifies lowest value an input float may have (default: None, no minimum value)
             max_value: Decimal, str, float or int, specifies highest value an input float may have (default: None, no maximum value)
             output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
+            rounding: Rounding mode for numbers that need to be rounded (default: decimal.ROUND_HALF_UP)
             allow_integers: Boolean, if True, integers are accepted as input (default: False)
             allow_strings: Boolean, if True, decimal strings are accepted and will be parsed by a DecimalValidator (default: False)
         """
@@ -94,6 +97,7 @@ class FloatToDecimalValidator(DecimalValidator):
             min_value=str(min_value) if type(min_value) in [float, int] else min_value,
             max_value=str(max_value) if type(max_value) in [float, int] else max_value,
             output_places=output_places,
+            rounding=rounding,
         )
 
         # Save parameters

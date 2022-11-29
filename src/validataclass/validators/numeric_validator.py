@@ -4,6 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+import decimal
 from decimal import Decimal
 from typing import Optional, Union
 
@@ -22,8 +23,8 @@ class NumericValidator(FloatToDecimalValidator):
     This validator is based on the `FloatToDecimalValidator`. In fact, the validator is basically just a shortcut for
     `FloatToDecimalValidator(allow_integers=True, allow_strings=True)`.
 
-    The validator supports the optional parameters 'min_value', 'max_value' and 'output_places' which will be passed
-    to the `FloatToDecimalValidator`.
+    The validator supports the optional parameters `min_value`, `max_value`, `output_places` and `rounding` which will
+    be passed to the `FloatToDecimalValidator`.
 
     NOTE: Due to the way that floats work, the resulting decimals for float input values can have inaccuracies! It is
     recommended to use `DecimalValidator` with decimal strings as input data instead of using float input (e.g. strings
@@ -61,22 +62,25 @@ class NumericValidator(FloatToDecimalValidator):
         min_value: Optional[Union[Decimal, str, float, int]] = None,
         max_value: Optional[Union[Decimal, str, float, int]] = None,
         output_places: Optional[int] = None,
+        rounding: Optional[str] = decimal.ROUND_HALF_UP,
     ):
         """
         Create a `NumericValidator` with optional value range and optional number of decimal places in output value.
 
-        The parameters 'min_value', 'max_value' and 'output_places' are passed to the underlying `FloatToDecimalValidator`.
+        The parameters `min_value`, `max_value`, `output_places` and `rounding` are passed to the underlying DecimalValidator.
 
         Parameters:
             min_value: Decimal, str, float or int, specifies lowest value an input float may have (default: None, no minimum value)
             max_value: Decimal, str, float or int, specifies highest value an input float may have (default: None, no maximum value)
             output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
+            rounding: Rounding mode for numbers that need to be rounded (default: decimal.ROUND_HALF_UP)
         """
         # Initialize base FloatToDecimalValidator with allow_integers and allow_strings always being enabled
         super().__init__(
             min_value=min_value,
             max_value=max_value,
             output_places=output_places,
+            rounding=rounding,
             allow_integers=True,
             allow_strings=True,
         )
