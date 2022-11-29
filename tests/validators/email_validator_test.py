@@ -34,7 +34,7 @@ class EmailValidatorTest:
 
     @staticmethod
     def test_invalid_empty_string():
-        """ Check that EmailValidator raises exceptions for empty strings. """
+        """ Check that EmailValidator raises exceptions for empty strings by default. """
         validator = EmailValidator()
         with pytest.raises(StringInvalidLengthError) as exception_info:
             validator.validate('')
@@ -56,24 +56,44 @@ class EmailValidatorTest:
         ]
     )
     def test_allow_empty_valid(input_string):
-        """ Check that EmailValidator returns empty string if boolean parameter allow_empty=True. """
+        """ Test that EmailValidator returns empty string if boolean parameter allow_empty=True. """
         validator = EmailValidator(allow_empty=True)
         assert validator.validate(input_string) == input_string
 
+    # Test maximum string length
+
     @staticmethod
-    def test_invalid_string_too_long():
-        """ Check that EmailValidator raises exceptions for strings that are too long. """
+    @pytest.mark.parametrize('allow_empty', [True, False])
+    def test_invalid_string_too_long(allow_empty):
+        """ Test that EmailValidator raises exceptions for strings that are too long. """
         # Construct an email address that is technically valid but too long
         input_string = ('a' * 64) + '@' + ('very-very-very-very-very-very-very-long-domain.' * 4)
         input_string += 'b' * (257 - len(input_string))
 
-        validator = EmailValidator()
+        validator = EmailValidator(allow_empty=allow_empty)
         with pytest.raises(StringInvalidLengthError) as exception_info:
             validator.validate(input_string)
         assert exception_info.value.to_dict() == {
             'code': 'string_too_long',
-            'min_length': 1,
+            'min_length': 0 if allow_empty else 1,
             'max_length': 256,
+        }
+
+    @staticmethod
+    def test_max_length_parameter():
+        """ Test EmailValidator with a custom value for max_length. """
+        validator = EmailValidator(max_length=16)
+
+        # Valid input (16 characters)
+        assert validator.validate('abcd@example.com')
+
+        # Invalid input (17 characters)
+        with pytest.raises(StringInvalidLengthError) as exception_info:
+            validator.validate('abcde@example.com')
+        assert exception_info.value.to_dict() == {
+            'code': 'string_too_long',
+            'min_length': 1,
+            'max_length': 16,
         }
 
     # Tests for regex validation of email address format
