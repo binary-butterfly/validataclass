@@ -856,9 +856,13 @@ These values can potentially be of any type, although strings and integers are p
 The `AnyOfValidator` is defined with a simple list of allowed values and accepts only values that are part of this list.
 The values will be returned as defined in the list.
 
-By default, strings will be matched case-sensitively. To change this, set `case_insensitive=True`. In that case, the
-value will always be returned as it is defined in the list of allowed values (e.g. if the allowed values contain
-"Apple", then "APPLE" and "apple" will be valid input too, but in all cases "Apple" will be returned).
+By default, strings will be matched **case-insensitively**. To change this, set `case_sensitive=True`. The returned
+value will always be as defined in the list of allowed values (e.g. if the allowed values contain "Apple" and the
+validator is case-insensitive, then "APPLE" and "apple" will be valid input too, but in all cases "Apple" will be
+returned).
+
+**NOTE:** Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter `case_insensitive`
+still exists for compatibility, but is deprecated now and will be removed in a future version.
 
 The list of allowed values may contain mixed types (e.g. `['banana', 123, True, None]`). Also the allowed values can be
 specified with any iterable, not just as a list (e.g. as a set or tuple).
@@ -878,18 +882,19 @@ include the list of allowed values (as "allowed_values"), as long as this list i
 ```python
 from validataclass.validators import AnyOfValidator
 
-# Accept a specific list of strings
-validator = AnyOfValidator(['apple', 'banana', 'strawberry'])
-validator.validate('banana')      # will return 'banana'
-validator.validate('strawberry')  # will return 'strawberry'
-validator.validate('pineapple')   # will raise ValueNotAllowedError()
-validator.validate(1)             # will raise InvalidTypeError(expected_type='str')
-
-# Accept strings with case-insensitive matching
-validator = AnyOfValidator(['Apple', 'Banana', 'Strawberry'], case_insensitive=True)
+# Accept a specific list of strings (case-insensitive by default)
+validator = AnyOfValidator(['Apple', 'Banana', 'Strawberry'])
 validator.validate('apple')       # will return 'Apple'
 validator.validate('bAnAnA')      # will return 'Banana'
 validator.validate('STRAWBERRY')  # will return 'Strawberry'
+validator.validate('pineapple')   # will raise ValueNotAllowedError()
+validator.validate(1)             # will raise InvalidTypeError(expected_type='str')
+
+# Accept strings with case-sensitive matching
+validator = AnyOfValidator(['Apple', 'Banana', 'Strawberry'], case_sensitive=True)
+validator.validate('Banana')     # will return 'Banana'
+validator.validate('banana')     # will raise ValueNotAllowedError
+validator.validate('BANANA')     # will raise ValueNotAllowedError
 
 # Accept a list of values of mixed types
 validator = AnyOfValidator(['banana', 123, True, None])
@@ -916,7 +921,10 @@ The `EnumValidator` is an extended `AnyOfValidator` that uses `Enum` classes ins
 
 It accepts the **values** of the Enum and converts the input value to the according enum **member**.
 
-Strings will be matched case-sensitively by default. To change this, set `case_insensitive=True`.
+Strings will be matched **case-insensitively** by default. To change this, set `case_insensitive=True`.
+
+NOTE: Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter "case_insensitive"
+still exists for compatibility, but is deprecated now and will be removed in a future version.
 
 By default all values in the Enum are accepted as input. This can be optionally restricted by specifying the
 `allowed_values` parameter, which will override the list of allowed values. Values in this list that are not valid for
@@ -951,19 +959,19 @@ class ExampleIntegerEnum(Enum):
     BAR = 3
     BAZ = -20
 
-# Default: Accept all values of the ExampleStringEnum
+# Default: Accept all values of the ExampleStringEnum (case-insensitive)
 validator = EnumValidator(ExampleStringEnum)
 validator.validate('apple')       # will return ExampleStringEnum.APPLE
-validator.validate('banana')      # will return ExampleStringEnum.BANANA
-validator.validate('strawberry')  # will return ExampleStringEnum.STRAWBERRY
+validator.validate('BANANA')      # will return ExampleStringEnum.BANANA
+validator.validate('Strawberry')  # will return ExampleStringEnum.STRAWBERRY
 validator.validate('pineapple')   # will raise ValueNotAllowedError
 validator.validate(123)           # will raise InvalidTypeError(expected_type='str')
 
-# Accept all values of the ExampleStringEnum with case-insensitive string matching
-validator = EnumValidator(ExampleStringEnum, case_insensitive=True)
-validator.validate('Apple')       # will return ExampleStringEnum.APPLE
-validator.validate('bAnAnA')      # will return ExampleStringEnum.BANANA
-validator.validate('STRAWBERRY')  # will return ExampleStringEnum.STRAWBERRY
+# Accept all values of the ExampleStringEnum, but with case-sensitive matching
+validator = EnumValidator(ExampleStringEnum, case_sensitive=True)
+validator.validate('apple')       # will return ExampleStringEnum.APPLE
+validator.validate('Apple')       # will raise ValueNotAllowedError
+validator.validate('APPLE')       # will raise ValueNotAllowedError
 
 # Default: Accept all values of the ExampleIntegerEnum
 validator = EnumValidator(ExampleIntegerEnum)

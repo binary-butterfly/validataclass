@@ -205,52 +205,82 @@ class EnumValidatorTest:
             'expected_type': expected_type_str,
         }
 
-    # Test EnumValidator with case-insensitive option
+    # Test EnumValidator with case-sensitive option
 
     @staticmethod
     @pytest.mark.parametrize(
-        'case_insensitive, allowed_values, input_data, expected_result',
+        'case_sensitive, allowed_values, input_data, expected_result',
         [
             # Case-sensitive matching
-            (False, None, 'red apple', UnitTestStringEnum.APPLE_RED),
-            (False, [UnitTestStringEnum.STRAWBERRY], 'strawberry', UnitTestStringEnum.STRAWBERRY),
-
-            # Case-insensitive matching
             (True, None, 'red apple', UnitTestStringEnum.APPLE_RED),
-            (True, None, 'RED apple', UnitTestStringEnum.APPLE_RED),
             (True, [UnitTestStringEnum.STRAWBERRY], 'strawberry', UnitTestStringEnum.STRAWBERRY),
-            (True, [UnitTestStringEnum.STRAWBERRY], 'Strawberry', UnitTestStringEnum.STRAWBERRY),
-            (True, [UnitTestStringEnum.STRAWBERRY], 'STRAWBERRY', UnitTestStringEnum.STRAWBERRY),
+
+            # Case-insensitive matching (default)
+            (False, None, 'red apple', UnitTestStringEnum.APPLE_RED),
+            (False, None, 'RED apple', UnitTestStringEnum.APPLE_RED),
+            (False, [UnitTestStringEnum.STRAWBERRY], 'strawberry', UnitTestStringEnum.STRAWBERRY),
+            (False, [UnitTestStringEnum.STRAWBERRY], 'Strawberry', UnitTestStringEnum.STRAWBERRY),
+            (False, [UnitTestStringEnum.STRAWBERRY], 'STRAWBERRY', UnitTestStringEnum.STRAWBERRY),
         ]
     )
-    def test_case_insensitive_valid(case_insensitive, allowed_values, input_data, expected_result):
+    def test_case_sensitive_valid(case_sensitive, allowed_values, input_data, expected_result):
         """ Test EnumValidator with case-sensitive and case-insensitive string matching, valid input. """
-        validator = EnumValidator(UnitTestStringEnum, allowed_values=allowed_values, case_insensitive=case_insensitive)
+        validator = EnumValidator(UnitTestStringEnum, allowed_values=allowed_values, case_sensitive=case_sensitive)
         assert validator.validate(input_data) is expected_result
 
     @staticmethod
     @pytest.mark.parametrize(
-        'case_insensitive, allowed_values, input_data',
+        'case_sensitive, allowed_values, input_data',
         [
             # Case-sensitive matching
-            (False, None, 'RED APPLE'),
-            (False, [UnitTestStringEnum.STRAWBERRY], 'red apple'),
-            (False, [UnitTestStringEnum.STRAWBERRY], 'STRAWberry'),
-
-            # Case-insensitive matching
-            (True, None, 'banana'),
+            (True, None, 'RED APPLE'),
             (True, [UnitTestStringEnum.STRAWBERRY], 'red apple'),
+            (True, [UnitTestStringEnum.STRAWBERRY], 'STRAWberry'),
+
+            # Case-insensitive matching (default)
+            (False, None, 'banana'),
+            (False, [UnitTestStringEnum.STRAWBERRY], 'red apple'),
         ]
     )
-    def test_case_insensitive_invalid(case_insensitive, allowed_values, input_data):
+    def test_case_sensitive_invalid(case_sensitive, allowed_values, input_data):
         """ Test EnumValidator with case-sensitive and case-insensitive string matching, invalid input. """
-        validator = EnumValidator(UnitTestStringEnum, allowed_values=allowed_values, case_insensitive=case_insensitive)
+        validator = EnumValidator(UnitTestStringEnum, allowed_values=allowed_values, case_sensitive=case_sensitive)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
             'allowed_values': ['red apple', 'green apple', 'strawberry'] if allowed_values is None else ['strawberry'],
         }
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'case_insensitive, valid_input, invalid_input',
+        [
+            # Case-insensitive matching
+            (True, ['strawberry', 'Strawberry', 'STRAWBERRY'], ['banana']),
+
+            # Case-sensitive matching
+            (False, ['strawberry'], ['Strawberry', 'STRAWBERRY', 'banana']),
+        ]
+    )
+    def test_deprecated_case_insensitive(case_insensitive, valid_input, invalid_input):
+        """ Test EnumValidator with deprecated case_insensitive parameter, which should issue a deprecation warning. """
+        with pytest.deprecated_call():
+            # This should issue a DeprecationWarning for the case_insensitive parameter, but continue without problems
+            validator = EnumValidator(UnitTestStringEnum, case_insensitive=case_insensitive)
+
+        # Valid input
+        for input_data in valid_input:
+            assert validator.validate(input_data) is UnitTestStringEnum.STRAWBERRY
+
+        # Invalid input
+        for input_data in invalid_input:
+            with pytest.raises(ValueNotAllowedError) as exception_info:
+                validator.validate(input_data)
+            assert exception_info.value.to_dict() == {
+                'code': 'value_not_allowed',
+                'allowed_values': ['red apple', 'green apple', 'strawberry'],
+            }
 
     # Invalid validator parameters
 
@@ -267,6 +297,23 @@ class EnumValidatorTest:
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             EnumValidator(UnitTestMixedEnum, allowed_types=[])
         assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'case_sensitive, case_insensitive',
+        [
+            (True, True),
+            (True, False),
+            (False, True),
+            (False, False),
+        ]
+    )
+    def test_case_insensitive_parameter_mutually_exclusive(case_sensitive, case_insensitive):
+        """ Test that the parameters "case_sensitive" and "case_insensitive" (deprecated) cannot be set at the same time. """
+        with pytest.raises(InvalidValidatorOptionException) as exception_info:
+            EnumValidator(UnitTestStringEnum, case_sensitive=case_sensitive, case_insensitive=case_insensitive)
+        assert str(exception_info.value) == \
+               'Parameters "case_sensitive" and "case_insensitive" (now deprecated) are mutually exclusive.'
 
     # Tests that cause ValueError in EnumValidator.validate()
 
