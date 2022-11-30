@@ -26,21 +26,21 @@ class AnyOfValidatorTest:
     @staticmethod
     def test_string_values_valid():
         """ Test AnyOfValidator with string value list with valid input. """
-        validator = AnyOfValidator(['red apple', 'green apple', 'strawberry'])
+        validator = AnyOfValidator(['red apple', 'green apple', 'STRAWBERRY'])
         assert validator.validate('red apple') == 'red apple'
         assert validator.validate('green apple') == 'green apple'
-        assert validator.validate('strawberry') == 'strawberry'
+        assert validator.validate('strawberry') == 'STRAWBERRY'
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'bananana', 'red', 'STRAWBERRY'])
+    @pytest.mark.parametrize('input_data', ['', 'bananana', 'red'])
     def test_string_values_invalid_value(input_data):
         """ Test AnyOfValidator with string value list with invalid input. """
-        validator = AnyOfValidator(['red apple', 'green apple', 'strawberry'])
+        validator = AnyOfValidator(['red apple', 'green apple', 'STRAWBERRY'])
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
-            'allowed_values': ['red apple', 'green apple', 'strawberry'],
+            'allowed_values': ['red apple', 'green apple', 'STRAWBERRY'],
         }
 
     @staticmethod
@@ -98,11 +98,12 @@ class AnyOfValidatorTest:
         """ Test AnyOfValidator with allowed values of mixed types with valid input. """
         validator = AnyOfValidator(allowed_values=('strawberry', 42, None))
         assert validator.validate('strawberry') == 'strawberry'
+        assert validator.validate('STRAWBERRY') == 'strawberry'
         assert validator.validate(42) == 42
         assert validator.validate(None) is None
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [0, 13, '', 'banana', 'STRAWBERRY'])
+    @pytest.mark.parametrize('input_data', [0, 13, '', 'banana'])
     def test_mixed_values_invalid_value(input_data):
         """ Test AnyOfValidator with allowed values of mixed types with invalid input. """
         validator = AnyOfValidator(allowed_values=('strawberry', 42, None))

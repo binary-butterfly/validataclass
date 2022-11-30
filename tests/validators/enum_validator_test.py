@@ -51,10 +51,10 @@ class EnumValidatorTest:
         validator = EnumValidator(UnitTestStringEnum)
         assert validator.validate('red apple') is UnitTestStringEnum.APPLE_RED
         assert validator.validate('green apple') is UnitTestStringEnum.APPLE_GREEN
-        assert validator.validate('strawberry') is UnitTestStringEnum.STRAWBERRY
+        assert validator.validate('STRAWBERRY') is UnitTestStringEnum.STRAWBERRY
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'bananana', 'APPLE_RED', 'STRAWBERRY'])
+    @pytest.mark.parametrize('input_data', ['', 'bananana', 'APPLE_RED'])
     def test_string_enum_invalid_value(input_data):
         """ Test EnumValidator with string based Enum with invalid enum values. """
         validator = EnumValidator(UnitTestStringEnum)
@@ -118,10 +118,11 @@ class EnumValidatorTest:
         """ Test EnumValidator with mixed value Enum with valid enum values. """
         validator = EnumValidator(UnitTestMixedEnum)
         assert validator.validate('foo') is UnitTestMixedEnum.FOO
+        assert validator.validate('FOO') is UnitTestMixedEnum.FOO
         assert validator.validate(42) is UnitTestMixedEnum.BAR
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [0, 1, 2, '', 'red apple', 'FOO'])
+    @pytest.mark.parametrize('input_data', [0, 1, 2, '', 'red apple'])
     def test_mixed_enum_invalid_value(input_data):
         """ Test EnumValidator with mixed value Enum with invalid enum values. """
         validator = EnumValidator(UnitTestMixedEnum)

@@ -88,7 +88,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
             enum_cls: Enum class to use for validation (required)
             allowed_values: List (or iterable) of values from the Enum that are accepted (default: None, all Enum values allowed)
             allowed_types: List (or iterable) of types allowed for input data (default: None, autodetermine types from enum values)
-            case_sensitive: If set, strings will be matched case-sensitively (default: True)
+            case_sensitive: If set, strings will be matched case-sensitively (default: False)
             case_insensitive: DEPRECATED. Validator is case-insensitive by default, use case_sensitive to change this.
         """
         # Ensure parameter is an Enum class

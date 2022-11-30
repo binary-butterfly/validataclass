@@ -80,7 +80,7 @@ class AnyOfValidator(Validator):
         Parameters:
             allowed_values: List (or any other iterable) of values that are allowed as input (required)
             allowed_types: Types that are allowed for input data (default: None, autodetermine types from allowed_values)
-            case_sensitive: If set, strings will be matched case-sensitively (default: True)
+            case_sensitive: If set, strings will be matched case-sensitively (default: False)
             case_insensitive: DEPRECATED. Validator is case-insensitive by default, use case_sensitive to change this.
         """
         # Save list of allowed values
@@ -99,7 +99,7 @@ class AnyOfValidator(Validator):
             raise InvalidValidatorOptionException('Parameter "allowed_types" is an empty list (or types could not be autodetermined).')
 
         # Changed in 0.8.0: The old "case_insensitive" parameter is now deprecated and replaced by a new parameter
-        # "case_sensitive", which is True by default.
+        # "case_sensitive", which is False by default.
         # TODO: For version 1.0, remove the old parameter completely and set a real default value for the new parameter.
         if case_sensitive is not None and case_insensitive is not None:
             raise InvalidValidatorOptionException(
@@ -114,8 +114,8 @@ class AnyOfValidator(Validator):
             )
             case_sensitive = not case_insensitive
 
-        # Set case_sensitive parameter, defaulting to True.
-        self.case_sensitive = case_sensitive if case_sensitive is not None else True
+        # Set case_sensitive parameter, defaulting to False.
+        self.case_sensitive = case_sensitive if case_sensitive is not None else False
 
     def validate(self, input_data: Any, **kwargs) -> Any:
         """
