@@ -35,7 +35,7 @@ It also introduces two **breaking changes**, which in practice shouldn't really 
 ### Changed
 
 - **Breaking change:** `AnyOfValidator` and `EnumValidator` are now **case-sensitive** by default. [#98]
-  - The parameter `case_insensitive` is **replaced** with a new parameter `case_sensitive` which defaults to True.
+  - The parameter `case_insensitive` is **replaced** with a new parameter `case_sensitive` which defaults to False.
   - The old parameter is still supported for compatibility, but is now deprecated and will be removed in a future version.
   - If you have set `case_insensitive=True` before, you can simply remove this parameter now as this is the default now.
 - **Breaking change:** `DecimalValidator` (and all subclasses) now uses `decimal.ROUND_HALF_UP` as default rounding mode. [#99]
