@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.8.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.8.1) - 2022-11-30
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.8.0...0.8.1)
+
+### Fixed
+
+- `AnyOfValidator` and `EnumValidator`: Fixed wrong default value. Now the validators are really case-insensitive by default.
+
+
 ## [0.8.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.8.0) - 2022-11-30
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.7.2...0.8.0)
