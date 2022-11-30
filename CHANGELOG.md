@@ -6,6 +6,59 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.8.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.8.0) - 2022-11-30
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.7.2...0.8.0)
+
+This release adds two new validators and a handful of new parameters to existing validators.
+
+It also introduces two **breaking changes**, which in practice shouldn't really affect anyone negatively, and one
+**deprecation** of an existing validator parameter. See the changes below.
+
+### Added
+
+- `AllowEmptyString`: New wrapper validator that accepts empty strings (by [@TomasHalgas]). [#91]
+- `DiscardValidator`: New validator that discards any input and always returns a predefined value. [#94]
+- `EmailValidator` and `RegexValidator`: Add parameter `allow_empty` to allow empty strings (by [@TomasHalgas]). [#89]
+- `EmailValidator`: Add parameter `max_length`. [#97]
+- `DecimalValidator`: Add parameter `rounding` to specify rounding mode (with a new default, see "Changed"). [#99]
+
+### Changed
+
+- **Breaking change:** `AnyOfValidator` and `EnumValidator` are now **case-sensitive** by default. [#98]
+  - The parameter `case_insensitive` is **replaced** with a new parameter `case_sensitive` which defaults to True.
+  - The old parameter is still supported for compatibility, but is now deprecated and will be removed in a future version.
+  - If you have set `case_insensitive=True` before, you can simply remove this parameter now as this is the default now.
+- **Breaking change:** `DecimalValidator` (and all subclasses) now uses `decimal.ROUND_HALF_UP` as default rounding mode. [#99]
+  - Until now, the rounding mode of the current decimal context was used, which defaults to `decimal.ROUND_HALF_EVEN`.
+  - Use the `rounding` parameter to change this. To restore the old behavior and use the decimal context, set `rounding=None`.
+
+### Deprecated
+
+- `AnyOfValidator` and `EnumValidator`: The parameter `case_insensitive` is now deprecated and will be removed in a future
+  version. (See "Changed" above.) [#98]
+
+### Testing
+
+- Fix version incompatibility in test suite. [#95]
+- `AnyOfValidator`: Add unit tests with an empty list for allowed values. [#96]
+
+### New contributors
+
+- [@TomasHalgas] made their first contributions in [#89] and [#91].
+
+[#89]: https://github.com/binary-butterfly/validataclass/pull/89
+[#91]: https://github.com/binary-butterfly/validataclass/pull/91
+[#94]: https://github.com/binary-butterfly/validataclass/pull/94
+[#95]: https://github.com/binary-butterfly/validataclass/pull/95
+[#96]: https://github.com/binary-butterfly/validataclass/pull/96
+[#97]: https://github.com/binary-butterfly/validataclass/pull/97
+[#98]: https://github.com/binary-butterfly/validataclass/pull/98
+[#99]: https://github.com/binary-butterfly/validataclass/pull/99
+
+[@TomasHalgas]: https://github.com/TomasHalgas
+
+
 ## [0.7.2](https://github.com/binary-butterfly/validataclass/releases/tag/0.7.2) - 2022-09-26
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.7.1...0.7.2)
