@@ -87,6 +87,12 @@ class DefaultTest:
         assert first != second
         assert second != first
 
+    @staticmethod
+    @pytest.mark.parametrize('value', [None, 0, 42, 'banana'])
+    def test_default_hashable(value):
+        """ Test hashability (__hash__) of Default objects. """
+        assert hash(Default(value)) == hash(value)
+
 
 class DefaultFactoryTest:
     """ Tests for the DefaultFactory class. """
@@ -167,6 +173,11 @@ class DefaultFactoryTest:
         assert first != second
         assert second != first
 
+    @staticmethod
+    def test_default_factory_hashable():
+        """ Test hashability (__hash__) of DefaultFactory objects. """
+        assert hash(DefaultFactory(list)) == hash(list)
+
 
 class DefaultUnsetTest:
     """ Tests for the DefaultUnset sentinel object. """
@@ -237,6 +248,11 @@ class NoDefaultTest:
         """ Test non-equality between NoDefault and other objects. """
         assert NoDefault != other
         assert other != NoDefault
+
+    @staticmethod
+    def test_no_default_hashable():
+        """ Test that NoDefault is hashable (i.e. implements __hash__). """
+        assert hash(NoDefault) == object.__hash__(NoDefault)
 
     @staticmethod
     def test_no_default_call():

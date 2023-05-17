@@ -39,8 +39,8 @@ class UnsetValueType:
     def __bool__(self):
         return False
 
-    def __eq__(self, other):
-        return other is self
+    # Don't define __eq__ because the default implementation is fine (identity check), and because we would then have to
+    # implement __hash__ as well, otherwise UnsetValue would be considered mutable by @dataclass.
 
 
 # Create sentinel object and redefine __new__ so that the object cannot be cloned
