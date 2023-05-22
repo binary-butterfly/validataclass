@@ -27,22 +27,22 @@ build:
 # Run complete tox suite
 .PHONY: tox
 tox:
-	tox
+	tox run
 
 # Run tox in venv (needs to be installed with `make venv` first)
 .PHONY: venv-tox
 venv-tox:
-	. venv/bin/activate && tox
+	. venv/bin/activate && tox run
 
 # Only run pytest
 .PHONY: test
 test:
-	tox -e 'clean,py{311,310,39,38,37},report'
+	tox run --skip-env flake8
 
 # Only run flake8 linter
 .PHONY: flake8
 flake8:
-	tox -e flake8
+	tox run -e flake8
 
 # Open HTML coverage report in browser
 .PHONY: open-coverage
@@ -58,7 +58,7 @@ docker-tox:
 		--workdir /code \
 		--env HOME=/tmp/home \
 		$(DOCKER_MULTI_PYTHON_IMAGE) \
-		tox --workdir .tox_docker $(TOX_ARGS)
+		tox run --workdir .tox_docker $(TOX_ARGS)
 
 # Run partial tox test suites in Docker
 .PHONY: docker-tox-py311 docker-tox-py310 docker-tox-py39 docker-tox-py38 docker-tox-py37
