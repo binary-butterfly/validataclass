@@ -793,12 +793,11 @@ the specified item validator).
 
 The `DataclassValidator` supports these context arguments and uses them in two ways: First, it passes them as they are
 to any field validator (which might pass them to other validators as well). Second, it also passes them to the
-`__post_validate__()` method of the dataclass.
+`__post_validate__()` method of the dataclass as long as the method accepts them.
 
-However, for this to work, the method MUST accept arbitrary keyword arguments, i.e. it needs to be declared with a
-`**kwargs` parameter (the parameter name doesn't matter). You can of course declare specific keyword arguments that you
-want to use for post-validation (make sure to define them as optional!), but you still need to accept any other keyword
-argument as well, otherwise the context arguments will not be passed to the method at all.
+You can define the `__post_validate__()` method with specific keyword-only arguments and/or with a `**kwargs` parameter.
+The `DataclassValidator` will make sure to only pass the arguments that the method accepts. Please make sure to use
+**keyword-only** arguments instead of positional arguments. The latter will still work, but emit a warning.
 
 Example:
 
@@ -814,8 +813,8 @@ class ContextSensitiveExampleClass:
     # This field is optional, unless the context says otherwise.
     some_value: Optional[int] = IntegerValidator(), Default(None)
 
-    # Note: Prefix the kwargs parameter with an underscore to avoid "unused parameter" notices.
-    def __post_validate__(self, *, require_some_value: bool = False, **_kwargs):
+    # Note: You can also specify **kwargs here to get all context arguments.
+    def __post_validate__(self, *, require_some_value: bool = False):
         # If require_some_value was set at validation time, ensure that some_value is set!
         if require_some_value and self.some_value is None:
             raise DataclassPostValidationError(field_errors={

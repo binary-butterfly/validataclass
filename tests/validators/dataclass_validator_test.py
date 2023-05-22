@@ -94,11 +94,49 @@ class UnitTestContextSensitiveDataclass:
     name: str = UnitTestContextValidator()
     value: Optional[int] = (IntegerValidator(), Default(None))
 
-    def __post_validate__(self, *, value_required: bool = False, **_kwargs):
+    def __post_validate__(self, *, value_required: bool = False):
         if value_required and self.value is None:
             raise DataclassPostValidationError(field_errors={
                 'value': RequiredValueError(reason='Value is required in this context.'),
             })
+
+
+@validataclass
+class UnitTestContextSensitiveDataclassWithPosArgs(UnitTestContextSensitiveDataclass):
+    """
+    Dataclass with a __post_validate__() method that takes *positional* arguments. This should work, but emit a warning.
+    """
+
+    # Same as UnitTestContextSensitiveDataclass, but with positional arguments
+    def __post_validate__(self, value_required: bool = False):
+        super().__post_validate__(value_required=value_required)
+
+
+# Regex-escaped warning text emitted when using __post_validate__ of the dataclass above
+POST_VALIDATE_POS_ARGS_WARNING = \
+    r'UnitTestContextSensitiveDataclassWithPosArgs\.__post_validate__\(\) is defined with positional arguments'
+
+
+@validataclass
+class UnitTestContextSensitiveDataclassWithVarKwargs:
+    """
+    Dataclass with a __post_validate__() method that takes fixed *and* variable keyword arguments (`**kwargs`).
+
+    This class only has one validated field "name". Additionally it takes two context parameters "ctx_a" and "ctx_b", as
+    well as arbitrary keyword arguments, which will be written into the attributes "ctx_a", "ctx_b" and "extra_kwargs"
+    respectively.
+    """
+    name: str = UnitTestContextValidator()
+
+    # These are no validated fields, just attributes that are populated by __post_validate__
+    ctx_a = None
+    ctx_b = None
+    extra_kwargs = None
+
+    def __post_validate__(self, *, ctx_a: str = '', ctx_b: str = '', **kwargs):
+        self.ctx_a = ctx_a
+        self.ctx_b = ctx_b
+        self.extra_kwargs = kwargs
 
 
 class DataclassValidatorTest:
@@ -450,6 +488,71 @@ class DataclassValidatorTest:
                 },
             },
         }
+
+    @staticmethod
+    def test_dataclass_with_context_sensitive_post_validate_with_pos_args():
+        """ Validate dataclass with a __post_validate__() method that accepts positional arguments. """
+        validator = DataclassValidator(UnitTestContextSensitiveDataclassWithPosArgs)
+
+        with pytest.warns(UserWarning, match=POST_VALIDATE_POS_ARGS_WARNING):
+            validated_data = validator.validate({'name': 'banana', 'value': 13}, value_required=True, foo=42)
+
+        assert validated_data.name == "banana / {'value_required': True, 'foo': 42}"
+        assert validated_data.value == 13
+
+    @staticmethod
+    def test_dataclass_with_context_sensitive_post_validate_with_pos_args_invalid():
+        """ Validate dataclass with a __post_validate__() method that accepts positional arguments, with invalid input. """
+        validator = DataclassValidator(UnitTestContextSensitiveDataclassWithPosArgs)
+
+        with pytest.raises(DataclassPostValidationError):
+            with pytest.warns(UserWarning, match=POST_VALIDATE_POS_ARGS_WARNING):
+                validator.validate({'name': 'banana'}, value_required=True)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'validate_kwargs, expected_ctx_a, expected_ctx_b, expected_extra_kwargs',
+        [
+            # No context arguments
+            ({}, '', '', {}),
+
+            # Only context parameters defined as keyword arguments in __post_validate__ (ctx_a, ctx_b)
+            ({'ctx_a': 'foo'}, 'foo', '', {}),
+            ({'ctx_b': 'bar'}, '', 'bar', {}),
+            ({'ctx_b': 'bar', 'ctx_a': 'foo'}, 'foo', 'bar', {}),
+
+            # Arbitrary context arguments not defined as keyword arguments in __post_validate__
+            (
+                {'some_value': 42},
+                '',
+                '',
+                {'some_value': 42},
+            ),
+            (
+                {'ctx_a': 'foo', 'some_value': 42},
+                'foo',
+                '',
+                {'some_value': 42},
+            ),
+            (
+                {'any_value': 3, 'ctx_a': 'foo', 'some_value': 42, 'ctx_b': 'bar'},
+                'foo',
+                'bar',
+                {'any_value': 3, 'some_value': 42},
+            ),
+        ]
+    )
+    def test_dataclass_with_context_sensitive_post_validate_with_var_kwargs(
+        validate_kwargs, expected_ctx_a, expected_ctx_b, expected_extra_kwargs,
+    ):
+        """ Validate dataclass with a context-sensitive __post_validate__() method that accepts arbitrary keyword arguments. """
+        validator = DataclassValidator(UnitTestContextSensitiveDataclassWithVarKwargs)
+        validated_data = validator.validate({'name': 'unit-test'}, **validate_kwargs)
+
+        assert validated_data.name == f"unit-test / {validate_kwargs}"
+        assert validated_data.ctx_a == expected_ctx_a
+        assert validated_data.ctx_b == expected_ctx_b
+        assert validated_data.extra_kwargs == expected_extra_kwargs
 
     # Test invalid validator options
 
