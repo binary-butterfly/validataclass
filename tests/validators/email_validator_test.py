@@ -96,6 +96,25 @@ class EmailValidatorTest:
             'max_length': 16,
         }
 
+    # Test to_lowercase option
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'to_lowercase, input_string, expected_output', [
+            # Default behaviour: Keep uppercase letters intact
+            (False, 'foo@example.com', 'foo@example.com'),
+            (False, 'Foo.Bar@Example.COM', 'Foo.Bar@Example.COM'),
+
+            # Set to_lowercase=True
+            (True, 'foo@example.com', 'foo@example.com'),
+            (True, 'Foo.Bar@Example.COM', 'foo.bar@example.com'),
+        ]
+    )
+    def test_email_to_lowercase(to_lowercase, input_string, expected_output):
+        """ Test EmailValidator with the to_lowercase option. """
+        validator = EmailValidator(to_lowercase=to_lowercase)
+        assert validator.validate(input_string) == expected_output
+
     # Tests for regex validation of email address format
 
     @staticmethod
@@ -108,7 +127,9 @@ class EmailValidatorTest:
             'foo.bar@example.com',
             'a.b.c.d.e@example.com',
             # Very long local part (up to 64 characters are allowed)
-            'fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo@example.com'
+            'fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo@example.com',
+            # Addresses with uppercase letters (should be left intact by default)
+            'Foo.Bar@Example.COM',
         ]
     )
     def test_email_regex_valid(input_string):
@@ -129,9 +150,9 @@ class EmailValidatorTest:
             'banana.@example.com',
             'bana..na@example.com',
             # Multiple @ characters
-            'foo@bar@example.com'
+            'foo@bar@example.com',
             # Query part
-            'foobar@example.com?subject=foo'
+            'foobar@example.com?subject=foo',
         ]
     )
     def test_email_regex_invalid(input_string):

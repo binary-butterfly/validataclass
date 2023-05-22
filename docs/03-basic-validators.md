@@ -235,6 +235,8 @@ mail software does not support those anyway and/or might break with those adress
 
 By default, the validator does not accept empty strings as input. To allow them, set the parameter `allow_empty=True`.
 
+To automatically convert the output email address to lowercase, you can set the parameter `to_lowercase=True`.
+
 Also, the default maximum string length is set to 256 characters (which would be a really long, but still valid email
 address), which can be changed using the `max_length` parameter.
 
@@ -253,6 +255,10 @@ validator.validate("")                 # will raise StringTooShortError(min_leng
 validator = EmailValidator(allow_empty=True)
 validator.validate("foo@example.com")  # will return "foo@example.com"
 validator.validate("")                 # will return "" (empty string)
+
+# Converts email addresses to lowercase
+validator = EmailValidator(to_lowercase=True)
+validator.validate("Foo.Bar@Example.COM")  # will return "foo.bar@example.com")
 ```
 
 

@@ -30,6 +30,8 @@ class EmailValidator(StringValidator):
 
     Set the parameter `allow_empty=True` to allow empty strings as input.
 
+    To automatically convert the output email address to lowercase, you can set the parameter `to_lowercase=True`.
+
     By default, the maximum string length is set to 256 characters. This can be changed with the `max_length` parameter.
 
     Example:
@@ -39,6 +41,9 @@ class EmailValidator(StringValidator):
 
     # Accepts also empty strings
     EmailValidator(allow_empty=True)
+
+    # Converts email addresses to lowercase (e.g. "Foo.Bar@Example.COM" -> "foo.bar@example.com")
+    EmailValidator(to_lowercase=True)
     ```
 
     Valid input: email address as `str` (also empty strings if `allow_empty=True`)
@@ -55,26 +60,33 @@ class EmailValidator(StringValidator):
     # Whether to accept empty strings
     allow_empty: bool = False
 
+    # Whether to automatically convert strings to lowercase
+    to_lowercase: bool = False
+
     def __init__(
         self,
         *,
         allow_empty: bool = False,
+        to_lowercase: bool = False,
         max_length: int = 256,
     ):
         """
         Create a `EmailValidator`.
 
         Parameters:
-            allow_empty: Boolean, if True, empty strings are accepted as valid email addresses (default: False)
+            allow_empty: Boolean, if True, empty strings are accepted as valid input (default: False)
+            to_lowercase: Boolean, if True, the output will be automatically converted to lowercase (default: False)
             max_length: Integer, maximum length of input string (default: 256)
         """
-        self.allow_empty = allow_empty
-
-        # Allow string with length 0 if `allow_empty=True`
-        min_length = 0 if allow_empty else 1
-
         # Initialize StringValidator with some length requirements
-        super().__init__(min_length=min_length, max_length=max_length)
+        super().__init__(
+            min_length=0 if allow_empty else 1,
+            max_length=max_length,
+        )
+
+        # Save parameters
+        self.allow_empty = allow_empty
+        self.to_lowercase = to_lowercase
 
     def validate(self, input_data: Any, **kwargs) -> str:
         """
@@ -101,6 +113,10 @@ class EmailValidator(StringValidator):
         email_domain = regex_match.group('domain')
         if not internet_helpers.validate_domain_name(email_domain, require_tld=True):
             raise InvalidEmailError(reason='Domain not valid.')
+
+        # Convert to lowercase (if enabled)
+        if self.to_lowercase:
+            input_email = input_email.lower()
 
         # Email address is valid :)
         return input_email
