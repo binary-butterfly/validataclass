@@ -40,6 +40,9 @@ class Default:
             return self.value == other.value
         return NotImplemented
 
+    def __hash__(self):
+        return hash(self.value)
+
     def get_value(self) -> Any:
         return deepcopy(self.value)
 
@@ -74,6 +77,9 @@ class DefaultFactory(Default):
         if isinstance(self, type(other)):
             return isinstance(other, DefaultFactory) and self.factory == other.factory
         return NotImplemented
+
+    def __hash__(self):
+        return hash(self.factory)
 
     def get_value(self) -> Any:
         return self.factory()
@@ -126,6 +132,10 @@ class _NoDefault(Default):
     def __eq__(self, other):
         # Nothing is equal to NoDefault except itself
         return type(self) is type(other)
+
+    def __hash__(self):
+        # Use default implementation
+        return object.__hash__(self)
 
     def get_value(self) -> NoReturn:
         raise ValueError('No default value specified!')

@@ -11,6 +11,7 @@ __pycache__/
 /.tox_docker
 /.eggs
 /.coverage
+/.coverage.*
 /.pytest_cache
 /build
 /dist

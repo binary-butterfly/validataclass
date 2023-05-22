@@ -1,6 +1,5 @@
 # Settings
-# NOTE: The multi-python image is a fork of fkrull/multi-python, which as of now has not been updated for Python 3.10 yet
-DOCKER_MULTI_PYTHON_IMAGE = gnufede/multi-python:focal
+DOCKER_MULTI_PYTHON_IMAGE = acidrain/multi-python:latest
 DOCKER_USER = "$(shell id -u):$(shell id -g)"
 
 # Default target
@@ -38,7 +37,7 @@ venv-tox:
 # Only run pytest
 .PHONY: test
 test:
-	tox -e 'clean,py{310,39,38,37},report'
+	tox -e 'clean,py{311,310,39,38,37},report'
 
 # Only run flake8 linter
 .PHONY: flake8
@@ -62,7 +61,9 @@ docker-tox:
 		tox --workdir .tox_docker $(TOX_ARGS)
 
 # Run partial tox test suites in Docker
-.PHONY: docker-tox-py310 docker-tox-py39 docker-tox-py38 docker-tox-py37
+.PHONY: docker-tox-py311 docker-tox-py310 docker-tox-py39 docker-tox-py38 docker-tox-py37
+docker-tox-py311: TOX_ARGS="-e clean,py311,py311-report"
+docker-tox-py311: docker-tox
 docker-tox-py310: TOX_ARGS="-e clean,py310,py310-report"
 docker-tox-py310: docker-tox
 docker-tox-py39: TOX_ARGS="-e clean,py39,py39-report"
@@ -79,6 +80,7 @@ docker-tox-all:
 	make docker-tox-py38
 	make docker-tox-py39
 	make docker-tox-py310
+	make docker-tox-py311
 
 # Pull the latest image of the multi-python Docker image
 .PHONY: docker-pull
@@ -91,7 +93,7 @@ docker-pull:
 
 .PHONY: clean
 clean:
-	rm -rf .coverage .pytest_cache reports src/validataclass/_version.py
+	rm -rf .coverage .pytest_cache reports src/validataclass/_version.py .tox .tox_docker .eggs src/*.egg-info venv
 
 .PHONY: clean-dist
 clean-dist:
@@ -99,4 +101,3 @@ clean-dist:
 
 .PHONY: clean-all
 clean-all: clean clean-dist
-	rm -rf .tox .tox_docker .eggs src/*.egg-info venv
