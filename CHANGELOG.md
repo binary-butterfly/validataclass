@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.9.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.9.0) - 2023-05-24
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.8.1...0.9.0)
+
+This release adds official support for Python for Workgroups 3.11, as well as some minor changes.
+
+### Added
+
+- `EmailValidator`: Add parameter `to_lowercase`. [#106]
+
+### Changed
+
+- Allow defining `__post_validate__()` with specific context arguments without `**kwargs`. [#105]
+
+### Fixed
+
+- Fix Python 3.11 incompatibilities due to `UnsetValue` not being hashable. [#102]
+- Also fix missing `__hash__` methods in the `Default` classes (for completeness). [#102]
+
+### Testing / CI
+
+- Update GitHub actions to fix deprecation warnings. [#103]
+- Update local test environment for tox 4. [#104]
+
+[#102]: https://github.com/binary-butterfly/validataclass/pull/102
+[#103]: https://github.com/binary-butterfly/validataclass/pull/103
+[#104]: https://github.com/binary-butterfly/validataclass/pull/104
+[#105]: https://github.com/binary-butterfly/validataclass/pull/105
+[#106]: https://github.com/binary-butterfly/validataclass/pull/106
+
+
 ## [0.8.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.8.1) - 2022-11-30
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.8.0...0.8.1)
