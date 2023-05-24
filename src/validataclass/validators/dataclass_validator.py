@@ -6,6 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import inspect
+import warnings
 from typing import Any, Dict, Generic, Optional, Type, TypeVar
 
 from validataclass.dataclasses import Default, NoDefault
@@ -67,7 +68,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
     is part of regular dataclasses and thus also works without validataclass) or using a `__post_validate__()` method
     (which is called by the DataclassValidator after creating the object). The latter also supports *context-sensitive*
     validation, which means you can pass extra arguments to the `validate()` call that will be passed both to all field
-    validators and to the `__post_validate__()` method (as long as it is defined with a `**kwargs` argument).
+    validators and to the `__post_validate__()` method (as long as it is defined to accept the keyword arguments).
 
     In post-validation you can either raise regular `ValidationError` exceptions, which will be automatically wrapped
     inside a `DataclassPostValidationError` exception, or raise such an exception directly (in which case you can
@@ -80,10 +81,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
     class ExampleDataclass:
         optional_field: str = StringValidator(), Default('')
 
-        # Note: The method MUST accept arbitrary keyword arguments (**kwargs), not just the parameter you defined,
-        # otherwise no context arguments will be passed to it at all. To avoid "unused parameter" notices, you can
-        # prepend the variable name with an underscore.
-        def __post_validate__(self, *, require_optional_field: bool = False, **_kwargs):
+        def __post_validate__(self, *, require_optional_field: bool = False):
             if require_optional_field and not self.optional_field:
                 raise DataclassPostValidationError(field_errors={
                     'value': RequiredValueError(reason='The optional field is required for some reason.'),
@@ -216,10 +214,26 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         """
         # Post validation using the custom __post_validate__() method in the dataclass (if defined)
         if hasattr(validated_object, '__post_validate__'):
-            # Only pass context arguments if __post_validate__() accepts them
-            if inspect.getfullargspec(validated_object.__post_validate__).varkw is not None:
-                validated_object.__post_validate__(**kwargs)
+            post_validate_spec = inspect.getfullargspec(validated_object.__post_validate__)
+
+            # Warn about __post_validate__() with positional arguments (ignoring "self")
+            if len(post_validate_spec.args) > 1 or post_validate_spec.varargs:
+                warnings.warn(
+                    f'{validated_object.__class__.__name__}.__post_validate__() is defined with positional arguments. '
+                    'This should still work, but it is recommended to use keyword-only arguments instead.'
+                )
+
+            # If __post_validate__() accepts arbitrary keyword arguments (**kwargs), we can just pass all keyword
+            # arguments to the function. Otherwise we need to filter out all keys that are not accepted as keyword
+            # arguments by the function.
+            if post_validate_spec.varkw is not None:
+                context_kwargs = kwargs
             else:
-                validated_object.__post_validate__()
+                context_kwargs = {
+                    key: value for key, value in kwargs.items()
+                    if key in post_validate_spec.kwonlyargs + post_validate_spec.args
+                }
+
+            validated_object.__post_validate__(**context_kwargs)
 
         return validated_object
