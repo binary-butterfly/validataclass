@@ -56,8 +56,8 @@ class IntegerValidator(Validator):
     """
 
     # Constants (minimum and maximum values for a 32 bit integer)
-    DEFAULT_MIN_VALUE = -2147483648  # -2^32
-    DEFAULT_MAX_VALUE = 2147483647  # 2^32 - 1
+    DEFAULT_MIN_VALUE = -2147483648  # -2^31
+    DEFAULT_MAX_VALUE = 2147483647  # 2^31 - 1
 
     # Value constraints
     min_value: Optional[int] = None
