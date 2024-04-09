@@ -61,15 +61,15 @@ class DateTimeFormat(Enum):
 
 class DateTimeValidator(StringValidator):
     """
-    Validator that parses datetime strings in the ISO 8601 compatible format "YYYY-MM-DDTHH:MM:SS[.fff[fff][+HH:MM]" to `datetime.datetime`
+    Validator that parses datetime strings in the ISO 8601 compatible format "YYYY-MM-DDTHH:MM:SS[.fff][+HH:MM]" to `datetime.datetime`
     objects, where "T" stands for the literal character as a separator between date and time (e.g. "2021-12-31T12:34:56" or
-    "2021-12-31T12:34:56.123456").
+    "2021-12-31T12:34:56.123456") and ".fff" is an arbitrary number of decimal places.
 
-    The string may specify a timezone using "+HH:MM" or "-HH:MM". Also the special suffix "Z" is allowed to denote UTC as the timezone
+    The string may specify a timezone using "+HH:MM" or "-HH:MM". Also, the special suffix "Z" is allowed to denote UTC as the timezone
     (e.g. "2021-12-31T12:34:56Z" which is equivalent to "2021-12-31T12:34:56+00:00"). If no timezone is specified, the datetime is
     interpreted as local time (see also the parameter 'local_timezone').
 
-    By default the validator allows datetimes with and without timezones. To restrict this to specific formats you can use the
+    By default, the validator allows datetimes with and without timezones. To restrict this to specific formats you can use the
     `DateTimeFormat` enum, which has the following values:
 
     - ALLOW_TIMEZONE: Default behavior, allows datetimes with any timezone or without a timezone (local time)
@@ -103,7 +103,7 @@ class DateTimeValidator(StringValidator):
 
     See `datetime.timezone` and `dateutil.tz` (https://dateutil.readthedocs.io/en/stable/tz.html) for information on defining timezones.
 
-    Additionally the parameter 'datetime_range' can be used to specify a range of datetime values that are allowed (e.g. a minimum and
+    Additionally, the parameter 'datetime_range' can be used to specify a range of datetime values that are allowed (e.g. a minimum and
     a maximum datetime, which can be dynamically defined using callables). See the classes `DateTimeRange` and `DateTimeOffsetRange`
     from `validataclass.helpers` for further information.
 
