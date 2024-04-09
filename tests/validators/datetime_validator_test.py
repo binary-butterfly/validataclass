@@ -75,8 +75,10 @@ class DateTimeValidatorTest:
             ('0001-01-01T00:00:00-01:00', datetime(1, 1, 1, 0, 0, 0, tzinfo=timezone(timedelta(hours=-1)))),
             ('2021-09-01T12:34:56+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
             ('2021-09-01T12:34:56-01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=-1)))),
+            ('2021-09-01T12:34:56.1-01:00', datetime(2021, 9, 1, 12, 34, 56, 100000, tzinfo=timezone(timedelta(hours=-1)))),
             ('2021-09-01T12:34:56.789+02:00', datetime(2021, 9, 1, 12, 34, 56, 789000, tzinfo=timezone(timedelta(hours=2)))),
             ('2021-09-01T12:34:56.789123-02:00', datetime(2021, 9, 1, 12, 34, 56, 789123, tzinfo=timezone(timedelta(hours=-2)))),
+            ('2021-09-01T12:34:56.789123789123-02:00', datetime(2021, 9, 1, 12, 34, 56, 789123, tzinfo=timezone(timedelta(hours=-2)))),
             ('2021-12-13T01:02:03+11:30', datetime(2021, 12, 13, 1, 2, 3, tzinfo=timezone(timedelta(minutes=690)))),
             ('2021-12-13T01:02:03-11:30', datetime(2021, 12, 13, 1, 2, 3, tzinfo=timezone(timedelta(minutes=-690)))),
             ('2021-12-13T01:02:03+00:01', datetime(2021, 12, 13, 1, 2, 3, tzinfo=timezone(timedelta(minutes=1)))),
@@ -102,10 +104,12 @@ class DateTimeValidatorTest:
             ('0001-01-01T00:00:00+00:00', datetime(1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)),
             ('2021-09-01T12:34:56Z', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone.utc)),
             ('2021-09-01T12:34:56+00:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone.utc)),
+            ('2021-09-01T12:34:56.1Z', datetime(2021, 9, 1, 12, 34, 56, 100000, tzinfo=timezone.utc)),
             ('2021-09-01T12:34:56.789Z', datetime(2021, 9, 1, 12, 34, 56, 789000, tzinfo=timezone.utc)),
             ('2021-09-01T12:34:56.789+00:00', datetime(2021, 9, 1, 12, 34, 56, 789000, tzinfo=timezone.utc)),
             ('2021-09-01T12:34:56.789123Z', datetime(2021, 9, 1, 12, 34, 56, 789123, tzinfo=timezone.utc)),
             ('2021-09-01T12:34:56.789123+00:00', datetime(2021, 9, 1, 12, 34, 56, 789123, tzinfo=timezone.utc)),
+            ('2021-09-01T12:34:56.789123789123789123+00:00', datetime(2021, 9, 1, 12, 34, 56, 789123, tzinfo=timezone.utc)),
         ]
     )
     @pytest.mark.parametrize(
@@ -234,15 +238,19 @@ class DateTimeValidatorTest:
         'input_string, expected_datetime', [
             # Without timezone
             ('2021-09-01T12:34:56', datetime(2021, 9, 1, 12, 34, 56)),
+            ('2021-09-01T12:34:56.1', datetime(2021, 9, 1, 12, 34, 56)),
             ('2021-09-01T12:34:56.000', datetime(2021, 9, 1, 12, 34, 56)),
             ('2021-09-01T12:34:56.123', datetime(2021, 9, 1, 12, 34, 56)),
             ('2021-09-01T12:34:56.999999', datetime(2021, 9, 1, 12, 34, 56)),
+            ('2021-09-01T12:34:56.999999999', datetime(2021, 9, 1, 12, 34, 56)),
 
             # With timezone
             ('2021-09-01T12:34:56+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
+            ('2021-09-01T12:34:56.1+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
             ('2021-09-01T12:34:56.000+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
             ('2021-09-01T12:34:56.123+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
             ('2021-09-01T12:34:56.999999+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
+            ('2021-09-01T12:34:56.999999999+01:00', datetime(2021, 9, 1, 12, 34, 56, tzinfo=timezone(timedelta(hours=1)))),
         ]
     )
     def test_with_discard_milliseconds(input_string, expected_datetime):
