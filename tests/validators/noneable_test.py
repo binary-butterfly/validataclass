@@ -31,7 +31,7 @@ class NoneableTest:
         validator = Noneable(DecimalValidator())
         result = validator.validate(input_data)
 
-        assert isinstance(result, type(expected_result))
+        assert type(result) is type(expected_result)
         assert result == expected_result
 
     @staticmethod
@@ -47,7 +47,7 @@ class NoneableTest:
         validator = Noneable(DecimalValidator(), default=Decimal('3.1415'))
         result = validator.validate(input_data)
 
-        assert isinstance(result, type(expected_result))
+        assert type(result) is type(expected_result)
         assert result == expected_result
 
     @staticmethod
