@@ -20,7 +20,7 @@ __all__ = [
 
 # Helper variables to construct more complex regex patterns
 _REGEX_DATE = r'(\d{4}-\d{2}-\d{2})'
-_REGEX_TIME = r'(\d{2}:\d{2}:\d{2}(\.\d{3}(\d{3})?)?)'
+_REGEX_TIME = r'(\d{2}:\d{2}:\d{2}(\.\d+)?)'
 _REGEX_TIMEZONE = r'(Z|[+-]\d{2}:\d{2})'
 _REGEX_UTC_ONLY = r'(Z|[+-]00:00)'
 _REGEX_DATE_AND_TIME = f'{_REGEX_DATE}T{_REGEX_TIME}'
