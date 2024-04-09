@@ -31,7 +31,7 @@ class NoneToUnsetValueTest:
         validator = NoneToUnsetValue(DecimalValidator())
         result = validator.validate(input_data)
 
-        assert type(result) == type(expected_result)
+        assert isinstance(result, type(expected_result))
         assert result == expected_result
 
     @staticmethod

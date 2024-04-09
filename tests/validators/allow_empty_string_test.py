@@ -30,7 +30,7 @@ class AllowEmptyStringTest:
         validator = AllowEmptyString(DecimalValidator())
         result = validator.validate(input_data)
 
-        assert type(result) == type(expected_result)
+        assert isinstance(result, type(expected_result))
         assert result == expected_result
 
     @staticmethod
@@ -46,7 +46,7 @@ class AllowEmptyStringTest:
         validator = AllowEmptyString(DecimalValidator(), default=Decimal('3.1415'))
         result = validator.validate(input_data)
 
-        assert type(result) == type(expected_result)
+        assert isinstance(result, type(expected_result))
         assert result == expected_result
 
     @staticmethod
