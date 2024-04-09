@@ -88,9 +88,10 @@ class DateTimeValidator(StringValidator):
     ```
 
     Regardless of the specified format, the validator always accepts input strings with milli- and microseconds (e.g.
-    "2021-12-31T12:34:56.123" or "2021-12-31T12:34:56.123456"). This cannot be changed currently. However, you can set
-    the option `discard_milliseconds=True`, which will discard the milli- and microseconds of the output datetime (both
-    of the examples would then result in the same datetime as "2021-12-31T12:34:56").
+    "2021-12-31T12:34:56.123" or "2021-12-31T12:34:56.123456"). It also accepts higher precisions (i.e. nanoseconds and beyond), but
+    anything above microseconds will be discarded (so "2021-12-31T12:34:56.123456789" will be interpreted as "2021-12-31T12:34:56.123456").
+    This cannot be changed currently. However, you can set the option `discard_milliseconds=True`, which will discard the milli- and
+    microseconds of the output datetime (all of the examples would then result in the same datetime as "2021-12-31T12:34:56").
 
     The parameter 'local_timezone' can be used to set the timezone for datetime strings that don't specify a timezone. For example, if
     'local_timezone' is set to a UTC+3 timezone, the string "2021-12-31T12:34:56" will be treated like "2021-12-31T12:34:56+03:00".
@@ -247,9 +248,25 @@ class DateTimeValidator(StringValidator):
         if not self.datetime_format_regex.fullmatch(datetime_string):
             raise InvalidDateTimeError(datetime_format_str=self.datetime_format.format_str)
 
-        # Replace 'Z' suffix to make the string compatible with fromisoformat()
+        # Replace 'Z' suffix to make the string compatible with oder versions of fromisoformat()
+        # (which only accepts 'Z' timezone since python 3.11)
         if datetime_string[-1] == 'Z':
             datetime_string = datetime_string[:-1] + '+00:00'
+
+        # Fix the length of the microseconds part to make the string compatible with older versions of fromisoformat()
+        # (which only accepts arbitrary length microseconds since python 3.11)
+        if len(datetime_string) > 19 and datetime_string[19] == '.':
+            if datetime_string[-6] in ['+', '-']:
+                # separate the timezone part from the rest of the datetime string
+                timezone_string = datetime_string[-6:]
+                datetime_string = datetime_string[:-6]
+            else:
+                timezone_string = ''
+            if len(datetime_string) > 26:
+                datetime_string = datetime_string[:26]  # cut off any nanoseconds
+            if len(datetime_string) not in [23, 26]:  # 3 or 6 decimal places of milliseconds are accepted anyway
+                datetime_string = datetime_string.ljust(26, '0')
+            datetime_string = datetime_string + timezone_string
 
         # Try to create datetime object from string (accepts a certain subset of ISO 8601 datetime strings)
         try:
