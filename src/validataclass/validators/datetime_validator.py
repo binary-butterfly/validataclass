@@ -20,7 +20,7 @@ __all__ = [
 
 # Helper variables to construct more complex regex patterns
 _REGEX_DATE = r'(\d{4}-\d{2}-\d{2})'
-_REGEX_TIME = r'(\d{2}:\d{2}:\d{2}(\.\d+)?)'
+_REGEX_TIME = r'(\d{2}:\d{2}:\d{2})(\.\d+)?'
 _REGEX_TIMEZONE = r'(Z|[+-]\d{2}:\d{2})'
 _REGEX_UTC_ONLY = r'(Z|[+-]00:00)'
 _REGEX_DATE_AND_TIME = f'{_REGEX_DATE}T{_REGEX_TIME}'
@@ -248,25 +248,31 @@ class DateTimeValidator(StringValidator):
         if not self.datetime_format_regex.fullmatch(datetime_string):
             raise InvalidDateTimeError(datetime_format_str=self.datetime_format.format_str)
 
-        # Replace 'Z' suffix to make the string compatible with oder versions of fromisoformat()
-        # (which only accepts 'Z' timezone since python 3.11)
-        if datetime_string[-1] == 'Z':
-            datetime_string = datetime_string[:-1] + '+00:00'
+        # Split the valid input into four groups (for easier modifications)
+        if self.datetime_format == DateTimeFormat.LOCAL_ONLY:
+            date_string, time_string, milliseconds_string = (
+                self.datetime_format_regex.fullmatch(datetime_string).groups(default='')
+            )
+            timezone_string = ''  # set default value separately because LOCAL_ONLY format does not contain a timezone string
+        else:
+            date_string, time_string, milliseconds_string, timezone_string = (
+                self.datetime_format_regex.fullmatch(datetime_string).groups(default='')
+            )
 
-        # Fix the length of the microseconds part to make the string compatible with older versions of fromisoformat()
-        # (which only accepts arbitrary length microseconds since python 3.11)
-        if len(datetime_string) > 19 and datetime_string[19] == '.':
-            if datetime_string[-6] in ['+', '-']:
-                # separate the timezone part from the rest of the datetime string
-                timezone_string = datetime_string[-6:]
-                datetime_string = datetime_string[:-6]
-            else:
-                timezone_string = ''
-            if len(datetime_string) > 26:
-                datetime_string = datetime_string[:26]  # cut off any nanoseconds
-            if len(datetime_string) not in [23, 26]:  # 3 or 6 decimal places of milliseconds are accepted anyway
-                datetime_string = datetime_string.ljust(26, '0')
-            datetime_string = datetime_string + timezone_string
+        # Replace 'Z' timezone suffix to make the string compatible with oder versions of fromisoformat()
+        # (which only accepts 'Z' timezone since python 3.11)
+        if timezone_string == 'Z':
+            timezone_string = '+00:00'
+
+        # Fix the length of the milli-/microseconds part to make the string compatible with older versions of fromisoformat()
+        # (which only accepts arbitrary precision decimal seconds since python 3.11)
+        if len(milliseconds_string) > 7:
+            milliseconds_string = milliseconds_string[:7]  # cut off any nanoseconds
+        elif 1 < len(milliseconds_string) < 7:
+            milliseconds_string = milliseconds_string.ljust(7, '0')  # pad with zeroes up to precision 6
+
+        # Put the modified string back together
+        datetime_string = date_string + 'T' + time_string + milliseconds_string + timezone_string
 
         # Try to create datetime object from string (accepts a certain subset of ISO 8601 datetime strings)
         try:
