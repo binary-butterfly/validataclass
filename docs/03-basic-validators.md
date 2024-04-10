@@ -687,65 +687,70 @@ validator.validate("13:05:59")  # will return datetime.time(13, 5, 59)
 
 ### DateTimeValidator
 
-The `DateTimeValidator` accepts datetime strings in the ISO 8601 compatible format `YYYY-MM-DDTHH:MM:SS[.fff[fff][+HH:MM]` and converts
-them to `datetime.datetime` objects. The `T` in this format stands for the literal character `T` as a separator between date and time
-(e.g. `"2021-12-31T12:34:56"` or `"2021-12-31T12:34:56.123456"`).
+Validator that parses datetime strings in the ISO 8601 compatible format `YYYY-MM-DDTHH:MM:SS[.fff][+HH:MM]` to
+`datetime.datetime` objects, where `T` stands for the literal character as a separator between date and time (e.g.
+`2021-12-31T12:34:56` or `2021-12-31T12:34:56.123456`) and `.fff` is an arbitrary number of decimal places.
 
-The string may specify a timezone using `+HH:MM` or `-HH:MM`. Also the special suffix `Z` is allowed to denote UTC as the timezone
-(e.g. `"2021-12-31T12:34:56Z"` which is equivalent to `"2021-12-31T12:34:56+00:00"`). If no timezone is specified, the datetime is
-interpreted as local time (see also the parameter `local_timezone`).
+The string may specify a timezone using `+HH:MM` or `-HH:MM`. Also, the special suffix `Z` is allowed to denote UTC
+as the timezone (e.g. `2021-12-31T12:34:56Z` which is equivalent to `2021-12-31T12:34:56+00:00`). If no timezone is
+specified, the datetime is interpreted as local time (see also the parameter `local_timezone`).
 
-By default the validator allows datetimes with and without timezones. To restrict this to specific formats you can use the
-`DateTimeFormat` enum, which has the following values:
+By default, the validator allows datetimes with and without timezones. To restrict this to specific formats you can
+use the `DateTimeFormat` enum, which has the following values:
 
 - `ALLOW_TIMEZONE`: Default behavior, allows datetimes with any timezone or without a timezone (local time)
 - `REQUIRE_TIMEZONE`: Only allows datetimes that specify a timezone (but any timezone is allowed)
 - `REQUIRE_UTC`: Only allows datetimes that explicitly specify UTC as timezone (either with `Z` or `+00:00`)
 - `LOCAL_ONLY`: Only allows datetimes **without** timezone (will be interpreted as local time)
-- `LOCAL_OR_UTC`: Only allows local datetimes (no timezone) or UTC datetimes (explicitly specified with `Z` or `+00:00`)
+- `LOCAL_OR_UTC`: Only allows local datetimes (no timezone) or UTC datetimes (explicit `Z` or `+00:00`)
 
+| Example input               | `ALLOW_TIMEZONE` | `REQUIRE_TIMEZONE` | `REQUIRE_UTC` | `LOCAL_ONLY` | `LOCAL_OR_UTC` |
+|-----------------------------|------------------|--------------------|---------------|--------------|----------------|
+| `2021-12-31T12:34:56`       | valid            |                    |               | valid        | valid          |
+| `2021-12-31T12:34:56Z`      | valid            | valid              | valid         |              | valid          |
+| `2021-12-31T12:34:56+00:00` | valid            | valid              | valid         |              | valid          |
+| `2021-12-31T12:34:56+02:00` | valid            | valid              |               |              |                |
 
-Example input               | `ALLOW_TIMEZONE` | `REQUIRE_TIMEZONE` | `REQUIRE_UTC` | `LOCAL_ONLY` | `LOCAL_OR_UTC`
-----------------------------|------------------|--------------------|---------------|--------------|---------------
-`2021-12-31T12:34:56`       | valid            |                    |               | valid        | valid
-`2021-12-31T12:34:56Z`      | valid            | valid              | valid         |              | valid
-`2021-12-31T12:34:56+00:00` | valid            | valid              | valid         |              | valid
-`2021-12-31T12:34:56+02:00` | valid            | valid              |               |              |
+The validator always accepts input strings with milli- and microseconds (e.g. `2021-12-31T12:34:56.123` or
+`2021-12-31T12:34:56.123456`). It also accepts higher precisions (i.e. nanoseconds and beyond), but anything smaller
+than microseconds will be discarded, since `datetime` doesn't support it (so `2021-12-31T12:34:56.123456789` will be
+interpreted as `2021-12-31T12:34:56.123456`).
 
+You can set the option `discard_milliseconds=True`, which will discard the milli- and microseconds of the output
+datetime (all of the examples would then result in the same datetime as `2021-12-31T12:34:56`).
 
-Regardless of the specified format, the validator always accepts input strings with milli- and microseconds (e.g.
-"2021-12-31T12:34:56.123" or "2021-12-31T12:34:56.123456"). This cannot be changed currently. However, you can set the
-option `discard_milliseconds=True`, which will discard the milli- and microseconds of the output datetime (both of the
-examples would then result in the same datetime as "2021-12-31T12:34:56").
+The parameter `local_timezone` can be used to set the timezone for datetime strings that don't specify a timezone.
+For example, if `local_timezone` is set to a UTC+3 timezone, the string `2021-12-31T12:34:56` will be treated like
+`2021-12-31T12:34:56+03:00`. Similarly, to interpret datetimes without timezone as UTC, set
+`local_timezone=datetime.timezone.utc`. By default, if the input datetime does not specify a timezone, the resulting
+datetime will be a naive datetime without any timezone info, i.e. `tzinfo=None`.
 
-The parameter `local_timezone` can be used to set the timezone for datetime strings that don't specify a timezone. For example, if
-`local_timezone` is set to a UTC+3 timezone, the string `"2021-12-31T12:34:56"` will be treated like `"2021-12-31T12:34:56+03:00"`.
-Similarly, to interpret datetimes without timezone as UTC, set `local_timezone=datetime.timezone.utc`. If `local_timezone` is not
-set (which is the default), the resulting `datetime` will have no timezone info (`tzinfo=None`).
+The parameter `target_timezone` can be used to convert all resulting datetime objects to a uniform timezone. This
+requires the datetimes to already have a timezone, though, so if you are using a format that allows local datetimes,
+you need to specify `local_timezone` as well.
 
-The parameter `target_timezone` can be used to convert all resulting datetime objects to a uniform timezone. This requires the
-datetimes to already have a timezone, so to allow local datetimes (without timezone info in the input string) you need to specify
-`local_timezone` as well.
+See [`datetime.timezone`](https://docs.python.org/3/library/datetime.html#timezone-objects) and
+[`zoneinfo`](https://docs.python.org/3/library/zoneinfo.html) (only supported as of Python 3.9) for information on
+defining timezones. For older Python versions, libraries like [`pytz`](https://pythonhosted.org/pytz/) or
+[`dateutil`](https://dateutil.readthedocs.io/en/stable/tz.html) can be used instead.
 
-See [`datetime.timezone`](https://docs.python.org/3/library/datetime.html#datetime.timezone) and
-[`dateutil.tz`](https://dateutil.readthedocs.io/en/stable/tz.html) for information on defining timezones.
+Additionally, the parameter `datetime_range` can be used to specify a range of datetime values that are allowed
+(e.g. a minimum and a maximum datetime, which can be dynamically defined using callables). See the classes
+`DateTimeRange` and `DateTimeOffsetRange` from `validataclass.helpers` for further information.
 
-Additionally the parameter `datetime_range` can be used to specify a range of datetime values that are allowed (e.g. a minimum and
-a maximum datetime, which can be dynamically defined using callables). See the classes `DateTimeRange` and `DateTimeOffsetRange`
-from [`validataclass.helpers`](../src/validataclass/helpers/datetime_range.py) for further information.
-
-**Note:** When using datetime ranges, make sure not to mix datetimes that have timezones with local datetimes because those comparisons
-will raise `TypeError` exceptions. It's recommended either to use only datetimes with defined timezones (for both input values and
-the boundaries of the datetime ranges), or to specify the `local_timezone` parameter (which will also be used to determine the
-timezone of the range boundary datetimes if they do not specify timezones themselves).
+**Note:** When using datetime ranges, make sure not to mix datetimes that have timezones with local datetimes
+because those comparisons will raise `TypeError` exceptions. It's recommended either to use only datetimes with
+defined timezones (for both input values and the boundaries of the datetime ranges), or to specify the
+`local_timezone` parameter (which will also be used to determine the timezone of the range boundary datetimes if
+they do not specify timezones themselves).
 
 **Examples:**
 
 ```python
 # Use `timezone.utc` from `datetime` to specify UTC as timezone
 from datetime import timezone
-# Use `dateutil.tz` to easily specify timezones that are not UTC
-from dateutil import tz
+# Use `zoneinfo.ZoneInfo` to easily specify timezones that are not UTC
+from zoneinfo import ZoneInfo
 
 from validataclass.validators import DateTimeValidator, DateTimeFormat
 
@@ -753,7 +758,8 @@ from validataclass.validators import DateTimeValidator, DateTimeFormat
 validator = DateTimeValidator()
 validator.validate("2021-12-31T12:34:56")        # -> datetime(2021, 12, 31, 12, 34, 56)
 validator.validate("2021-12-31T12:34:56Z")       # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
-validator.validate("2021-12-31T12:34:56+02:00")  # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone(timedelta(seconds=7200)))
+validator.validate("2021-12-31T12:34:56+02:00")  # -> datetime(2021, 12, 31, 12, 34, 56,
+                                                 #             tzinfo=timezone(timedelta(seconds=7200)))
 # Times with milliseconds/microseconds:
 validator.validate("2021-12-31T12:34:56.123")     # -> datetime(2021, 12, 31, 12, 34, 56, 123000)
 validator.validate("2021-12-31T12:34:56.123456")  # -> datetime(2021, 12, 31, 12, 34, 56, 123456)
@@ -762,7 +768,8 @@ validator.validate("2021-12-31T12:34:56.123456")  # -> datetime(2021, 12, 31, 12
 validator = DateTimeValidator(DateTimeFormat.REQUIRE_TIMEZONE)
 validator.validate("2021-12-31T12:34:56")        # raises InvalidDateTimeError
 validator.validate("2021-12-31T12:34:56Z")       # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
-validator.validate("2021-12-31T12:34:56+02:00")  # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone(timedelta(seconds=7200)))
+validator.validate("2021-12-31T12:34:56+02:00")  # -> datetime(2021, 12, 31, 12, 34, 56,
+                                                 #             tzinfo=timezone(timedelta(seconds=7200)))
 
 # LOCAL_OR_UTC format: Only allow datetimes either without timezone or with UTC explicitly specified
 validator = DateTimeValidator(DateTimeFormat.LOCAL_OR_UTC)
@@ -772,14 +779,16 @@ validator.validate("2021-12-31T12:34:56+00:00")  # -> datetime(2021, 12, 31, 12,
 validator.validate("2021-12-31T12:34:56+02:00")  # raises InvalidDateTimeError
 
 # LOCAL_OR_UTC, but with a specified local timezone (as default value for the datetime's tzinfo)
-validator = DateTimeValidator(DateTimeFormat.LOCAL_OR_UTC, local_timezone=tz.gettz('Europe/Berlin'))
-validator.validate("2021-12-31T12:34:56")        # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=tzfile('[...]/Europe/Berlin'))
+validator = DateTimeValidator(DateTimeFormat.LOCAL_OR_UTC, local_timezone=ZoneInfo('Europe/Berlin'))
+validator.validate("2021-12-31T12:34:56")        # -> datetime(2021, 12, 31, 12, 34, 56,
+                                                 #             tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin'))
 validator.validate("2021-12-31T12:34:56Z")       # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
 validator.validate("2021-12-31T12:34:56+00:00")  # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
 validator.validate("2021-12-31T12:34:56+02:00")  # raises InvalidDateTimeError
 
-# Allow datetimes with arbitrary timezones (using CET/CEST (+01:00/+02:00) as local timezone), but convert all datetimes to UTC
-validator = DateTimeValidator(local_timezone=tz.gettz('Europe/Berlin'), target_timezone=timezone.utc)
+# Allow datetimes with arbitrary timezones (using CET/CEST (+01:00/+02:00) as local timezone), but convert all
+# datetimes to UTC
+validator = DateTimeValidator(local_timezone=ZoneInfo('Europe/Berlin'), target_timezone=timezone.utc)
 validator.validate("2021-12-31T12:34:56")        # -> datetime(2021, 12, 31, 11, 34, 56, tzinfo=timezone.utc)
 validator.validate("2021-12-31T12:34:56Z")       # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
 validator.validate("2021-12-31T12:34:56+00:00")  # -> datetime(2021, 12, 31, 12, 34, 56, tzinfo=timezone.utc)
@@ -796,11 +805,16 @@ from validataclass.helpers import DateTimeRange, DateTimeOffsetRange
 from validataclass.validators import DateTimeValidator, DateTimeFormat
 
 # DateTimeRange: Only allow datetimes within a specified datetime range, e.g. allow all datetimes in the year 2021
-validator = DateTimeValidator(DateTimeFormat.REQUIRE_TIMEZONE, target_timezone=timezone.utc, datetime_range=DateTimeRange(
-    datetime(2021, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-    datetime(2021, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)
-))
+validator = DateTimeValidator(
+    DateTimeFormat.REQUIRE_TIMEZONE,
+    target_timezone=timezone.utc,
+    datetime_range=DateTimeRange(
+        datetime(2021, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        datetime(2021, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc),
+    ),
+)
 
+# Valid datetimes in the specified datetime range
 validator.validate("2021-01-01T00:00:00Z")       # -> datetime(2021, 1, 1, 0, 0, tzinfo=timezone.utc)
 validator.validate("2021-07-28T12:34:56Z")       # -> datetime(2021, 7, 28, 12, 34, 56, tzinfo=timezone.utc)
 validator.validate("2021-12-31T23:59:59Z")       # -> datetime(2021, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
@@ -809,33 +823,40 @@ validator.validate("2021-12-31T23:59:59Z")       # -> datetime(2021, 12, 31, 23,
 validator.validate("2020-12-31T23:00:00-01:00")  # -> datetime(2021, 1, 1, 0, 0, tzinfo=timezone.utc)
 validator.validate("2022-01-01T00:00:00+01:00")  # -> datetime(2021, 12, 31, 23, 0, tzinfo=timezone.utc)
 
-# These will all raise DateTimeRangeError(lower_boundary='2021-01-01T00:00:00+00:00', upper_boundary='2021-12-31T23:59:59.999999+00:00')
+# These will all raise a DateTimeRangeError with lower_boundary and upper_boundary set to the datetime range
 validator.validate("2020-12-31T23:59:59Z")       # raises DateTimeRangeError
 validator.validate("2022-01-01T00:00:00Z")       # raises DateTimeRangeError
 validator.validate("2021-01-01T00:00:00+01:00")  # raises DateTimeRangeError
 validator.validate("2021-12-31T23:59:59-01:00")  # raises DateTimeRangeError
 
 
-# DateTimeOffsetRange: Specify a datetime range using a pivot datetime and two offsets (allows all datetimes "around" the pivot datetime
-# plus/minus the offsets), e.g. all datetimes between pivot_datetime - 5 minutes and pivot_datetime + 10 minutes:
-validator = DateTimeValidator(DateTimeFormat.REQUIRE_UTC, datetime_range=DateTimeOffsetRange(
-    pivot=datetime(2021, 7, 15, 12, 30, 0, tzinfo=timezone.utc),
-    offset_minus=timedelta(minutes=5),
-    offset_plus=timedelta(minutes=10)
-))
+# DateTimeOffsetRange: Specify a datetime range using a pivot datetime and two offsets (allows all datetimes
+# "around" the pivot datetime plus/minus the offsets), e.g. all datetimes between pivot_datetime - 5 minutes and
+# pivot_datetime + 10 minutes:
+validator = DateTimeValidator(
+    DateTimeFormat.REQUIRE_UTC,
+    datetime_range=DateTimeOffsetRange(
+        pivot=datetime(2021, 7, 15, 12, 30, 0, tzinfo=timezone.utc),
+        offset_minus=timedelta(minutes=5),
+        offset_plus=timedelta(minutes=10),
+    ),
+)
 
+# Valid datetimes in the specified datetime range
 validator.validate("2021-07-15T12:25:00Z")  # -> datetime(2021, 7, 15, 12, 25, tzinfo=timezone.utc)
 validator.validate("2021-07-15T12:30:00Z")  # -> datetime(2021, 7, 15, 12, 30, tzinfo=timezone.utc)
 validator.validate("2021-07-15T12:40:00Z")  # -> datetime(2021, 7, 15, 12, 40, tzinfo=timezone.utc)
 
-# These will all raise DateTimeRangeError(lower_boundary='2021-07-15T12:25:00+00:00', upper_boundary='2021-07-15T12:40:00+00:00')
+# These will all raise a DateTimeRangeError with lower_boundary='2021-07-15T12:25:00+00:00'
+# and upper_boundary='2021-07-15T12:40:00+00:00'
 validator.validate("2021-07-14T12:30:00Z")  # raises DateTimeRangeError (time fits, but day is out of range)
 validator.validate("2021-07-15T12:24:59Z")  # raises DateTimeRangeError (one second too early)
 validator.validate("2021-07-15T12:40:01Z")  # raises DateTimeRangeError (one second too late)
 ```
 
-The pivot in a `DateTimeOffsetRange` can also be a callable, which will be evaluated just when the `validate()` method is called.
-If the pivot is undefined, it will default to the current time (in UTC and without milliseconds).
+The pivot in a `DateTimeOffsetRange` can also be a callable, which will be evaluated just when the `validate()`
+method is called. If the pivot is undefined, it will default to the current date and time (in UTC and without
+milliseconds) at the point of validation.
 
 **Example for `DateTimeOffsetRange` with the default pivot:**
 
@@ -846,22 +867,26 @@ from validataclass.helpers import DateTimeOffsetRange
 from validataclass.validators import DateTimeValidator, DateTimeFormat
 
 # This example allows all datetimes in the next 7 days, but no datetimes in the past or after these 7 days:
-validator = DateTimeValidator(DateTimeFormat.REQUIRE_UTC, datetime_range=DateTimeOffsetRange(
-    offset_plus=timedelta(days=7)
-))
+validator = DateTimeValidator(
+    DateTimeFormat.REQUIRE_UTC,
+    datetime_range=DateTimeOffsetRange(offset_plus=timedelta(days=7)),
+)
 
 # Assuming the current date and time is: 2021-10-12, 12:00:00 UTC
 validator.validate("2021-10-12T12:00:00Z")  # -> datetime(2021, 10, 12, 12, 0, 0, tzinfo=timezone.utc)
 validator.validate("2021-10-15T01:23:45Z")  # -> datetime(2021, 10, 15, 1, 23, 45, tzinfo=timezone.utc)
 validator.validate("2021-10-19T11:59:59Z")  # -> datetime(2021, 10, 19, 11, 59, 59, tzinfo=timezone.utc)
 
-# These will all raise DateTimeRangeError(lower_boundary='2021-10-12T12:00:00+00:00', upper_boundary='2021-10-19T12:00:00+00:00')
+# These will all raise a DateTimeRangeError with lower_boundary set to the current date and time
+# ('2021-07-15T12:25:00+00:00') and upper_boundary set to 7 days in the future (so '2021-07-15T12:40:00+00:00')
 validator.validate("2021-10-12T11:59:59Z")  # raises DateTimeRangeError (one second in the past)
 validator.validate("2021-10-19T12:00:01Z")  # raises DateTimeRangeError (one second too late)
 validator.validate("2021-10-20T12:00:00Z")  # raises DateTimeRangeError (one day too late)
 
-# Also, the time is evaluated when validate() is called, so after waiting at least one second, the following will fail:
-validator.validate("2021-10-12T12:00:00Z")  # raises DateTimeRangeError (boundaries in exception will have changed too)
+# Also, the time is reevaluated everytime validate() is called, so the following call will work after creating the
+# validator, but fail after waiting for at least one second. The boundaries in the DateTimeRangeError will have
+# changed accordingly.
+validator.validate("2021-10-12T12:00:00Z")  # now raises DateTimeRangeError
 ```
 
 
