@@ -263,10 +263,8 @@ class DateTimeValidator(StringValidator):
 
         # Fix the length of the milli-/microseconds part to make the string compatible with older versions of fromisoformat()
         # (which only accepts arbitrary precision decimal seconds since python 3.11)
-        if len(milliseconds_string) > 7:
-            milliseconds_string = milliseconds_string[:7]  # cut off any nanoseconds
-        elif 1 < len(milliseconds_string) < 7:
-            milliseconds_string = milliseconds_string.ljust(7, '0')  # pad with zeroes up to precision 6
+        if milliseconds_string:
+            milliseconds_string = f'{milliseconds_string}000000'[:7]  # pad with zeroes and cut off after 6 decimal places
 
         # Put the modified string back together
         datetime_string = f'{date_string}T{time_string}{milliseconds_string}{timezone_string}'
