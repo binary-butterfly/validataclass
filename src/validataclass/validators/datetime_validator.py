@@ -269,7 +269,7 @@ class DateTimeValidator(StringValidator):
             milliseconds_string = milliseconds_string.ljust(7, '0')  # pad with zeroes up to precision 6
 
         # Put the modified string back together
-        datetime_string = date_string + 'T' + time_string + milliseconds_string + timezone_string
+        datetime_string = f'{date_string}T{time_string}{milliseconds_string}{timezone_string}'
 
         # Try to create datetime object from string (accepts a certain subset of ISO 8601 datetime strings)
         try:
