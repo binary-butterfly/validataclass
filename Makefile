@@ -61,7 +61,9 @@ docker-tox:
 		tox run --workdir .tox_docker $(TOX_ARGS)
 
 # Run partial tox test suites in Docker
-.PHONY: docker-tox-py311 docker-tox-py310 docker-tox-py39 docker-tox-py38 docker-tox-py37
+.PHONY: docker-tox-py312 docker-tox-py311 docker-tox-py310 docker-tox-py39 docker-tox-py38 docker-tox-py37
+docker-tox-py312: TOX_ARGS="-e clean,py312,py312-report"
+docker-tox-py312: docker-tox
 docker-tox-py311: TOX_ARGS="-e clean,py311,py311-report"
 docker-tox-py311: docker-tox
 docker-tox-py310: TOX_ARGS="-e clean,py310,py310-report"
@@ -81,6 +83,7 @@ docker-tox-all:
 	make docker-tox-py39
 	make docker-tox-py310
 	make docker-tox-py311
+	make docker-tox-py312
 
 # Pull the latest image of the multi-python Docker image
 .PHONY: docker-pull
