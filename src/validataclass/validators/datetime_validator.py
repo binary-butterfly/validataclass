@@ -245,19 +245,16 @@ class DateTimeValidator(StringValidator):
         datetime_string = super().validate(input_data, **kwargs)
 
         # Validate string format with a regular expression
-        if not self.datetime_format_regex.fullmatch(datetime_string):
+        valid_input_match = self.datetime_format_regex.fullmatch(datetime_string)
+        if not valid_input_match:
             raise InvalidDateTimeError(datetime_format_str=self.datetime_format.format_str)
 
         # Split the valid input into four groups (for easier modifications)
         if self.datetime_format == DateTimeFormat.LOCAL_ONLY:
-            date_string, time_string, milliseconds_string = (
-                self.datetime_format_regex.fullmatch(datetime_string).groups(default='')
-            )
+            date_string, time_string, milliseconds_string = valid_input_match.groups(default='')
             timezone_string = ''  # set default value separately because LOCAL_ONLY format does not contain a timezone string
         else:
-            date_string, time_string, milliseconds_string, timezone_string = (
-                self.datetime_format_regex.fullmatch(datetime_string).groups(default='')
-            )
+            date_string, time_string, milliseconds_string, timezone_string = valid_input_match.groups(default='')
 
         # Replace 'Z' timezone suffix to make the string compatible with oder versions of fromisoformat()
         # (which only accepts 'Z' timezone since python 3.11)
