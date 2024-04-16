@@ -69,6 +69,11 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
 
     All fields that do NOT specify a default value (or explicitly use the special value `NoDefault`) are required.
 
+    Pre-validation preprocessing (e.g. to map fields to different names) can be implemented in the dataclass by defining
+    the `__pre_validate__()` class method or static method. This method is called by the DataclassValidator before
+    validating the input data. It must accept the input dictionary as a positional argument and return a dictionary that
+    will then replace the input dictionary and be validated. See documentation for an example.
+
     Post-validation checks can be implemented in the dataclass either using the `__post_init__()` special method (which
     is part of regular dataclasses and thus also works without validataclass) or using a `__post_validate__()` method
     (which is called by the DataclassValidator after creating the object). The latter also supports *context-sensitive*
