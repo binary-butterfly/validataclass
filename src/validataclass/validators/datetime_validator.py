@@ -174,22 +174,60 @@ class DateTimeValidator(StringValidator):
 
     **Examples for datetime ranges:**
 
-    ```
+    ```python
+    from datetime import datetime, timedelta, timezone
+
     from validataclass.helpers import DateTimeRange, DateTimeOffsetRange
+    from validataclass.validators import DateTimeValidator, DateTimeFormat
 
-    # Only allow datetimes within a specified datetime range, e.g. allow all datetimes in the year 2021
-    DateTimeValidator(local_timezone=timezone.utc, datetime_range=DateTimeRange(
-        datetime(2021, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-        datetime(2021, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc)
-    ))
+    # DateTimeRange: Only allow datetimes within a specified datetime range, e.g. allow all datetimes in the year 2021
+    validator = DateTimeValidator(
+        DateTimeFormat.REQUIRE_TIMEZONE,
+        target_timezone=timezone.utc,
+        datetime_range=DateTimeRange(
+            datetime(2021, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+            datetime(2021, 12, 31, 23, 59, 59, 999999, tzinfo=timezone.utc),
+        ),
+    )
 
-    # Specify a datetime range using a pivot datetime and two offsets (allows all datetimes "around" some datetime plus/minus offsets),
-    # e.g. all datetimes between pivot_datetime - 5 minutes and pivot_datetime + 10 minutes:
-    DateTimeValidator(local_timezone=timezone.utc, datetime_range=DateTimeOffsetRange(
-        pivot=datetime(2021, 5, 25, 12, 0, 0, tzinfo=timezone.utc),
-        offset_minus=timedelta(minutes=5),
-        offset_plus=timedelta(minutes=10)
-    ))
+    # Valid datetimes in the specified datetime range
+    validator.validate("2021-01-01T00:00:00Z")       # -> datetime(2021, 1, 1, 0, 0, tzinfo=timezone.utc)
+    validator.validate("2021-07-28T12:34:56Z")       # -> datetime(2021, 7, 28, 12, 34, 56, tzinfo=timezone.utc)
+    validator.validate("2021-12-31T23:59:59Z")       # -> datetime(2021, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+
+    # These appear to be outside of the range, but are inside when taking the timezones into account
+    validator.validate("2020-12-31T23:00:00-01:00")  # -> datetime(2021, 1, 1, 0, 0, tzinfo=timezone.utc)
+    validator.validate("2022-01-01T00:00:00+01:00")  # -> datetime(2021, 12, 31, 23, 0, tzinfo=timezone.utc)
+
+    # These will all raise a DateTimeRangeError with lower_boundary and upper_boundary set to the datetime range
+    validator.validate("2020-12-31T23:59:59Z")       # raises DateTimeRangeError
+    validator.validate("2022-01-01T00:00:00Z")       # raises DateTimeRangeError
+    validator.validate("2021-01-01T00:00:00+01:00")  # raises DateTimeRangeError
+    validator.validate("2021-12-31T23:59:59-01:00")  # raises DateTimeRangeError
+
+
+    # DateTimeOffsetRange: Specify a datetime range using a pivot datetime and two offsets (allows all datetimes
+    # "around" the pivot datetime plus/minus the offsets), e.g. all datetimes between pivot_datetime - 5 minutes and
+    # pivot_datetime + 10 minutes:
+    validator = DateTimeValidator(
+        DateTimeFormat.REQUIRE_UTC,
+        datetime_range=DateTimeOffsetRange(
+            pivot=datetime(2021, 7, 15, 12, 30, 0, tzinfo=timezone.utc),
+            offset_minus=timedelta(minutes=5),
+            offset_plus=timedelta(minutes=10),
+        ),
+    )
+
+    # Valid datetimes in the specified datetime range
+    validator.validate("2021-07-15T12:25:00Z")  # -> datetime(2021, 7, 15, 12, 25, tzinfo=timezone.utc)
+    validator.validate("2021-07-15T12:30:00Z")  # -> datetime(2021, 7, 15, 12, 30, tzinfo=timezone.utc)
+    validator.validate("2021-07-15T12:40:00Z")  # -> datetime(2021, 7, 15, 12, 40, tzinfo=timezone.utc)
+
+    # These will all raise a DateTimeRangeError with lower_boundary='2021-07-15T12:25:00+00:00'
+    # and upper_boundary='2021-07-15T12:40:00+00:00'
+    validator.validate("2021-07-14T12:30:00Z")  # raises DateTimeRangeError (time fits, but day is out of range)
+    validator.validate("2021-07-15T12:24:59Z")  # raises DateTimeRangeError (one second too early)
+    validator.validate("2021-07-15T12:40:01Z")  # raises DateTimeRangeError (one second too late)
     ```
 
     The pivot in a `DateTimeOffsetRange` can also be a callable, which will be evaluated just when the `validate()`
