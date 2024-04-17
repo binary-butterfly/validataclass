@@ -1019,8 +1019,8 @@ class DataclassValidatorTest:
             DataclassValidator()
 
         assert (
-            str(exception_info.value) ==
-            'Parameter "dataclass_cls" must be specified (or set as class member in a subclass).'
+            str(exception_info.value)
+            == 'Parameter "dataclass_cls" must be specified (or set as class member in a subclass).'
         )
 
     @staticmethod
@@ -1042,8 +1042,8 @@ class DataclassValidatorTest:
             DataclassValidator(dataclass_instance)
 
         assert (
-            str(exception_info.value) ==
-            'Parameter "dataclass_cls" is a dataclass instance, but must be a dataclass type.'
+            str(exception_info.value)
+            == 'Parameter "dataclass_cls" is a dataclass instance, but must be a dataclass type.'
         )
 
     # Test DataclassValidator with incompatible dataclasses
