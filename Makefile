@@ -37,12 +37,17 @@ venv-tox:
 # Only run pytest
 .PHONY: test
 test:
-	tox run --skip-env flake8
+	tox run --skip-env flake8,mypy
 
 # Only run flake8 linter
 .PHONY: flake8
 flake8:
 	tox run -e flake8
+
+# Only run mypy (via tox; you can also just run "mypy" directly)
+.PHONY: mypy
+mypy:
+	tox run -e mypy
 
 # Open HTML coverage report in browser
 .PHONY: open-coverage
@@ -81,6 +86,21 @@ docker-tox-all:
 	make docker-tox-py310
 	make docker-tox-py311
 	make docker-tox-py312
+
+# Run mypy using all different (or specific) Python versions in Docker
+.PHONY: docker-mypy-all docker-mypy-py312 docker-mypy-py311 docker-mypy-py310 docker-mypy-py39 docker-mypy-py38
+docker-mypy-all: TOX_ARGS="-e py312-mypy,py311-mypy,py310-mypy,py39-mypy,py38-mypy,py37-mypy"
+docker-mypy-all: docker-tox
+docker-mypy-py312: TOX_ARGS="-e py312-mypy"
+docker-mypy-py312: docker-tox
+docker-mypy-py311: TOX_ARGS="-e py311-mypy"
+docker-mypy-py311: docker-tox
+docker-mypy-py310: TOX_ARGS="-e py310-mypy"
+docker-mypy-py310: docker-tox
+docker-mypy-py39: TOX_ARGS="-e py39-mypy"
+docker-mypy-py39: docker-tox
+docker-mypy-py38: TOX_ARGS="-e py38-mypy"
+docker-mypy-py38: docker-tox
 
 # Pull the latest image of the multi-python Docker image
 .PHONY: docker-pull
