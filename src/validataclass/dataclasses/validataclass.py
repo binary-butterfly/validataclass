@@ -31,7 +31,7 @@ def validataclass(cls: Type[_T]) -> Type[_T]:
 
 
 @overload
-def validataclass(cls: None = None, **kwargs) -> Callable[[Type[_T]], Type[_T]]:
+def validataclass(cls: None = None, /, **kwargs) -> Callable[[Type[_T]], Type[_T]]:
     ...
 
 
@@ -39,7 +39,11 @@ def validataclass(cls: None = None, **kwargs) -> Callable[[Type[_T]], Type[_T]]:
     kw_only_default=True,
     field_specifiers=(dataclasses.field, dataclasses.Field, validataclass_field),
 )
-def validataclass(cls: Optional[Type[_T]] = None, **kwargs) -> Union[Type[_T], Callable[[Type[_T]], Type[_T]]]:
+def validataclass(
+    cls: Optional[Type[_T]] = None,
+    /,
+    **kwargs,
+) -> Union[Type[_T], Callable[[Type[_T]], Type[_T]]]:
     """
     Decorator that turns a normal class into a DataclassValidator-compatible dataclass.
 
