@@ -637,6 +637,127 @@ class SubClass(BaseB, BaseA):
 ```
 
 
+## Pre-validation
+
+In some cases, it can be useful to preprocess the input dictionary **before** validating it.
+
+For example, you might have an externally defined API that uses field names in a different naming scheme than your
+dataclass (e.g. camel case instead of snake case) or field names that aren't valid identifiers in Python (e.g. invalid
+characters, like dashes instead of underscores). You might also want to define aliases for field names (e.g. to keep
+backwards compatibility after renaming a field in the API) without defining the fields multiple times.
+
+One way to do this would be to simply modify the input data before calling the `DataclassValidator`, or to write a
+custom `DataclassValidator` that does this for you. A custom validator especially makes sense if you want to apply the
+same transformations (e.g. changing the naming scheme) to a bunch of different dataclasses.
+
+Since version 0.10.0, there is another more generic way for defining pre-validation as part of the dataclass itself:
+The `__pre_validate__()` method.
+
+If a validataclass defines a static or class method called `__pre_validate__()`, the `DataclassValidator` will call
+this method on the input dictionary before validating it. 
+
+- The method **must** accept **exactly one** positional argument (except for the class object if it is a class method).
+  This argument is the input dictionary. The `DataclassValidator` ensures that this is always a `dict` (although at this
+  point it is **not** guaranteed that the dictionary keys are all strings).
+- The method also **must** return a dictionary, which will replace the original input dictionary. This can be either
+  the same dictionary object or a completely new one.
+- The method **may** accept any number of keyword arguments. These will be filled with so called context arguments if
+  they exist. This works in the same way as the `__post_validate__()` method which will be explained later.
+- Keep in mind that the input dictionary is the same object that was passed to `DataclassValidator.validate()`, so it
+  is **not** a copy. Modifying the dictionary will affect the original object.
+
+The following example shows how to define a `__pre_validate__()` method to transform field names to a static mapping
+defined in the method itself (and therefore as part of the dataclass).
+
+```python
+from validataclass.dataclasses import validataclass
+from validataclass.validators import DataclassValidator, StringValidator
+
+@validataclass
+class ExamplePreValidateDataclass:
+    """
+    Dataclass with `__pre_validate__()` static method to map field names according to a static mapping.
+    """
+    first_name: str = StringValidator()
+    last_name: str = StringValidator()
+    street: str = StringValidator()
+
+    @staticmethod
+    def __pre_validate__(input_data: dict) -> dict:
+        # Define a mapping table for field names
+        field_mapping = {
+            # The API uses UpperCamelCase, but we want to use snake_case
+            'FirstName': 'first_name',
+            'LastName': 'last_name',
+            
+            # Someone apparently thought mixing languages in API fields was a good idea...
+            'Straße': 'street',
+            'Strasse': 'street',
+        }
+
+        for from_key, to_key in field_mapping.items():
+            if from_key in input_data:
+                # NOTE: If both the "to" and "from" keys already exist in the input dictionary, e.g. if a field was
+                # specified both with the "correct" name and the alias, the alias takes precedence. This can be
+                # implemented differently of course.
+                input_data[to_key] = input_data.pop(from_key)
+
+        return input_data
+
+# Create a validator for this dataclass
+validator = DataclassValidator(ExamplePreValidateDataclass)
+
+# These examples will all result in the same object
+validator.validate({"first_name": "Luke", "last_name": "Skywalker", "street": "Anchorhead Street"})
+validator.validate({"first_name": "Luke", "LastName": "Skywalker", "Straße": "Anchorhead Street"})
+validator.validate({"FirstName": "Luke", "LastName": "Skywalker", "Strasse": "Anchorhead Street"})
+```
+
+If you need the same kind of mapping with different keys for multiple dataclasses, you can also define the
+`__pre_validate__()` method in a mixin class and get the key mapping from the dataclass. For example:
+
+```python
+from validataclass.dataclasses import validataclass
+from validataclass.validators import StringValidator
+
+class KeyMappingMixin:
+    """
+    Mixin class to be used in validataclasses. Implements a `__pre_validate__()` method that maps field names according
+    to a mapping that is defined in the dataclass as `__field_mapping__`.
+    """
+    # Override this member to define the key mapping
+    __field_mapping__ = {}
+
+    @classmethod
+    def __pre_validate__(cls, input_data: dict) -> dict:
+        for from_key, to_key in cls.__field_mapping__.items():
+            if from_key in input_data:
+                input_data[to_key] = input_data.pop(from_key)
+
+        return input_data
+
+@validataclass
+class ExamplePreValidateDataclass(KeyMappingMixin):
+    """
+    Dataclass that uses the KeyMappingMixin to map field names.
+    """
+    # Define a mapping table for field names
+    __field_mapping__ = {
+        # The API uses UpperCamelCase, but we want to use snake_case
+        'FirstName': 'first_name',
+        'LastName': 'last_name',
+
+        # Someone apparently thought mixing languages in API fields was a good idea...
+        'Straße': 'street',
+        'Strasse': 'street',
+    }
+
+    first_name: str = StringValidator()
+    last_name: str = StringValidator()
+    street: str = StringValidator()
+```
+
+
 ## Post-validation
 
 Post-validation is everything that happens **after** all fields have been validated individually, but **before** the
@@ -806,7 +927,7 @@ from typing import Optional
 
 from validataclass.dataclasses import validataclass, Default
 from validataclass.exceptions import RequiredValueError, DataclassPostValidationError
-from validataclass.validators import DataclassValidator, BooleanValidator, IntegerValidator
+from validataclass.validators import DataclassValidator, IntegerValidator
 
 @validataclass
 class ContextSensitiveExampleClass:
