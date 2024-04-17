@@ -40,7 +40,7 @@ class UnitTestDataclass:
     Simple dataclass for testing DataclassValidator.
     """
     name: str = StringValidator()
-    color: str = (StringValidator(), Default('unknown color'))
+    color: str = StringValidator(), Default('unknown color')
     amount: int = IntegerValidator()
     weight: Decimal = DecimalValidator()
 
@@ -108,7 +108,7 @@ class UnitTestContextSensitiveDataclass:
     when the context argument "value_required" is set.
     """
     name: str = UnitTestContextValidator()
-    value: Optional[int] = (IntegerValidator(), Default(None))
+    value: Optional[int] = IntegerValidator(), Default(None)
 
     def __post_validate__(self, *, value_required: bool = False):
         if value_required and self.value is None:
@@ -391,10 +391,10 @@ class DataclassValidatorTest:
 
         @validataclass
         class DataclassWithDefaults:
-            default_str: str = (StringValidator(), Default('example default'))
-            default_list: List[int] = (ListValidator(IntegerValidator()), Default([]))
-            default_counter: int = (IntegerValidator(), DefaultFactory(counter))
-            default_unset: OptionalUnset[str] = (StringValidator(), DefaultUnset)
+            default_str: str = StringValidator(), Default('example default')
+            default_list: List[int] = ListValidator(IntegerValidator()), Default([])
+            default_counter: int = IntegerValidator(), DefaultFactory(counter)
+            default_unset: OptionalUnset[str] = StringValidator(), DefaultUnset
 
         validator = DataclassValidator(DataclassWithDefaults)
 

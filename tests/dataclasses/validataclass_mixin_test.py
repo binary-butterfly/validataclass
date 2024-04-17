@@ -16,8 +16,8 @@ from validataclass.validators import DataclassValidator, DecimalValidator, Integ
 @validataclass
 class UnitTestDataclass(ValidataclassMixin):
     foo: int = IntegerValidator()  # required field
-    bar: str = (StringValidator(), Default('bloop'))
-    baz: OptionalUnset[Decimal] = (DecimalValidator(), DefaultUnset)
+    bar: str = StringValidator(), Default('bloop')
+    baz: OptionalUnset[Decimal] = DecimalValidator(), DefaultUnset
 
 
 class ValidataclassMixinTest:
@@ -27,7 +27,7 @@ class ValidataclassMixinTest:
 
     @staticmethod
     def test_validataclass_to_dict():
-        """ Tests the to_dict() method of the ValidataclassMixin class using the regular constructor. """
+        """ Tests ValidataclassMixin.to_dict() using the regular constructor. """
         obj = UnitTestDataclass(foo=42, bar='meep', baz=Decimal('-1.23'))
         assert obj.to_dict() == {
             'foo': 42,
@@ -37,7 +37,7 @@ class ValidataclassMixinTest:
 
     @staticmethod
     def test_validataclass_to_dict_validated():
-        """ Tests the to_dict() method of the ValidataclassMixin class using a DataclassValidator. """
+        """ Tests ValidataclassMixin.to_dict() using a DataclassValidator. """
         validator = DataclassValidator(UnitTestDataclass)
         obj: UnitTestDataclass = validator.validate({'foo': 42, 'bar': 'meep', 'baz': '-1.23'})
         assert obj.to_dict() == {
@@ -48,7 +48,7 @@ class ValidataclassMixinTest:
 
     @staticmethod
     def test_validataclass_to_dict_validated_with_defaults():
-        """ Tests the to_dict() method of the ValidataclassMixin class using a DataclassValidator, with default values. """
+        """ Tests ValidataclassMixin.to_dict() using a DataclassValidator, with default values. """
         validator = DataclassValidator(UnitTestDataclass)
         obj: UnitTestDataclass = validator.validate({'foo': 42})
         assert obj.to_dict() == {
@@ -58,7 +58,7 @@ class ValidataclassMixinTest:
 
     @staticmethod
     def test_validataclass_to_dict_validated_keep_unset_values():
-        """ Tests the to_dict() method of the ValidataclassMixin class with the parameter keep_unset_value=True. """
+        """ Tests ValidataclassMixin.to_dict() with the parameter keep_unset_value=True. """
         validator = DataclassValidator(UnitTestDataclass)
         obj: UnitTestDataclass = validator.validate({'foo': 42})
         obj_as_dict = obj.to_dict(keep_unset_values=True)

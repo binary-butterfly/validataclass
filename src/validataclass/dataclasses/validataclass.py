@@ -67,9 +67,6 @@ def validataclass(cls: Optional[Type[_T]] = None, **kwargs) -> Union[Type[_T], C
         example_field3: str = validataclass_field(StringValidator())  # Same as example_field1
         example_field4: str = validataclass_field(StringValidator(), default='not set')  # Same as example_field2
         post_init_field: int = field(init=False, default=0)  # Post-init field without validator
-
-        # COMPATIBILITY NOTE: In Python 3.7 parentheses are required when setting a Default using the tuple notation:
-        # field_with_default: str = (StringValidator(), Default('not set'))
     ```
 
     Note: As of now, InitVars are not supported because they are not recognized as proper fields. This might change in a

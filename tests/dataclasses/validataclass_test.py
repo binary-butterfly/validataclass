@@ -10,7 +10,14 @@ from typing import Optional, List, Dict
 import pytest
 
 from tests.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
-from validataclass.dataclasses import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset, NoDefault
+from validataclass.dataclasses import (
+    validataclass,
+    validataclass_field,
+    Default,
+    DefaultFactory,
+    DefaultUnset,
+    NoDefault,
+)
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.helpers import OptionalUnset, UnsetValue
 from validataclass.validators import IntegerValidator, StringValidator, Noneable, ListValidator, DictValidator
@@ -63,10 +70,11 @@ class ValidatorDataclassTest:
 
     @staticmethod
     def test_validataclass_with_kwargs():
-        """ Create a dataclass using @validataclass(...) with arguments and check that they are passed to @dataclass(). """
+        """ Create a dataclass using @validataclass() with arguments and check that they are passed to @dataclass(). """
 
-        # Create two dataclasses, one without any arguments and one with unsafe_hash=True. The first won't have a __hash__ function,
-        # but the latter will have one. We can use this to check that the argument was really passed to @dataclass.
+        # Create two dataclasses, one without any arguments and one with unsafe_hash=True.
+        # The first won't have a __hash__ function, but the latter will have one.
+        # We can use this to check that the argument was really passed to @dataclass.
 
         @validataclass()
         class FooDataclass:
@@ -90,9 +98,9 @@ class ValidatorDataclassTest:
 
         @validataclass
         class UnitTestValidatorDataclass:
-            foo: int = (IntegerValidator(), NoDefault)
-            bar: int = (IntegerValidator(), Default(42))
-            baz: Optional[int] = (IntegerValidator(), Default(None))
+            foo: int = IntegerValidator(), NoDefault
+            bar: int = IntegerValidator(), Default(42)
+            baz: Optional[int] = IntegerValidator(), Default(None)
 
         # Get fields from dataclass
         fields = get_dataclass_fields(UnitTestValidatorDataclass)
@@ -156,8 +164,8 @@ class ValidatorDataclassTest:
         @validataclass
         class UnitTestDataclass:
             field1: int = IntegerValidator()
-            field2: int = (IntegerValidator(), Default(100))
-            field3: int = (IntegerValidator(), DefaultFactory(counter))
+            field2: int = IntegerValidator(), Default(100)
+            field3: int = IntegerValidator(), DefaultFactory(counter)
 
         # Create an instance where all fields are specified explicitly
         instance = UnitTestDataclass(field1=42, field2=13, field3=12)
@@ -173,12 +181,14 @@ class ValidatorDataclassTest:
 
     @staticmethod
     def test_validataclass_create_objects_invalid():
-        """ Create a dataclass using @validataclass and try to instantiate objects from it, but missing a required value. """
+        """
+        Create a dataclass using @validataclass and try to instantiate objects from it, but missing a required value.
+        """
 
         @validataclass
         class UnitTestDataclass:
             required_field: int = IntegerValidator()
-            optional_field: int = (IntegerValidator(), Default(10))
+            optional_field: int = IntegerValidator(), Default(10)
 
         # Try to instantiate without the required field
         with pytest.raises(TypeError, match="required keyword-only argument"):
@@ -197,8 +207,11 @@ class ValidatorDataclassTest:
 
         @validataclass
         class UnitTestDataclass:
-            field_list: List[int] = (ListValidator(IntegerValidator()), Default([]))
-            field_dict: Dict[str, int] = (DictValidator(field_validators={'foo': IntegerValidator()}), Default({'foo': 0}))
+            field_list: List[int] = ListValidator(IntegerValidator()), Default([])
+            field_dict: Dict[str, int] = (
+                DictValidator(field_validators={'foo': IntegerValidator()}),
+                Default({'foo': 0}),
+            )
 
         # Try to instantiate the class using the regular constructor
         obj1 = UnitTestDataclass()
@@ -216,7 +229,7 @@ class ValidatorDataclassTest:
 
     @staticmethod
     def test_validataclass_subclassing_defaults():
-        """ Test the @validataclass decorator with a subclassed validataclass with different defaults. """
+        """ Test @validataclass decorator with a subclassed validataclass with different defaults. """
 
         @validataclass
         class BaseClass:
@@ -227,10 +240,10 @@ class ValidatorDataclassTest:
             required4: int = IntegerValidator()
 
             # Optional fields
-            optional1: Optional[int] = (IntegerValidator(), Default(None))
-            optional2: Optional[int] = (IntegerValidator(), Default(None))
-            optional3: int = (IntegerValidator(), Default(3))
-            optional4: OptionalUnset[int] = (IntegerValidator(), DefaultUnset)
+            optional1: Optional[int] = IntegerValidator(), Default(None)
+            optional2: Optional[int] = IntegerValidator(), Default(None)
+            optional3: int = IntegerValidator(), Default(3)
+            optional4: OptionalUnset[int] = IntegerValidator(), DefaultUnset
 
         @validataclass
         class SubClass(BaseClass):
@@ -252,8 +265,10 @@ class ValidatorDataclassTest:
         fields = get_dataclass_fields(SubClass)
 
         # Check that all fields exist
-        assert list(fields.keys()) == \
-               ['required1', 'required2', 'required3', 'required4', 'optional1', 'optional2', 'optional3', 'optional4']
+        assert list(fields.keys()) == [
+            'required1', 'required2', 'required3', 'required4',
+            'optional1', 'optional2', 'optional3', 'optional4',
+        ]
 
         # Check type annotations
         assert all(fields[field].type is int for field in ['required1', 'required2', 'optional2', 'optional4'])
@@ -277,7 +292,7 @@ class ValidatorDataclassTest:
 
     @staticmethod
     def test_validataclass_subclassing_validators():
-        """ Test the @validataclass decorator with a subclassed validataclass with different validators and new fields. """
+        """ Test @validataclass decorator with a subclassed validataclass with different validators and new fields. """
 
         @validataclass
         class BaseClass:
@@ -286,22 +301,22 @@ class ValidatorDataclassTest:
             required2: int = IntegerValidator()
 
             # Optional fields
-            optional1: int = (IntegerValidator(), Default(3))
-            optional2: int = (IntegerValidator(), Default(3))
+            optional1: int = IntegerValidator(), Default(3)
+            optional2: int = IntegerValidator(), Default(3)
 
         @validataclass
         class SubClass(BaseClass):
             # Required fields
             required1: str = StringValidator()
-            required2: Optional[str] = (StringValidator(), Default(None))
+            required2: Optional[str] = StringValidator(), Default(None)
 
             # Optional fields
-            optional1: str = StringValidator()  # No default override, so Default(3) from base class should still be set!
-            optional2: Optional[str] = (StringValidator(), Default(None))
+            optional1: str = StringValidator()  # No default override, so the default should still be Default(3)
+            optional2: Optional[str] = StringValidator(), Default(None)
 
             # New fields
             new1: str = StringValidator()
-            new2: Optional[str] = (StringValidator(), Default(None))
+            new2: Optional[str] = StringValidator(), Default(None)
 
         # Get fields from dataclass
         fields = get_dataclass_fields(SubClass)
@@ -341,7 +356,7 @@ class ValidatorDataclassTest:
         @validataclass
         class SubClass(BaseClass):
             # Modify the validated field
-            validated: int = (IntegerValidator(), Default(42))
+            validated: int = IntegerValidator(), Default(42)
 
         # Get fields from dataclass
         fields = get_dataclass_fields(SubClass)
@@ -362,7 +377,7 @@ class ValidatorDataclassTest:
         @validataclass
         class BaseA:
             field_a: int = IntegerValidator()
-            field_both: int = (IntegerValidator(), Default(1))
+            field_both: int = IntegerValidator(), Default(1)
 
         @validataclass
         class BaseB:
@@ -385,9 +400,9 @@ class ValidatorDataclassTest:
         assert fields['field_a'].metadata.get('validator_default') == Default(42)
         assert fields['field_b'].metadata.get('validator_default') == Default(None)
 
-        # For fields defined in both base classes, BaseB should take precedence over BaseA (MRO: SubClass, BaseB, BaseA, object).
-        # Since BaseB does NOT inherit from BaseA, there should NOT be partial overrides in the field, i.e. field_both in
-        # SubClass does not have a default, since the field has no default in BaseB.
+        # For fields defined in both base classes, BaseB should take precedence over BaseA (MRO: SubClass, BaseB, BaseA,
+        # object). Since BaseB does NOT inherit from BaseA, there should NOT be partial overrides in the field, i.e.
+        # field_both in SubClass does not have a default, since the field has no default in BaseB.
         assert isinstance((fields['field_both'].metadata.get('validator')), StringValidator)
         assert fields['field_both'].metadata.get('validator_default') is None
 
@@ -395,7 +410,10 @@ class ValidatorDataclassTest:
 
     @staticmethod
     def test_validataclass_with_invalid_values():
-        """ Test that @validataclass raises exceptions when a field is not predefined (e.g. with field()) and has no Validator. """
+        """
+        Test that @validataclass raises exceptions if a field is not already defined (e.g. with field()) and has no
+        Validator.
+        """
 
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
@@ -462,7 +480,9 @@ class ValidatorDataclassTest:
         ]
     )
     def test_validataclass_with_missing_annotations_invalid(cls_name):
-        """ Test that @validataclass raises exceptions when it detects a field with a validator but with a missing type annotation. """
+        """
+        Test that @validataclass raises exceptions when it detects a field with a validator but no type annotation.
+        """
 
         class InvalidDataclassA:
             foo = IntegerValidator()
@@ -471,7 +491,7 @@ class ValidatorDataclassTest:
             foo = Default(0)
 
         class InvalidDataclassC:
-            foo = (IntegerValidator(), Default(0))
+            foo = IntegerValidator(), Default(0)
 
         classes = {
             'InvalidDataclassA': InvalidDataclassA,
@@ -481,7 +501,11 @@ class ValidatorDataclassTest:
 
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             validataclass(classes[cls_name])
-        assert str(exception_info.value) == 'Dataclass field "foo" has a defined Validator and/or Default object, but no type annotation.'
+
+        assert (
+            str(exception_info.value)
+            == 'Dataclass field "foo" has a defined Validator and/or Default object, but no type annotation.'
+        )
 
     @staticmethod
     def test_validataclass_with_missing_annotations_valid():
@@ -501,10 +525,13 @@ class ValidatorDataclassTest:
 
     @staticmethod
     def test_validataclass_with_init_vars_exception():
-        """ Test that @validataclass raises an exception when it detects InitVars (because they don't work currently). """
+        """ Test that @validataclass raises an exception when it detects InitVars (they don't work currently). """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
             class InvalidDataclass:
                 foo: dataclasses.InitVar[int] = IntegerValidator()
 
-        assert str(exception_info.value) == 'Dataclass field "foo": InitVars currently not supported by DataclassValidator.'
+        assert (
+            str(exception_info.value)
+            == 'Dataclass field "foo": InitVars currently not supported by DataclassValidator.'
+        )
