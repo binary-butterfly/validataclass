@@ -9,7 +9,12 @@ import re
 from decimal import Decimal, InvalidOperation
 from typing import Any, Optional, Union
 
-from validataclass.exceptions import InvalidDecimalError, NumberRangeError, DecimalPlacesError, InvalidValidatorOptionException
+from validataclass.exceptions import (
+    DecimalPlacesError,
+    InvalidDecimalError,
+    InvalidValidatorOptionException,
+    NumberRangeError,
+)
 from .string_validator import StringValidator
 
 __all__ = [
@@ -19,10 +24,10 @@ __all__ = [
 
 class DecimalValidator(StringValidator):
     """
-    Validator that parses decimal numbers from strings (e.g. '1.234') to `decimal.Decimal` objects.
+    Validator that parses decimal numbers from strings (e.g. `1.234`) to `decimal.Decimal` objects.
 
-    Only allows finite numbers in regular decimal notation (e.g. '1.234', '-42', '.00', ...), but no other values that
-    are accepted by `decimal.Decimal` (e.g. no 'Infinity' or 'NaN' and no scientific notation).
+    Only allows finite numbers in regular decimal notation (e.g. `1.234`, `-42`, `.00`, ...), but no other values that
+    are accepted by `decimal.Decimal` (e.g. no `Infinity` or `NaN` and no scientific notation).
 
     Optionally a number range (minimum/maximum value as `Decimal`, integer or decimal string) can be specified using the
     parameters `min_value` and `max_value`, as well as a minimum/maximum number of decimal places in the input using
@@ -34,8 +39,8 @@ class DecimalValidator(StringValidator):
     used, which can be specified with the `rounding` parameter.
 
     The rounding mode defaults to `decimal.ROUND_HALF_UP`, which basically means that digits 0 to 4 are rounded down and
-    digits 5 to 9 are rounded up (e.g. with `output_places=1`, "1.149" would be rounded to "1.1" and "1.150" would be
-    rounded to "1.2"). Alternatively, set `rounding=None` to use the rounding mode set by the current decimal context.
+    digits 5 to 9 are rounded up (e.g. with `output_places=1`, `1.149` would be rounded to `1.1` and `1.150` would be
+    rounded to `1.2`). Alternatively, set `rounding=None` to use the rounding mode set by the current decimal context.
 
     Examples:
 
@@ -52,10 +57,12 @@ class DecimalValidator(StringValidator):
     # Allow any value with 2 or 3 decimal places (e.g. '0.123', '-123456.00', but not '0.1' or '0.1234')
     DecimalValidator(min_places=2, max_places=3)
 
-    # No constraints, but output Decimal will always have 2 places (e.g. '1' -> '1.00', '1.2345' -> '1.23', '1.999' -> '2.00')
+    # No constraints, but output Decimal will always have 2 places
+    # (e.g. '1' -> '1.00', '1.2345' -> '1.23', '1.999' -> '2.00')
     DecimalValidator(output_places=2)
 
-    # As above, but only allow 2 or less decimal places in input (e.g. '1' -> '1.00', '1.23' -> '1.23' but '1.234' raises an exception)
+    # As above, but only allow 2 or less decimal places in input
+    # (e.g. '1' -> '1.00', '1.23' -> '1.23' but '1.234' raises an exception)
     DecimalValidator(max_places=2, output_places=2)
 
     # Two output places, but always round up (e.g. '1.001' -> '1.01')
@@ -84,7 +91,8 @@ class DecimalValidator(StringValidator):
     decimal_regex: re.Pattern = re.compile(r'[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)')
 
     def __init__(
-        self, *,
+        self,
+        *,
         min_value: Optional[Union[Decimal, int, str]] = None,
         max_value: Optional[Union[Decimal, int, str]] = None,
         min_places: Optional[int] = None,
@@ -93,16 +101,16 @@ class DecimalValidator(StringValidator):
         rounding: Optional[str] = decimal.ROUND_HALF_UP,
     ):
         """
-        Create a DecimalValidator with optional value range, optional minimum/maximum number of decimal places and
+        Creates a `DecimalValidator` with optional value range, optional minimum/maximum number of decimal places and
         optional number of decimal places in output value.
 
         Parameters:
-            min_value: Decimal, integer or string, specifies lowest allowed value (default: None, no minimum value)
-            max_value: Decimal, integer or string, specifies highest allowed value (default: None, no maximum value)
-            min_places: Integer, minimum number of decimal places an input value must have (default: None, no minimum places)
-            max_places: Integer, maximum number of decimal places an input value must have (default: None, no maximum places)
-            output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
-            rounding: Rounding mode for numbers that need to be rounded (default: decimal.ROUND_HALF_UP)
+            `min_value`: Decimal, integer or string, specifies lowest allowed value (default: `None`, no minimum value)
+            `max_value`: Decimal, integer or string, specifies highest allowed value (default: `None`, no maximum value)
+            `min_places`: Integer, minimum number of decimal places an input value must have (default: `None`)
+            `max_places`: Integer, maximum number of decimal places an input value must have (default: `None`)
+            `output_places`: Integer, if set, values are rounded to this number of decimal places (default: `None`)
+            `rounding`: Rounding mode for numbers that need to be rounded (default: `decimal.ROUND_HALF_UP`)
         """
         # Restrict string length
         super().__init__(max_length=40)
@@ -139,7 +147,7 @@ class DecimalValidator(StringValidator):
 
     def validate(self, input_data: Any, **kwargs) -> Decimal:
         """
-        Validate input data as a string, convert it to a Decimal object and check optional constraints.
+        Validates input data as a string, convert it to a `Decimal` object and check optional constraints.
         """
         # First, validate input data as string
         decimal_string = super().validate(input_data, **kwargs)
@@ -152,7 +160,10 @@ class DecimalValidator(StringValidator):
         places = len(decimal_string.rsplit('.', maxsplit=1)[1]) if '.' in decimal_string else 0
 
         # Validate number of decimal places
-        if (self.min_places is not None and places < self.min_places) or (self.max_places is not None and places > self.max_places):
+        if (
+            (self.min_places is not None and places < self.min_places)
+            or (self.max_places is not None and places > self.max_places)
+        ):
             raise DecimalPlacesError(min_places=self.min_places, max_places=self.max_places)
 
         # Try to parse string as decimal value
@@ -162,7 +173,10 @@ class DecimalValidator(StringValidator):
             raise InvalidDecimalError()
 
         # Check if value is in allowed range
-        if (self.min_value is not None and decimal_out < self.min_value) or (self.max_value is not None and decimal_out > self.max_value):
+        if (
+            (self.min_value is not None and decimal_out < self.min_value)
+            or (self.max_value is not None and decimal_out > self.max_value)
+        ):
             min_value_str = str(self.min_value) if self.min_value is not None else None
             max_value_str = str(self.max_value) if self.max_value is not None else None
             raise NumberRangeError(min_value=min_value_str, max_value=max_value_str)

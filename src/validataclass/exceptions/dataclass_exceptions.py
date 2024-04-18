@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from validataclass.exceptions import ValidationError
 
@@ -15,14 +15,16 @@ __all__ = [
 
 class DataclassPostValidationError(ValidationError):
     """
-    Validation error raised by `DataclassValidator` (or by a dataclass itself) when a user-defined post-validation condition fails.
+    Validation error raised by `DataclassValidator` (or by a dataclass itself) when a user-defined post-validation
+    condition fails.
 
-    This is an "error container" similar to `DictFieldsValidationError`, i.e. it does not represent a specific error in itself,
-    but *contains* one or multiple specific errors that happened at post-validation.
+    This is an "error container" similar to `DictFieldsValidationError`, i.e. it does not represent a specific error in
+    itself, but *contains* one or multiple specific errors that happened at post-validation.
 
-    This exception may contain a single field-independent validation error in the 'error' attribute (for example, an arbitrary
-    ValidationError raised by a `__post_init__()` method in a dataclass will be wrapped that way by the DataclassValidator), or may
-    contain multiple field validation errors in the 'field_errors' attribute (similar to DictFieldsValidationError), or both.
+    This exception may contain a single field-independent validation error in the `error` attribute (for example, an
+    arbitrary `ValidationError` raised by a `__post_validate__()` or `__post_init__()` method in a dataclass will be
+    wrapped that way by the `DataclassValidator`), or may contain multiple field validation errors in the `field_errors`
+    attribute (similar to `DictFieldsValidationError`), or both.
 
     The implementation of `to_dict()` recursively converts the field validation errors to dictionaries.
 
@@ -53,7 +55,13 @@ class DataclassPostValidationError(ValidationError):
     wrapped_error: Optional[ValidationError] = None
     field_errors: Optional[Dict[str, ValidationError]] = None
 
-    def __init__(self, *, error: Optional[ValidationError] = None, field_errors: Optional[Dict[str, ValidationError]] = None, **kwargs):
+    def __init__(
+        self,
+        *,
+        error: Optional[ValidationError] = None,
+        field_errors: Optional[Dict[str, ValidationError]] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
 
         # Wrap single validation error

@@ -4,13 +4,13 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+import re
 from datetime import time
 from enum import Enum
-import re
 from typing import Any
 
-from .string_validator import StringValidator
 from validataclass.exceptions import InvalidTimeError
+from .string_validator import StringValidator
 
 __all__ = [
     'TimeFormat',
@@ -23,8 +23,9 @@ class TimeFormat(Enum):
     Enum to specify time string format for `TimeValidator`.
 
     Enum members have two properties:
-    - format_str: String representation used in InvalidTimeError (e.g. "HH:MM[:SS]")
-    - regex_str: Regular expression pattern as string
+
+    - `format_str`: String representation used in InvalidTimeError (e.g. `HH:MM[:SS]`)
+    - `regex_str`: Regular expression pattern as string
     """
 
     def __init__(self, format_str, regex_str):
@@ -43,23 +44,24 @@ class TimeFormat(Enum):
 
 class TimeValidator(StringValidator):
     """
-    Validator that parses time strings in "HH:MM:SS" or "HH:MM" format (e.g. "13:05:59" / "13:05") to `datetime.time` objects.
+    Validator that parses time strings in the formats `HH:MM:SS` or `HH:MM` (e.g. `13:05:59` or `13:05`) to
+    `datetime.time` objects.
 
     The exact format can be specified using the `TimeFormat` enum, which has the following values:
 
-    - NO_SECONDS: Only allows "HH:MM" strings
-    - WITH_SECONDS: Only allows "HH:MM:SS" strings
-    - OPTIONAL_SECONDS: Allows both "HH:MM:SS" and "HH:MM" strings (where "HH:MM" is equivalent to "HH:MM:00")
+    - `NO_SECONDS`: Only allows `HH:MM` strings
+    - `WITH_SECONDS`: Only allows `HH:MM:SS` strings
+    - `OPTIONAL_SECONDS`: Allows both `HH:MM:SS` and `HH:MM` strings (where `HH:MM` is equivalent to `HH:MM:00`)
 
-    The default format is `TimeFormat.WITH_SECONDS` ("HH:MM:SS").
+    The default format is `TimeFormat.WITH_SECONDS` (`HH:MM:SS`).
 
     Examples:
 
     ```
-    # Validates "HH:MM:SS" strings (e.g. "13:05:59" -> datetime.time(13, 5, 59), while "13:05" raises an InvalidTimeError)
+    # Validates "HH:MM:SS" strings (e.g. "13:05:59" -> datetime.time(13, 5, 59); "13:05" raises an InvalidTimeError)
     TimeValidator()
 
-    # Validates "HH:MM" strings (e.g. "13:05" -> datetime.time(13, 5, 0), while "13:05:59" raises an InvalidTimeError)
+    # Validates "HH:MM" strings (e.g. "13:05" -> datetime.time(13, 5, 0); "13:05:59" raises an InvalidTimeError)
     TimeValidator(TimeFormat.NO_SECONDS)
 
     # Validates both "HH:MM:SS" and "HH:MM" (e.g. "13:05:59" and "13:05" are both valid)
@@ -80,10 +82,10 @@ class TimeValidator(StringValidator):
 
     def __init__(self, time_format: TimeFormat = TimeFormat.WITH_SECONDS):
         """
-        Create a `TimeValidator` with a specified time string format.
+        Creates a `TimeValidator` with a specified time string format.
 
         Parameters:
-            time_format: `TimeFormat`, specifies the accepted string format (default: `TimeFormat.WITH_SECONDS`)
+            `time_format`: `TimeFormat`, specifies the accepted string format (default: `TimeFormat.WITH_SECONDS`)
         """
         # Initialize StringValidator without any parameters
         super().__init__()
@@ -94,7 +96,7 @@ class TimeValidator(StringValidator):
 
     def validate(self, input_data: Any, **kwargs) -> time:
         """
-        Validate input as a valid time string and convert it to a `datetime.time` object.
+        Validates input as a valid time string and convert it to a `datetime.time` object.
         """
         # First, validate input data as string
         time_string = super().validate(input_data, **kwargs)

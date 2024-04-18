@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, Optional, Union, Type
+from typing import Any, Optional, Type, Union
 
 from validataclass.exceptions import RegexMatchError, ValidationError
 from .string_validator import StringValidator
@@ -42,7 +42,7 @@ class RegexValidator(StringValidator):
     By default only "safe" singleline strings are allowed (i.e. no non-printable characters). See the `StringValidator`
     options `unsafe` and `multiline` for more details.
 
-    Set the parameter `allow_empty=True` to allow empty strings ('').
+    If the parameter `allow_empty` is `True`, empty strings will be accepted as input (skipping the regex validation).
 
     Examples:
 
@@ -56,7 +56,8 @@ class RegexValidator(StringValidator):
     # Same as above, but with the re.IGNORECASE flag for case-insensitive matching (e.g. '123abc', '123ABC')
     RegexValidator(re.compile(r'[0-9a-f]+', re.IGNORECASE))
 
-    # Same as above, but using a raw string instead of a precompiled pattern (explicitly allowing uppercase letters in character class)
+    # Same as above, but using a raw string instead of a precompiled pattern (explicitly allowing uppercase letters in
+    # character class)
     RegexValidator(r'[0-9a-fA-F]+')
 
     # As above, but setting string length requirements to only allow 6-digit hex numbers (e.g. '123abc')
@@ -109,17 +110,17 @@ class RegexValidator(StringValidator):
         **kwargs,
     ):
         """
-        Create a RegexValidator with a specified regex pattern (as string or precompiled `re.Pattern` object).
+        Creates a `RegexValidator` with a specified regex pattern (as string or precompiled `re.Pattern` object).
 
-        Optionally with a custom error class (subclass of ValidationError) and custom error code. Other keyword
-        arguments (e.g. 'min_length', 'max_length', 'multiline' and 'unsafe') will be passed to `StringValidator`.
+        Optionally with a custom error class (subclass of `ValidationError`) and custom error code. Other keyword
+        arguments (e.g. `min_length`, `max_length`, `multiline` and `unsafe`) will be passed to `StringValidator`.
 
         Parameters:
-            pattern: `re.Pattern` or `str`, regex pattern to use for validation (required)
-            output_template: Optional `str`, template to be used in output, will be supplied to match.expand() (default: None)
-            custom_error_class: Subclass of `ValidationError` raised when regex matching fails (default: RegexMatchError)
-            custom_error_code: Optional `str`, overrides the default error code in the regex match exception (default: None)
-            allow_empty: Boolean, if True, empty strings are accepted as valid (default: False)
+            `pattern`: `re.Pattern` or `str`, regex pattern to use for validation (required)
+            `output_template`: `str`, used as a template to generate the output string if set (default: `None`)
+            `custom_error_class`: `ValidationError` subclass raised when regex match fails (default: `RegexMatchError`)
+            `custom_error_code`: `str`, overrides the default error code in the regex match exception (default: `None`)
+            `allow_empty`: Boolean, whether to accept empty strings as valid input (default: `False`)
         """
         # Initialize base StringValidator (may set min_length/max_length via kwargs)
         super().__init__(**kwargs)
@@ -145,7 +146,7 @@ class RegexValidator(StringValidator):
 
     def validate(self, input_data: Any, **kwargs) -> str:
         """
-        Validate input as string and match full string against regular expression.
+        Validates input as string and match full string against regular expression.
 
         Returns unmodified string, unless when output template was supplied.
         """

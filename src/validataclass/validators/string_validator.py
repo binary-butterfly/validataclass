@@ -6,8 +6,13 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any, Optional
 
+from validataclass.exceptions import (
+    StringTooShortError,
+    StringTooLongError,
+    StringInvalidCharactersError,
+    InvalidValidatorOptionException,
+)
 from .validator import Validator
-from validataclass.exceptions import StringTooShortError, StringTooLongError, StringInvalidCharactersError, InvalidValidatorOptionException
 
 __all__ = [
     'StringValidator',
@@ -18,17 +23,20 @@ class StringValidator(Validator):
     """
     Validator for arbitrary strings, optionally with minimal/maximal length requirements.
 
-    By default only "safe" singleline strings are allowed, i.e. strings are not allowed to contain non-printable characters (like
-    newlines or ASCII control characters, see https://docs.python.org/3/library/stdtypes.html#str.isprintable). The 'unsafe' option can
-    be set to True to allow non-printable characters (with the exception of newlines, see next paragraph). Please make sure to handle
-    such unsafe strings properly after validation though.
+    By default only "safe" singleline strings are allowed, i.e. strings are not allowed to contain characters that are
+    considered "non-printable" (like newlines or ASCII control characters, see
+    https://docs.python.org/3/library/stdtypes.html#str.isprintable). The `unsafe` option can be set to `True` to allow
+    non-printable characters (with the exception of newlines, see next paragraph). Please make sure to handle such
+    unsafe strings properly after validation though.
 
-    To allow multiline strings (i.e. strings that contain the newline characters '\n' and/or '\r'), the 'multiline' option can be set
-    to True. This is also necessary in unsafe mode, so setting `unsafe=True` alone will only allow *most* non-printable characters, but
-    still no '\n' or '\r'. To allow unsafe multiline strings, you need to set `unsafe=True, multiline=True`.
+    To allow multiline strings (i.e. strings that contain the newline characters `\n` and/or `\r`), the `multiline`
+    option can be set to `True`. This is also necessary in unsafe mode, so setting `unsafe=True` alone will only allow
+    *most* non-printable characters, but still no '\n' or '\r'. To allow unsafe multiline strings, you need to set
+    `unsafe=True` and `multiline=True`.
 
-    In safe mode (default), line endings in multiline strings will be normalized to Unix line endings (thus, "\r\n" and "\r" are allowed
-    as line endings and will be converted to "\n"). In *unsafe* mode, line endings will be preserved as they are in the input string.
+    In safe mode (default), line endings in multiline strings will be normalized to Unix line endings (thus, `\r\n` and
+    `\r` are allowed as line endings and will be converted to `\n`). In *unsafe* mode, line endings will be preserved as
+    they are in the input string.
 
     Examples:
 
@@ -42,10 +50,12 @@ class StringValidator(Validator):
     # Restricts input to strings that have a length of at least one, but at most 200 characters
     StringValidator(min_length=1, max_length=200)
 
-    # Accepts safe multiline strings of any length, normalizing line endings (e.g. "foo\r\nbar\rbaz\n" will result in "foo\nbar\nbaz\n")
+    # Accepts safe multiline strings of any length, normalizing line endings
+    # (e.g. "foo\r\nbar\rbaz\n" will result in "foo\nbar\nbaz\n")
     StringValidator(multiline=True)
 
-    # Accepts unsafe strings, but only singlelined (e.g. "foo\0bar" will be allowed, but "foo\nbar" or "foo\rbar" will not)
+    # Accepts unsafe strings, but only singlelined
+    # (e.g. "foo\0bar" will be allowed, but "foo\nbar" or "foo\rbar" will not)
     StringValidator(unsafe=True)
 
     # Accepts unsafe multiline strings, thus allowing *every* possible ASCII or UTF-8 character
@@ -67,23 +77,24 @@ class StringValidator(Validator):
     unsafe: bool = False
 
     def __init__(
-        self, *,
+        self,
+        *,
         min_length: Optional[int] = None,
         max_length: Optional[int] = None,
         multiline: bool = False,
         unsafe: bool = False,
     ):
         """
-        Create a StringValidator with optional length requirements and other options.
+        Creates a `StringValidator` with optional length requirements and other options.
 
-        By default, strings with non-printable characters, including newlines, are not allowed. This can be changed using the parameters
-        'multiline' and 'unsafe'. See class description for details.
+        By default, strings with non-printable characters, including newlines, are not allowed. This can be changed
+        using the parameters `multiline` and `unsafe`. See class description for details.
 
         Parameters:
-            min_length: `int`, specifies minimum length of input strings (default: None, no minimum length)
-            max_length: `int`, specifies maximum length of input strings (default: None, no maximum length)
-            multiline: `bool`, whether to allow newlines in strings (default: False)
-            unsafe: `bool`, whether to allow non-printable characters (except for newlines, see 'multiline') in strings (default: False)
+            `min_length`: `int`, specifies minimum length of input strings (default: `None`, no minimum length)
+            `max_length`: `int`, specifies maximum length of input strings (default: `None`, no maximum length)
+            `multiline`: `bool`, whether to allow newlines in strings (default: `False`)
+            `unsafe`: `bool`, whether to allow non-printable characters (except newlines) in strings (default: `False`)
         """
         # Check parameter validity
         if min_length is not None and min_length < 0:
@@ -101,7 +112,7 @@ class StringValidator(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> str:
         """
-        Validate input data to be a valid string, optionally checking length and allowed characters.
+        Validates input data to be a valid string, optionally checking length and allowed characters.
 
         Returns the input string with normalized line endings (only in safe multiline mode).
         """
@@ -118,7 +129,7 @@ class StringValidator(Validator):
 
         # Check string for non-printable characters, unless in unsafe mode
         if not self.unsafe:
-            # Temporarily replace newline characters (\n and \r) because those are non-printable and will be checked later
+            # Temporarily replace newline characters (\n, \r) because those are non-printable and will be checked later
             input_without_newlines = input_str.translate({10: ' ', 13: ' '})
             if not input_without_newlines.isprintable():
                 raise StringInvalidCharactersError(reason='String contains non-printable characters.')

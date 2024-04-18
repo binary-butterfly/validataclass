@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from validataclass.exceptions import ValidationError
 
@@ -17,9 +17,9 @@ __all__ = [
 class ListItemsValidationError(ValidationError):
     """
     Validation error raised by `ListValidator` when one or more list items has validation errors, i.e. errors raised
-    by the 'item_validator'.
+    by the `item_validator`.
 
-    Contains the extra field 'item_errors', which is a dictionary containing further `ValidationErrors`. The keys of
+    Contains the extra field `item_errors`, which is a dictionary containing further `ValidationErrors`. The keys of
     the dictionary are the indices of the invalid list items (as given in the input list).
 
     The implementation of `to_dict()` recursively converts the item validation errors to dictionaries.
@@ -51,10 +51,10 @@ class ListItemsValidationError(ValidationError):
 
 class ListLengthError(ValidationError):
     """
-    Validation error raised by `ListValidator` when a minimum and/or maximum list length is specified and the input list has too many
-    or not enough items.
+    Validation error raised by `ListValidator` when a minimum and/or maximum list length is specified and the input list
+    has too many or not enough items.
 
-    May contain the extra fields 'min_length' and 'max_length', depending on which are specified in the validator.
+    May contain the extra fields `min_length` and `max_length`, depending on which are specified in the validator.
     """
     code = 'list_invalid_length'
 

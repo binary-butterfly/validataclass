@@ -6,7 +6,12 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any, Generic, List, Optional, TypeVar
 
-from validataclass.exceptions import ValidationError, ListItemsValidationError, ListLengthError, InvalidValidatorOptionException
+from validataclass.exceptions import (
+    InvalidValidatorOptionException,
+    ListItemsValidationError,
+    ListLengthError,
+    ValidationError,
+)
 from .validator import Validator
 
 __all__ = [
@@ -27,6 +32,12 @@ class ListValidator(Generic[T_ListItem], Validator):
 
     Optionally a minimum and/or maximum length for the list can be specified.
 
+    If the parameter `discard_invalid` is set, the validator will NOT raise validation errors if the item validator
+    fails, but silently discard the invalid items. The result will be a list with only the valid items (which can be an
+    empty list if all items are invalid). If `minimum_length` is set, the length of the list will be checked a second
+    time after discarding invalid items to make sure that the resulting list still fulfills the minimum length
+    requirement.
+
     Example:
 
     ```
@@ -43,10 +54,17 @@ class ListValidator(Generic[T_ListItem], Validator):
     # Discard items that are not a valid integers instead of raising an error
     # Example: [3, 'banana', 42, None] -> [3, 42]
     ListValidator(IntegerValidator(), discard_invalid=True)
+
+    # Discard invalid items, but with a minimum list length
+    # Examples:
+    # [3, 'banana', 42] -> [3]
+    # [3]               -> ListLengthError (raised BEFORE validating the items)
+    # [3, 'foo', 'bar'] -> ListLengthError (raised AFTER validating the items, the resulting list would be too short)
+    ListValidator(IntegerValidator(), min_length=2, discard_invalid=True)
     ```
 
-    Valid input: [item1, item2, ...] (if all items are valid input for the item validator)
-    Output: [validated_item1, validated_item2, ...]
+    Valid input: `[item1, item2, ...]` (if all items are valid input for the item validator)
+    Output: `[validated_item1, validated_item2, ...]`
     """
 
     # Validator used to validate the list items
@@ -68,13 +86,13 @@ class ListValidator(Generic[T_ListItem], Validator):
         discard_invalid: bool = False
     ):
         """
-        Create a ListValidator with a given item validator and optional minimum/maximum list length requirements.
+        Creates a `ListValidator` with a given item validator and optional minimum/maximum list length requirements.
 
         Parameters:
-            item_validator: Validator, used to validate the items in the list (required)
-            min_length: Integer, specifies minimum length of input list (default: None, no minimum length)
-            max_length: Integer, specifies maximum length of input list (default: None, no maximum length)
-            discard_invalid: Boolean, if True, will discard invalid items instead of raising error
+            `item_validator`: Validator used to validate the items in the list (required)
+            `min_length`: Integer, specifies minimum length of input list (default: `None`, no minimum length)
+            `max_length`: Integer, specifies maximum length of input list (default: `None`, no maximum length)
+            `discard_invalid`: Boolean, if `True`, will silently discard invalid items instead of raising error
         """
         # Set validator used on each list item
         self.item_validator = item_validator
@@ -93,7 +111,7 @@ class ListValidator(Generic[T_ListItem], Validator):
 
     def validate(self, input_data: Any, **kwargs) -> List[T_ListItem]:
         """
-        Validate input data. Returns a validated list.
+        Validates input data. Returns a validated list.
         """
         self._ensure_type(input_data, list)
 

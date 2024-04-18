@@ -17,16 +17,16 @@ class BigIntegerValidator(IntegerValidator):
     """
     Validator for big integer values.
 
-    This validator is a variation of the IntegerValidator. It's exactly the same validator, just with other default
+    This validator is a variation of the `IntegerValidator`. It's exactly the same validator, just with other default
     parameters.
 
-    While the IntegerValidator sets defaults for `min_value` and `max_value` to limit input to 32-bit integers, the
-    BigIntegerValidator resets these parameters to `None` to allow arbitrarily big integers. You can still override
+    While the `IntegerValidator` sets defaults for `min_value` and `max_value` to limit input to 32-bit integers, the
+    `BigIntegerValidator` resets these parameters to `None` to allow arbitrarily big integers. You can still override
     these parameters, e.g. by setting `min_value=1` to allow only positive numbers.
 
     So basically, `BigIntegerValidator()` is identical to `IntegerValidator(min_value=None, max_value=None)`.
 
-    Like the IntegerValidator, it also supports the parameter `allow_strings` to allow strings as input.
+    Like the `IntegerValidator`, it also supports the parameter `allow_strings` to allow strings as input.
 
     Examples:
 
@@ -49,13 +49,19 @@ class BigIntegerValidator(IntegerValidator):
     Output: `int`
     """
 
-    def __init__(self, *, min_value: Optional[int] = None, max_value: Optional[int] = None, allow_strings: bool = False):
+    def __init__(
+        self,
+        *,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
+        allow_strings: bool = False,
+    ):
         """
-        Create a BigIntegerValidator.
+        Creates a `BigIntegerValidator`.
 
         Parameters:
-            min_value: Integer or None, smallest allowed integer value (default: None, no limit)
-            max_value: Integer or None, biggest allowed integer value (default: None, no limit)
-            allow_strings: Boolean, if True, numeric strings (e.g. "123") are accepted and converted to integers (default: False)
+            `min_value`: Integer or `None`, smallest allowed integer value (default: `None`, no limit)
+            `max_value`: Integer or `None`, biggest allowed integer value (default: `None`, no limit)
+            `allow_strings`: Boolean, whether to accept numeric strings and convert them to integers (default: `False`)
         """
         super().__init__(min_value=min_value, max_value=max_value, allow_strings=allow_strings)

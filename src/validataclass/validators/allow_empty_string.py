@@ -17,42 +17,43 @@ __all__ = [
 
 class AllowEmptyString(Validator):
     """
-    Special validator that wraps another validator, but allows empty string ('') as input value.
+    Special validator that wraps another validator, but allows empty strings as the input value.
 
-    By default, the wrapper returns empty string ('') for empty string ('') as input value. Optionally a default value
-    can be specified in the constructor that will be returned instead of empty string ('').
+    By default, the wrapper returns an empty string if the input value is an empty string. Alternatively, the parameter
+    `default` can be set to a different value that will be returned instead of the empty string.
 
-    If the wrapped validator raises an `InvalidTypeError`, `AllowEmptyString` will add str
-    to its 'expected_types' parameter and reraise it.
+    If the wrapped validator raises an `InvalidTypeError`, the wrapper will add the type `str` to its `expected_types`
+    and reraise the exception.
 
     Examples:
 
     ```
-    # Accepts strings and empty string (''), returns both unmodified (e.g. "foo" -> "foo", "" -> "")
-    AllowEmptyString(StringValidator())
+    # Accepts decimal strings and empty strings. Returns either a Decimal object or an empty string.
+    # (e.g. '1.23' -> Decimal('1.23'), '' -> '')
+    AllowEmptyString(DecimalValidator())
 
-    # Accepts strings and empty string (''), returns a default string for empty string ('')
-     (e.g. '' -> "no value given!", but "foo" -> "foo")
-    AllowEmptyString(StringValidator(), default='no value given!')
+    # Accepts decimal strings and empty strings. If the input is an empty string, a Decimal(0) will be returned.
+    # (e.g. '1.23' -> Decimal('1.23'), '' -> Decimal('0'))
+    AllowEmptyString(DecimalValidator(), default=Decimal(0))
     ```
 
-    Valid input: `` or any data accepted by the wrapped validator
-    Output: `` (or default value specified in constructor) or the output of the wrapped validator
+    Valid input: Empty string or any data accepted by the wrapped validator
+    Output: Output of the wrapped validator or specified default value (default: empty string)
     """
 
-    # Default value returned in case the input is empty string ('')
+    # Default value returned in case the input is empty string
     default_value: Any
 
-    # Validator used in case the input is not empty string ('')
+    # Validator used in case the input is not empty string
     wrapped_validator: Validator
 
     def __init__(self, validator: Validator, *, default: Any = ''):
         """
-        Create a AllowEmptyString wrapper validator.
+        Creates a `AllowEmptyString` wrapper validator.
 
         Parameters:
-            validator: Validator that will be wrapped (required)
-            default: Value of any type that is returned instead of empty string ('') (default: ``)
+            `validator`: Validator that will be wrapped (required)
+            `default`: Value of any type that is returned when the input is an empty string (default: empty string)
         """
         # Check parameter validity
         if not isinstance(validator, Validator):
@@ -63,9 +64,9 @@ class AllowEmptyString(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> Optional[Any]:
         """
-        Validate input data.
+        Validates input data.
 
-        If the input is empty string (''), return empty string ('') (or the value specified in the `default` parameter).
+        If the input is an empty string, returns an empty string (or the value specified in the `default` parameter).
         Otherwise, pass the input to the wrapped validator and return its result.
         """
         if input_data == "":

@@ -15,7 +15,8 @@ __all__ = [
     'NoDefault',
 ]
 
-# DEPRECATED: This module exists only for compatibility reasons and is going to be removed in a future version (presumably 1.0.0).
+# DEPRECATED: This module exists only for compatibility reasons and is going to be removed in a future version
+# (presumably 1.0.0).
 warnings.warn(
     "All dataclass related modules have been moved from validataclass.helpers to validataclass.dataclasses. "
     "Importing from the old location is still possible for compatibility reasons, but will stop working in a "

@@ -15,14 +15,15 @@ class ValidationError(Exception):
     """
     Exception that is raised by validators if the input data is not valid. Can be subclassed for specific errors.
 
-    Contains a string error code (usually in snake_case) to describe the error that can be used by frontends to generate human readable
-    error messages. Optionally it can contain additional fields for further information, e.g. for an 'invalid_length' error there could
-    be fields like 'min' and 'max' to tell the client what length an input string is supposed to have. Exceptions for combound validators
-    (like `ListValidator` and `DictValidator`) could also contain nested exceptions.
+    Contains a string error code (usually in snake_case) to describe the error that can be used by frontends to generate
+    human readable error messages. Optionally it can contain additional fields for further information, e.g. for an
+    `invalid_length` error there could be fields like `min` and `max` to tell the client what length an input string is
+    supposed to have. Exceptions for compound validators (like `ListValidator` and `DictValidator`) could also contain
+    nested exceptions.
 
-    The optional 'reason' attribute can be used to further describe an error with a human readable string (e.g. if some input is only
-    invalid under certain conditions and the error code alone does not make enough sense, for example a 'required_field' error on a field
-    that usually is optional could have a 'reason' string like "Field is required when $someOtherField is defined."
+    The optional `reason` attribute can be used to further describe an error with a human readable string. For example,
+    if an optional field is required under certain conditions (e.g. when a certain other field has a value), the
+    `required_field` error could have a `reason` string like `This field is required when [some_other_field] is set.`.
 
     Use `exception.to_dict()` to get a dictionary suitable for generating JSON responses.
     """
@@ -47,7 +48,10 @@ class ValidationError(Exception):
     def _get_repr_dict(self) -> Dict[str, str]:
         """
         Returns a dictionary representing the error fields as strings (e.g. by applying `repr()` on the values).
-        Used by `__repr__` to generate a string representation of the form "ExampleValidationError(code='foo', reason='foo', ...)".
+
+        Used by `__repr__` to generate a string representation of the form:
+        `ExampleValidationError(code='foo', reason='foo', ...)`
+
         The default implementation calls `to_dict()` and applies `repr()` on all values.
         """
         return {
@@ -56,7 +60,7 @@ class ValidationError(Exception):
 
     def to_dict(self) -> dict:
         """
-        Generate a dictionary containing error information, suitable as response to the user.
+        Generates a dictionary containing error information, suitable as response to the user.
         May be overridden by subclasses to extend the dictionary.
         """
         reason = {'reason': self.reason} if self.reason is not None else {}

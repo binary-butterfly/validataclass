@@ -7,9 +7,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from typing import Any
 
-from .string_validator import StringValidator
 from validataclass.exceptions import InvalidEmailError
 from validataclass.internal import internet_helpers
+from .string_validator import StringValidator
 
 __all__ = [
     'EmailValidator',
@@ -25,8 +25,8 @@ class EmailValidator(StringValidator):
 
     Please note that this validator is a bit opinionated and simplified in that it does *not* allow every email address
     that technically is valid according to the RFCs. For example, it does neither allow internationalized email
-    addresses (although this might be changed in the future), nor oddities like quoted strings as local part or comments,
-    because most mail software does not support those anyway and/or might break with those addresses.
+    addresses (although this might be changed in the future), nor oddities like quoted strings as local part or
+    comments, because most mail software does not support those anyway and/or might break with those addresses.
 
     Set the parameter `allow_empty=True` to allow empty strings as input.
 
@@ -51,11 +51,11 @@ class EmailValidator(StringValidator):
     """
 
     # Precompiled regular expression
-    email_regex: re.Pattern = re.compile(f'''
-        (?P<local_part> {_REGEX_LOCAL_PART_CHARS}+ (?: \\.{_REGEX_LOCAL_PART_CHARS}+)* )
-        @
-        (?P<domain> [^@?]+ )
-    ''', re.IGNORECASE | re.VERBOSE)
+    email_regex: re.Pattern = re.compile(
+        f'(?P<local_part> {_REGEX_LOCAL_PART_CHARS}+ (?: \\.{_REGEX_LOCAL_PART_CHARS}+)* ) '
+        f'@ (?P<domain> [^@?]+ )',
+        re.IGNORECASE | re.VERBOSE,
+    )
 
     # Whether to accept empty strings
     allow_empty: bool = False
@@ -71,12 +71,12 @@ class EmailValidator(StringValidator):
         max_length: int = 256,
     ):
         """
-        Create a `EmailValidator`.
+        Creates a `EmailValidator`.
 
         Parameters:
-            allow_empty: Boolean, if True, empty strings are accepted as valid input (default: False)
-            to_lowercase: Boolean, if True, the output will be automatically converted to lowercase (default: False)
-            max_length: Integer, maximum length of input string (default: 256)
+            `allow_empty`: Boolean, whether to accept empty strings as valid input (default: `False`)
+            `to_lowercase`: Boolean, whether to automatically converted the output to lowercase (default: `False`)
+            `max_length`: Integer, maximum length of input string (default: 256)
         """
         # Initialize StringValidator with some length requirements
         super().__init__(
@@ -90,7 +90,7 @@ class EmailValidator(StringValidator):
 
     def validate(self, input_data: Any, **kwargs) -> str:
         """
-        Validate that input is a valid email address string. Returns unmodified string.
+        Validates that input is a valid email address string. Returns unmodified string.
         """
         # Validate input data as string
         input_email = super().validate(input_data, **kwargs)

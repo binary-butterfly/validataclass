@@ -58,22 +58,24 @@ class NumericValidator(FloatToDecimalValidator):
     """
 
     def __init__(
-        self, *,
+        self,
+        *,
         min_value: Optional[Union[Decimal, str, float, int]] = None,
         max_value: Optional[Union[Decimal, str, float, int]] = None,
         output_places: Optional[int] = None,
         rounding: Optional[str] = decimal.ROUND_HALF_UP,
     ):
         """
-        Create a `NumericValidator` with optional value range and optional number of decimal places in output value.
+        Creates a `NumericValidator` with optional value range and optional number of decimal places in output value.
 
-        The parameters `min_value`, `max_value`, `output_places` and `rounding` are passed to the underlying DecimalValidator.
+        The parameters `min_value`, `max_value`, `output_places` and `rounding` are passed to the underlying
+        `DecimalValidator`.
 
         Parameters:
-            min_value: Decimal, str, float or int, specifies lowest value an input float may have (default: None, no minimum value)
-            max_value: Decimal, str, float or int, specifies highest value an input float may have (default: None, no maximum value)
-            output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
-            rounding: Rounding mode for numbers that need to be rounded (default: decimal.ROUND_HALF_UP)
+            `min_value`: Decimal, str, float or int, specifies lowest allowed value (default: `None`, no minimum value)
+            `max_value`: Decimal, str, float or int, specifies highest allowed value (default: `None`, no maximum value)
+            `output_places`: Integer, if set, values are rounded to this number of decimal places (default: `None`)
+            `rounding`: Rounding mode for numbers that need to be rounded (default: `decimal.ROUND_HALF_UP`)
         """
         # Initialize base FloatToDecimalValidator with allow_integers and allow_strings always being enabled
         super().__init__(

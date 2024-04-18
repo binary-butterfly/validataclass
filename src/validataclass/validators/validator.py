@@ -7,9 +7,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 import inspect
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Union, List
+from typing import Any, List, Union
 
-from validataclass.exceptions import RequiredValueError, InvalidTypeError
+from validataclass.exceptions import InvalidTypeError, RequiredValueError
 
 __all__ = [
     'Validator',
@@ -37,11 +37,11 @@ class Validator(ABC):
         """
         Validates input data. Returns sanitized data or raises a `ValidationError` (or any subclass).
 
-        This method must be implemented in validator class.
+        This method must be implemented in any validator class.
 
         Note: When implementing a validator class, make sure to add `**kwargs` to the method parameters. This base
         method currently does not have this parameter for compatibility reasons. However, this will change in the
-        future, making it mandatory for a Validator subclass to accept arbitrary keyword arguments (which can be used
+        future, making it mandatory for a `Validator` subclass to accept arbitrary keyword arguments (which can be used
         for context-sensitive validation).
         """
         raise NotImplementedError()
@@ -56,7 +56,7 @@ class Validator(ABC):
         arguments.
 
         NOTE: This method is only needed for compatibility reasons and will become obsolete in the future, when every
-        Validator class will be required to accept arbitrary keyword arguments (probably in version 1.0).
+        `Validator` class will be required to accept arbitrary keyword arguments (probably in version 1.0).
 
         Use this method only if you want/need to pass context arguments to a validator and don't know for sure that the
         validator accepts keyword arguments (e.g. because you don't know the class of the validator).
@@ -69,7 +69,7 @@ class Validator(ABC):
     @staticmethod
     def _ensure_not_none(input_data: Any) -> None:
         """
-        Raises a `RequiredValueError` if input data is None.
+        Raises a `RequiredValueError` if input data is `None`.
         """
         # Ensure input is not None
         if input_data is None:
@@ -77,7 +77,7 @@ class Validator(ABC):
 
     def _ensure_type(self, input_data: Any, expected_types: Union[type, List[type]]) -> None:
         """
-        Checks if input data is not None and has the expected type (or one of multiple expected types).
+        Checks if input data is not `None` and has the expected type (or one of multiple expected types).
 
         Raises `RequiredValueError` and `InvalidTypeError`.
         """

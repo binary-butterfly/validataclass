@@ -13,6 +13,7 @@ __all__ = [
 
 class InvalidUrlError(ValidationError):
     """
-    Validation error raised by `UrlValidator` when the input string is not a valid URL (as defined by the validator options).
+    Validation error raised by `UrlValidator` when the input string is not a valid URL (as defined by the validator
+    options).
     """
     code = 'invalid_url'

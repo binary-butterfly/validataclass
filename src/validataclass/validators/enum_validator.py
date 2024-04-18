@@ -38,11 +38,11 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
 
     By default, strings will be matched *case-insensitively*. To change this, set `case_sensitive=True`.
 
-    NOTE: Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter "case_insensitive"
-    still exists for compatibility, but is deprecated now and will be removed in a future version.
+    NOTE: Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter
+    `case_insensitive` still exists for compatibility, but is deprecated now and will be removed in a future version.
 
-    If the input value is not valid (but has the correct type), a ValueNotAllowedError (code='value_not_allowed') will
-    be raised. This error will include the list of allowed values (as "allowed_values"), as long as this list is not
+    If the input value is not valid (but has the correct type), a `ValueNotAllowedError` (code `value_not_allowed`) will
+    be raised. This error will include the list of allowed values (as `allowed_values`), as long as this list is not
     longer than 20 items. (See `AnyOfValidator`.)
 
     Examples:
@@ -56,7 +56,8 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
     # Only allow values explicitly specified (as long as they are valid values of the Enum)
     EnumValidator(ExampleEnum, allowed_values=['foo', 'bar'])
 
-    # Same as above, but by specifying Enum members instead of their values (given that ExampleEnum.FOO = 'foo', ExampleEnum.BAR = 'bar')
+    # Same as above, but by specifying Enum members instead of their values
+    # (given that ExampleEnum.FOO = 'foo', ExampleEnum.BAR = 'bar')
     EnumValidator(ExampleEnum, allowed_values=[ExampleEnum.FOO, ExampleEnum.BAR])
 
     # Allow all Enum values except for 'foo' without specifying all allowed values explicitly
@@ -82,14 +83,14 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
         case_insensitive: Optional[bool] = None,
     ):
         """
-        Create a EnumValidator for a specified Enum class, optionally with a restricted list of allowed values.
+        Creates a `EnumValidator` for a specified Enum class, optionally with a restricted list of allowed values.
 
         Parameters:
-            enum_cls: Enum class to use for validation (required)
-            allowed_values: List (or iterable) of values from the Enum that are accepted (default: None, all Enum values allowed)
-            allowed_types: List (or iterable) of types allowed for input data (default: None, autodetermine types from enum values)
-            case_sensitive: If set, strings will be matched case-sensitively (default: False)
-            case_insensitive: DEPRECATED. Validator is case-insensitive by default, use case_sensitive to change this.
+            `enum_cls`: Enum class to use for validation (required)
+            `allowed_values`: List or iterable of values from the Enum that are accepted (default: `None`, all values)
+            `allowed_types`: Types that are allowed for input data (default: `None`, autodetermined from enum values)
+            `case_sensitive`: If set, strings will be matched case-sensitively (default: `False`)
+            `case_insensitive`: DEPRECATED. Validator is case-insensitive by default (see `case_sensitive`)
         """
         # Ensure parameter is an Enum class
         if not isinstance(enum_cls, EnumMeta):
@@ -118,7 +119,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
 
     def validate(self, input_data: Any, **kwargs) -> T_Enum:
         """
-        Validate input to be a valid value of the specified Enum. Returns the Enum member.
+        Validates input to be a valid value of the specified Enum. Returns the Enum member.
         """
         # Validate input using the AnyOfValidator first
         input_data = super().validate(input_data, **kwargs)

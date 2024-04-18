@@ -18,9 +18,9 @@ __all__ = [
 class DictFieldsValidationError(ValidationError):
     """
     Validation error raised by `DictValidator` when one or more dict fields has validation errors, i.e. errors raised
-    by the 'field_validators' or the 'default_validator'.
+    by the `field_validators` or the `default_validator`.
 
-    Contains the extra field 'field_errors', which is a dictionary containing further `ValidationErrors`. The keys of
+    Contains the extra field `field_errors`, which is a dictionary containing further `ValidationErrors`. The keys of
     the dictionary are the names of the invalid dict fields.
 
     The implementation of `to_dict()` recursively converts the field validation errors to dictionaries.
@@ -65,10 +65,10 @@ class DictRequiredFieldError(ValidationError):
     """
     Validation error raised by `DictValidator` when a required field does not exist.
 
-    This is different from `RequiredValueError` which will be raised if a field *does* exist but has None as value,
+    This is different from `RequiredValueError` which will be raised if a field *does* exist but has `None` as value,
     *regardless* of the field being required or optional.
 
     To define a field that is optional (i.e. allowed to be missing in an input dictionary) *and* is allowed to exist
-    with None as value, combine `required_fields` / `optional_fields` with the `Noneable` validator.
+    with `None` as value, combine `required_fields` / `optional_fields` with the `Noneable` validator.
     """
     code = 'required_field'

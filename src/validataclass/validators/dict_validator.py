@@ -4,11 +4,16 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
 
+from validataclass.exceptions import (
+    DictFieldsValidationError,
+    DictInvalidKeyTypeError,
+    DictRequiredFieldError,
+    InvalidValidatorOptionException,
+    ValidationError,
+)
 from .validator import Validator
-from validataclass.exceptions import ValidationError, InvalidValidatorOptionException, DictFieldsValidationError, \
-    DictInvalidKeyTypeError, DictRequiredFieldError
 
 __all__ = [
     'DictValidator',
@@ -51,8 +56,8 @@ class DictValidator(Validator):
 
     # Note: In the validator above, you could also specify optional_fields=['price'] instead of required_fields.
 
-    # Validator for a dict with arbitrary fields (as long as the keys are strings), all values are validated as integers
-    # No fields are required; output dict will have the same keys as the input dict (as long as all values are valid integers)
+    # Validator for a dict with arbitrary keys (as long as they are strings), all values are validated as integers
+    # No fields are required; output dict will have the same keys as the input dict with validated integers
     DictValidator(default_validator=IntegerValidator())
     ```
 
@@ -70,28 +75,30 @@ class DictValidator(Validator):
     required_fields: Set[str]
 
     def __init__(
-        self, *,
+        self,
+        *,
         field_validators: Optional[Dict[str, Validator]] = None,
         default_validator: Optional[Validator] = None,
         required_fields: Optional[List[str]] = None,
         optional_fields: Optional[List[str]] = None
     ):
         """
-        Creates a DictValidator.
+        Creates a `DictValidator`.
 
         At least one of the parameters `field_validators` and `default_validator` is required (both can be combined).
         The parameters `required_fields` and `optional_fields` are mutually exclusive (cannot be combined).
         See class documentation (above) for more information.
 
         Parameters:
-             field_validators: Dictionary, maps field names to validators
-             default_validator: Validator for all fields not specified in field_validators
-             required_fields: List of field names that must exist in a dict (default: all fields are required)
-             optional_fields: If set, list of field names that are not required (mutually exclusive with required_fields)
+             `field_validators`: Dictionary, maps field names to validators
+             `default_validator`: Validator for all fields not specified in `field_validators`
+             `required_fields`: List of field names that must exist in a dict (default: all fields are required)
+             `optional_fields`: List of field names that are not required (mutually exclusive with `required_fields`)
         """
-        # For easier subclassing: If 'field_validators' etc. are already set (e.g. as class members in a subclass), use those values as
-        # default for the constructor parameters. That way subclasses can simply define fields at class scope without needing to define
-        # a custom __init__() method. Specifying the parameters explicitly in the constructor still takes precedence over the defaults.
+        # For easier subclassing: If 'field_validators' etc. are already set (e.g. as class members in a subclass), use
+        # those values as default for the constructor parameters. That way subclasses can simply define fields at class
+        # scope without needing to define a custom __init__() method. Specifying the parameters explicitly in the
+        # constructor still takes precedence over the defaults.
         if field_validators is None:
             field_validators = getattr(self, 'field_validators', None)
         if default_validator is None:
@@ -102,10 +109,13 @@ class DictValidator(Validator):
         # Check parameter validity
         if field_validators is None and default_validator is None:
             raise InvalidValidatorOptionException(
-                'At least one of the parameters "field_validators" and "default_validator" needs to be specified.')
+                'At least one of the parameters "field_validators" and "default_validator" needs to be specified.'
+            )
 
         if required_fields is not None and optional_fields is not None:
-            raise InvalidValidatorOptionException('Parameters "required_fields" and "optional_fields" cannot be combined.')
+            raise InvalidValidatorOptionException(
+                'Parameters "required_fields" and "optional_fields" cannot be combined.'
+            )
 
         # Set field and default validators
         self.field_validators = field_validators if field_validators is not None else {}
@@ -124,7 +134,7 @@ class DictValidator(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> dict:
         """
-        Validate input data. Returns a validated dict.
+        Validates input data. Returns a validated dict.
         """
         self._ensure_type(input_data, dict)
 
