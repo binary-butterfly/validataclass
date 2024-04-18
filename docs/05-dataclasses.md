@@ -368,9 +368,6 @@ class ExampleDataclass:
 To set a default value for a field using the `@validataclass` decorator, you have to define the field as a **tuple**
 consisting of the validator and a `Default` object, e.g. `IntegerValidator(), Default(42)`.
 
-Please note that in Python 3.7 for some reason these tuples require parentheses (see example). Unless you're writing
-code for Python 3.7, it is recommended to omit the parentheses for a more consistent look, though.
-
 **Example:**
 
 ```python
@@ -381,9 +378,6 @@ from validataclass.validators import IntegerValidator
 class ExampleDataclass:
     example_field: int = IntegerValidator()
     optional_field: int = IntegerValidator(), Default(42)
-
-    # Compatibility note: In Python 3.7 parentheses are required when using the tuple notation:
-    optional_field2: int = (IntegerValidator(), Default(42))
 ```
 
 

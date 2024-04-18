@@ -51,9 +51,6 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         example_field: str = StringValidator()
         optional_field: str = StringValidator(), Default('')
 
-        # Compatibility note: In Python 3.7 parentheses are required when setting a Default using the tuple notation:
-        # optional_field: str = (StringValidator(), Default(''))
-
         # Equivalent definition using validataclass_field():
         # example_field: str = validataclass_field(StringValidator())
         # optional_field: str = validataclass_field(StringValidator(), default='')

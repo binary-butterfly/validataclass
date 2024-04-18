@@ -61,7 +61,7 @@ docker-tox:
 		tox run --workdir .tox_docker $(TOX_ARGS)
 
 # Run partial tox test suites in Docker
-.PHONY: docker-tox-py312 docker-tox-py311 docker-tox-py310 docker-tox-py39 docker-tox-py38 docker-tox-py37
+.PHONY: docker-tox-py312 docker-tox-py311 docker-tox-py310 docker-tox-py39 docker-tox-py38
 docker-tox-py312: TOX_ARGS="-e clean,py312,py312-report"
 docker-tox-py312: docker-tox
 docker-tox-py311: TOX_ARGS="-e clean,py311,py311-report"
@@ -72,13 +72,10 @@ docker-tox-py39: TOX_ARGS="-e clean,py39,py39-report"
 docker-tox-py39: docker-tox
 docker-tox-py38: TOX_ARGS="-e clean,py38,py38-report"
 docker-tox-py38: docker-tox
-docker-tox-py37: TOX_ARGS="-e clean,py37,py37-report"
-docker-tox-py37: docker-tox
 
 # Run all tox test suites, but separately to check code coverage individually
 .PHONY: docker-tox-all
 docker-tox-all:
-	make docker-tox-py37
 	make docker-tox-py38
 	make docker-tox-py39
 	make docker-tox-py310
