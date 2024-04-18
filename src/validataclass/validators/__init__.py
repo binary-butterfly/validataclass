@@ -7,35 +7,29 @@ Use of this source code is governed by an MIT-style license that can be found in
 # Abstract base class
 from .validator import Validator
 
-# Basic type validators
-from .boolean_validator import BooleanValidator
-from .integer_validator import IntegerValidator
-from .float_validator import FloatValidator
-from .string_validator import StringValidator
-
-# Special validators
-from .noneable import Noneable
-from .none_to_unset_value import NoneToUnsetValue
-from .anything_validator import AnythingValidator
-from .reject_validator import RejectValidator
-from .discard_validator import DiscardValidator
+# Validators
 from .allow_empty_string import AllowEmptyString
-
-# Extended type validators
 from .any_of_validator import AnyOfValidator
+from .anything_validator import AnythingValidator
 from .big_integer_validator import BigIntegerValidator
-from .enum_validator import EnumValidator, T_Enum
+from .boolean_validator import BooleanValidator
+from .dataclass_validator import DataclassValidator, T_Dataclass
+from .date_validator import DateValidator
+from .datetime_validator import DateTimeValidator, DateTimeFormat
 from .decimal_validator import DecimalValidator
+from .dict_validator import DictValidator
+from .discard_validator import DiscardValidator
+from .email_validator import EmailValidator
+from .enum_validator import EnumValidator, T_Enum
 from .float_to_decimal_validator import FloatToDecimalValidator
+from .float_validator import FloatValidator
+from .integer_validator import IntegerValidator
+from .list_validator import ListValidator, T_ListItem
+from .none_to_unset_value import NoneToUnsetValue
+from .noneable import Noneable
 from .numeric_validator import NumericValidator
 from .regex_validator import RegexValidator
-from .date_validator import DateValidator
+from .reject_validator import RejectValidator
+from .string_validator import StringValidator
 from .time_validator import TimeValidator, TimeFormat
-from .datetime_validator import DateTimeValidator, DateTimeFormat
-from .email_validator import EmailValidator
 from .url_validator import UrlValidator
-
-# Composite type validators
-from .list_validator import ListValidator, T_ListItem
-from .dict_validator import DictValidator
-from .dataclass_validator import DataclassValidator, T_Dataclass

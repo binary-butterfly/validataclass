@@ -17,7 +17,8 @@ from validataclass.exceptions import (
     InvalidValidatorOptionException,
     ValidationError,
 )
-from . import Validator, DictValidator
+from .dict_validator import DictValidator
+from .validator import Validator
 
 __all__ = [
     'DataclassValidator',
