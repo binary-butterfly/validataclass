@@ -12,8 +12,11 @@ from .meta_exceptions import (
     InvalidValidatorOptionException,
 )
 
-# Base and common validation error exceptions (base class ValidationError)
-from .common_exceptions import ValidationError, RequiredValueError, FieldNotAllowedError, InvalidTypeError
+# Base exception classes for validation errors
+from .base_exceptions import ValidationError
+
+# Common validation errors used throughout the library
+from .common_exceptions import RequiredValueError, FieldNotAllowedError, InvalidTypeError
 
 # More specific validation errors
 from .dataclass_exceptions import DataclassPostValidationError
