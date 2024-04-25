@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Optional, TypeVar, Union
 
+from typing_extensions import Self
+
 __all__ = [
     'UnsetValue',
     'UnsetValueType',
@@ -28,16 +30,16 @@ class UnsetValueType:
     or to create a copy of `UnsetValue` will always result in the same instance.
     """
 
-    def __call__(self):
+    def __call__(self) -> Self:
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'UnsetValue'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<UnsetValue>'
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
     # Don't define __eq__ because the default implementation is fine (identity check), and because we would then have to

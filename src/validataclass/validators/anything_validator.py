@@ -70,7 +70,7 @@ class AnythingValidator(Validator):
         self,
         *,
         allow_none: Optional[bool] = None,
-        allowed_types: Optional[Union[Iterable[Union[type, None]], type]] = None,
+        allowed_types: Union[Iterable[Union[type, None]], type, None] = None,
     ):
         """
         Creates an `AnythingValidator` that accepts any input.
@@ -108,7 +108,7 @@ class AnythingValidator(Validator):
     @staticmethod
     def _normalize_allowed_types(
         *,
-        allowed_types: Optional[Union[Iterable[Union[type, None]], type]],
+        allowed_types: Union[Iterable[Union[type, None]], type, None],
         allow_none: Optional[bool],
     ) -> List[type]:
         """
@@ -116,7 +116,7 @@ class AnythingValidator(Validator):
         """
         # If allowed_types is not already an Iterable, put it in a list. (Treating strings as iterable doesn't make
         # sense here, so we make an exception for strings to give the user a more meaningful error message.)
-        if not isinstance(allowed_types, Iterable) or type(allowed_types) is str:
+        if not isinstance(allowed_types, Iterable) or isinstance(allowed_types, str):
             allowed_types = [allowed_types]
 
         # Make sure allowed_types only contains valid types (or None, which is replaced later)
@@ -125,21 +125,21 @@ class AnythingValidator(Validator):
                 raise InvalidValidatorOptionException(f'Element of allowed_types is not a type: {t!r}')
 
         # Convert to a set to remove duplicates and replace None with NoneType while we're on it
-        allowed_types = set(type(None) if t is None else t for t in allowed_types)
+        allowed_types_set = set(type(None) if t is None else t for t in allowed_types)
 
         # If allow_none is set, this parameter overrides whether NoneType is part of the allowed types
         if allow_none is True:
-            allowed_types.add(type(None))
+            allowed_types_set.add(type(None))
         elif allow_none is False:
-            allowed_types.discard(type(None))
+            allowed_types_set.discard(type(None))
 
         # Don't allow empty allowed_types
-        if len(allowed_types) == 0:
+        if len(allowed_types_set) == 0:
             raise InvalidValidatorOptionException('allowed_types is empty. Use the RejectValidator instead.')
 
-        return list(allowed_types)
+        return list(allowed_types_set)
 
-    def validate(self, input_data: Any, **kwargs) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> Any:
         """
         Validates input data. Accepts anything (or only specific types) and returns data unmodified.
         """

@@ -117,7 +117,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
             case_insensitive=case_insensitive,
         )
 
-    def validate(self, input_data: Any, **kwargs) -> T_Enum:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_Enum:
         """
         Validates input to be a valid value of the specified Enum. Returns the Enum member.
         """

@@ -93,7 +93,7 @@ class RejectValidator(Validator):
         self.error_code = error_code
         self.error_reason = error_reason
 
-    def validate(self, input_data: Any, **kwargs) -> None:
+    def validate(self, input_data: Any, **kwargs: Any) -> None:
         """
         Validates input data. In this case, reject any value (except for `None` if `allow_none` is set).
         """

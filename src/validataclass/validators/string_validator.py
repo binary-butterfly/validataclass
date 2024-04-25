@@ -110,7 +110,7 @@ class StringValidator(Validator):
         self.allow_multiline = multiline
         self.unsafe = unsafe
 
-    def validate(self, input_data: Any, **kwargs) -> str:
+    def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates input data to be a valid string, optionally checking length and allowed characters.
 

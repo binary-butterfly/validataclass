@@ -107,7 +107,7 @@ class RegexValidator(StringValidator):
         custom_error_class: Type[ValidationError] = RegexMatchError,
         custom_error_code: Optional[str] = None,
         allow_empty: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Creates a `RegexValidator` with a specified regex pattern (as string or precompiled `re.Pattern` object).
@@ -144,7 +144,7 @@ class RegexValidator(StringValidator):
 
         self.allow_empty = allow_empty
 
-    def validate(self, input_data: Any, **kwargs) -> str:
+    def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates input as string and match full string against regular expression.
 

@@ -6,6 +6,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import warnings
+from typing import Any, Dict
+
+from typing_extensions import Self
 
 from validataclass.helpers import UnsetValue
 
@@ -27,7 +30,7 @@ class ValidataclassMixin:
     ```
     """
 
-    def to_dict(self, *, keep_unset_values: bool = False) -> dict:
+    def to_dict(self, *, keep_unset_values: bool = False) -> Dict[str, Any]:
         """
         Returns the data of the object as a dictionary (recursively resolving inner dataclasses as well).
 
@@ -45,7 +48,7 @@ class ValidataclassMixin:
         return data
 
     @classmethod
-    def create_with_defaults(cls, **kwargs):
+    def create_with_defaults(cls, **kwargs: Any) -> Self:
         """
         (Deprecated.)
 

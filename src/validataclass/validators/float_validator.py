@@ -79,7 +79,7 @@ class FloatValidator(Validator):
         self.max_value = float(max_value) if max_value is not None else None
         self.allow_integers = allow_integers
 
-    def validate(self, input_data: Any, **kwargs) -> float:
+    def validate(self, input_data: Any, **kwargs: Any) -> float:
         """
         Validates type (and optionally value) of input data. Returns unmodified float.
         """

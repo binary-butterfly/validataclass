@@ -109,6 +109,6 @@ class UnitTestContextValidator(Validator):
     def __init__(self, *, prefix: str = ''):
         self.prefix = f'[{prefix}] ' if prefix else ''
 
-    def validate(self, input_data: Any, **kwargs) -> str:
+    def validate(self, input_data: Any, **kwargs: Any) -> str:
         self._ensure_type(input_data, str)
         return f'{self.prefix}{input_data} / {kwargs}'

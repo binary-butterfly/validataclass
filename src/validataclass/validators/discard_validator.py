@@ -53,7 +53,7 @@ class DiscardValidator(Validator):
         """
         self.output_value = output_value
 
-    def validate(self, input_data: Any, **kwargs) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> Any:
         """
         Validates input data.
         Discards any input and always returns `None` (or the specified `output_value`).

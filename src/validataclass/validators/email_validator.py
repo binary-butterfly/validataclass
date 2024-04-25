@@ -88,7 +88,7 @@ class EmailValidator(StringValidator):
         self.allow_empty = allow_empty
         self.to_lowercase = to_lowercase
 
-    def validate(self, input_data: Any, **kwargs) -> str:
+    def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates that input is a valid email address string. Returns unmodified string.
         """

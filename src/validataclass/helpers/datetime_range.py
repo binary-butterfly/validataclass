@@ -47,7 +47,7 @@ class BaseDateTimeRange(ABC):
         Helper method to resolve callables to datetime objects and to apply `local_timezone` if necessary.
         """
         # Resolve callable to an actual datetime
-        boundary_datetime = boundary() if isinstance(boundary, Callable) else boundary
+        boundary_datetime = boundary() if callable(boundary) else boundary
 
         # For local datetimes, set timezone if local_timezone is given
         if boundary_datetime is not None and boundary_datetime.tzinfo is None and local_timezone is not None:
@@ -92,7 +92,7 @@ class DateTimeRange(BaseDateTimeRange):
         self.lower_boundary = lower_boundary
         self.upper_boundary = upper_boundary
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{type(self).__name__}(lower_boundary={self.lower_boundary!r}, upper_boundary={self.upper_boundary!r})'
 
     def contains_datetime(self, dt: datetime, local_timezone: Optional[tzinfo] = None) -> bool:
@@ -189,7 +189,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         self.offset_minus = offset_minus
         self.offset_plus = offset_plus
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f'{type(self).__name__}(pivot={self.pivot!r}, offset_minus={self.offset_minus!r}, '
             f'offset_plus={self.offset_plus!r})'

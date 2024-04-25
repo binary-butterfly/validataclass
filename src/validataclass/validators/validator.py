@@ -21,7 +21,7 @@ class Validator(ABC):
     Base class for building extendable validator classes that validate, sanitize and transform input.
     """
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any):
         # Check if subclasses are future-proof
         if inspect.getfullargspec(cls.validate).varkw is None:
             warnings.warn(
@@ -33,7 +33,7 @@ class Validator(ABC):
         super().__init_subclass__(**kwargs)
 
     @abstractmethod  # pragma: nocover
-    def validate(self, input_data: Any, **kwargs):
+    def validate(self, input_data: Any, **kwargs: Any) -> Any:
         """
         Validates input data. Returns sanitized data or raises a `ValidationError` (or any subclass).
 
@@ -46,7 +46,7 @@ class Validator(ABC):
         """
         raise NotImplementedError()
 
-    def validate_with_context(self, input_data: Any, **kwargs):
+    def validate_with_context(self, input_data: Any, **kwargs: Any) -> Any:
         """
         This method is a wrapper for `validate()` that always accepts arbitrary keyword arguments (which can be used
         for context-sensitive validation).
@@ -85,9 +85,9 @@ class Validator(ABC):
         self._ensure_not_none(input_data)
 
         # Normalize expected_types to a list
-        if type(expected_types) is not list:
+        if not isinstance(expected_types, list):
             expected_types = [expected_types]
 
         # Ensure input has correct type
         if type(input_data) not in expected_types:
-            raise InvalidTypeError(expected_types=expected_types)
+            raise InvalidTypeError(expected_types=list(expected_types))

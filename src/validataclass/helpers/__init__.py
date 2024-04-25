@@ -6,6 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import importlib
 import warnings
+from typing import Any
 
 from .datetime_range import BaseDateTimeRange, DateTimeRange, DateTimeOffsetRange
 from .unset_value import UnsetValue, UnsetValueType, OptionalUnset, OptionalUnsetNone, unset_to_none
@@ -19,7 +20,7 @@ __all__ = [
 
 # DEPRECATED: Allow importing of moved modules for compatibility reasons. This is going to be removed in a future
 # version (presumably 1.0.0).
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     if name in [
         'Default', 'DefaultFactory', 'DefaultUnset', 'NoDefault',
         'validataclass', 'validataclass_field', 'ValidataclassMixin',

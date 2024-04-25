@@ -4,7 +4,7 @@ Copyright (c) 2024, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 __all__ = [
     'ValidationError',
@@ -29,20 +29,20 @@ class ValidationError(Exception):
     """
     code: str = 'unknown_error'
     reason: Optional[str] = None
-    extra_data: Optional[dict] = None
+    extra_data: Optional[Dict[str, Any]] = None
 
-    def __init__(self, *, code: Optional[str] = None, reason: Optional[str] = None, **kwargs):
+    def __init__(self, *, code: Optional[str] = None, reason: Optional[str] = None, **kwargs: Any):
         if code is not None:
             self.code = code
         if reason is not None:
             self.reason = reason
         self.extra_data = {key: value for key, value in kwargs.items() if value is not None}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         params_string = ', '.join(f'{key}={value}' for key, value in self._get_repr_dict().items() if value is not None)
         return f'{type(self).__name__}({params_string})'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
 
     def _get_repr_dict(self) -> Dict[str, str]:
@@ -58,7 +58,7 @@ class ValidationError(Exception):
             key: repr(value) for key, value in self.to_dict().items() if value is not None
         }
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Generates a dictionary containing error information, suitable as response to the user.
         May be overridden by subclasses to extend the dictionary.

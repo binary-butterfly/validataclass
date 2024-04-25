@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import sys
-from typing import Any, NoReturn, Optional
+from typing import Any, Dict, NoReturn, Optional
 
 from validataclass.validators import Validator
 from .defaults import Default, NoDefault
@@ -20,10 +20,10 @@ def validataclass_field(
     validator: Validator,
     default: Any = NoDefault,
     *,
-    metadata: Optional[dict] = None,
+    metadata: Optional[Dict[str, Any]] = None,
     _name: Optional[str] = None,  # noqa (undocumented parameter, only used internally)
-    **kwargs
-):
+    **kwargs: Any,
+) -> Any:
     """
     Defines a dataclass field compatible with DataclassValidator.
 
@@ -84,7 +84,7 @@ def validataclass_field(
     return dataclasses.field(metadata=metadata, **kwargs)
 
 
-def _raise_field_required(name: str) -> NoReturn:  # pragma: ignore-py-gte-310
+def _raise_field_required(name: Optional[str]) -> NoReturn:  # pragma: ignore-py-gte-310
     """
     Raises a TypeError exception. Used for required fields (only in Python 3.9 or lower where the kw_only option is not
     supported yet).

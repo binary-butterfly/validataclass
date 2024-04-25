@@ -109,7 +109,7 @@ class ListValidator(Generic[T_ListItem], Validator):
         self.max_length = max_length
         self.discard_invalid = discard_invalid
 
-    def validate(self, input_data: Any, **kwargs) -> List[T_ListItem]:
+    def validate(self, input_data: Any, **kwargs: Any) -> List[T_ListItem]:
         """
         Validates input data. Returns a validated list.
         """

@@ -28,7 +28,7 @@ class TimeFormat(Enum):
     - `regex_str`: Regular expression pattern as string
     """
 
-    def __init__(self, format_str, regex_str):
+    def __init__(self, format_str: str, regex_str: str):
         self.format_str = format_str
         self.regex_str = regex_str
 
@@ -94,7 +94,7 @@ class TimeValidator(StringValidator):
         self.time_format = time_format
         self.time_format_regex = re.compile(self.time_format.regex_str)
 
-    def validate(self, input_data: Any, **kwargs) -> time:
+    def validate(self, input_data: Any, **kwargs: Any) -> time:
         """
         Validates input as a valid time string and convert it to a `datetime.time` object.
         """
