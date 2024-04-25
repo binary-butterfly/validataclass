@@ -18,7 +18,9 @@ class ValidatorTest:
 
     @staticmethod
     def test_validate_without_kwargs_deprecation():
-        """ Test that creating a Validator subclass that does not accept context arguments raises a deprecration warning. """
+        """
+        Test that creating a Validator subclass that does not accept context arguments raises a deprecration warning.
+        """
         # Ensure that Validator creation causes a DeprecationWarning
         with pytest.deprecated_call():
             class ValidatorWithoutKwargs(Validator):

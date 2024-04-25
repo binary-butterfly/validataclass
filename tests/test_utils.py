@@ -12,8 +12,12 @@ from validataclass.validators import Validator
 
 def unpack_params(*args) -> List[tuple]:
     """
-    Returns a list containing tuples build from the arguments. Arguments that are lists are "unpacked" by combining the other elements
-    of the tuples with all elements in this list. Useful for constructing datasets for test parametrization.
+    Returns a list containing tuples build from the arguments.
+
+    Arguments that are lists are "unpacked" by combining the other elements of the tuples with all elements in that
+    list.
+
+    Useful for constructing datasets for test parametrization.
 
     Examples:
 
@@ -61,12 +65,21 @@ def unpack_params(*args) -> List[tuple]:
     ```
     """
     unpacked = [tuple()]
+
     for arg in args:
         if type(arg) is list:
             arg_tuples = [item if type(item) is tuple else (item,) for item in arg]
-            unpacked = [(*current_params, *next_param) for current_params in unpacked for next_param in arg_tuples]
+            unpacked = [
+                (*current_params, *next_param)
+                for current_params in unpacked
+                for next_param in arg_tuples
+            ]
         else:
-            unpacked = [(*current_params, arg) for current_params in unpacked]
+            unpacked = [
+                (*current_params, arg)
+                for current_params in unpacked
+            ]
+
     return unpacked
 
 

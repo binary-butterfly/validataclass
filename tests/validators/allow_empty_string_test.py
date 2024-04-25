@@ -23,7 +23,7 @@ class AllowEmptyStringTest:
         [
             ('', ''),
             ('12.34', Decimal('12.34')),
-        ]
+        ],
     )
     def test_allow_empty_string_valid(input_data, expected_result):
         """ Test AllowEmptyString with different valid input (empty string ('') and not empty string). """
@@ -39,10 +39,10 @@ class AllowEmptyStringTest:
         [
             ('', Decimal('3.1415')),
             ('12.34', Decimal('12.34')),
-        ]
+        ],
     )
     def test_allow_empty_string_with_default_valid(input_data, expected_result):
-        """ Test AllowEmptyString with a custom default value with different valid input (empty string ('') and not empty string). """
+        """ Test AllowEmptyString with a custom default value with valid input. """
         validator = AllowEmptyString(DecimalValidator(), default=Decimal('3.1415'))
         result = validator.validate(input_data)
 
@@ -53,24 +53,32 @@ class AllowEmptyStringTest:
     def test_allow_empty_string_with_context_arguments():
         """ Test that AllowEmptyString passes context arguments down to the wrapped validator. """
         validator = AllowEmptyString(UnitTestContextValidator())
+
         assert validator.validate('') == ''
         assert validator.validate('unittest') == "unittest / {}"
         assert validator.validate('unittest', foo=42) == "unittest / {'foo': 42}"
 
     @staticmethod
     def test_invalid_not_empty_string_value():
-        """ Test that AllowEmptyString correctly wraps a specified validator and leaves (most) exceptions unmodified. """
+        """ Test that AllowEmptyString correctly wraps a specified validator, leaving most exceptions unmodified. """
         validator = AllowEmptyString(DecimalValidator())
+
         with pytest.raises(ValidationError) as exception_info:
             validator.validate('foobar')
+
         assert exception_info.value.to_dict() == {'code': 'invalid_decimal'}
 
     @staticmethod
     def test_invalid_type_contains_empty_string():
-        """ Test that AllowEmptyString adds str to the expected_types parameter if the wrapped validator raises an InvalidTypeError. """
+        """
+        Test that AllowEmptyString adds `str` to the list of expected types and reraises the exception if the wrapped
+        validator raises an InvalidTypeError.
+        """
         validator = AllowEmptyString(IntegerValidator())
+
         with pytest.raises(ValidationError) as exception_info:
             validator.validate('unittest')
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_types': ['int', 'str'],
@@ -82,14 +90,18 @@ class AllowEmptyStringTest:
         Test that given default values are deepcopied. Otherwise using for example `default=[]` would always return a
         reference to the *same* list, and modifying this list would result in unexpected behaviour.
         """
-        # Note: An empty list as default value for an IntegerValidator doesn't make a lot of sense, but simplifies the test.
+        # Use an empty list as an example for a mutable default value. This doesn't make a lot of sense together with
+        # an IntegerValidator but simplifies the test.
         validator = AllowEmptyString(IntegerValidator(), default=[])
+
         first_list = validator.validate('')
         second_list = validator.validate('')
+
+        # Both times an empty list should be returned
         assert first_list == []
         assert second_list == []
 
-        # The lists are equal (both are empty lists), but they must not be the *same* object, otherwise bad stuff will happen.
+        # The two empty lists should NOT be the same instance
         assert first_list is not second_list
 
     @staticmethod
@@ -97,14 +109,16 @@ class AllowEmptyStringTest:
         'validator',
         [
             # Non-sense types
-            '',
+            None,
             'banana',
 
-            # Validator class instead of instance (common mistake)
+            # Validator class instead of instance (easy mistake)
             IntegerValidator,
-        ]
+        ],
     )
     def test_invalid_validator_type(validator):
-        """ Test that AllowEmptyString raises an exception on construction if the wrapped validator has the wrong type. """
+        """
+        Test that AllowEmptyString raises an exception on construction if the wrapped validator has the wrong type.
+        """
         with pytest.raises(TypeError, match='AllowEmptyString requires a Validator instance'):
             AllowEmptyString(validator)  # noqa

@@ -26,7 +26,7 @@ class DefaultTest:
             (42, 'Default(42)'),
             (1.234, 'Default(1.234)'),
             ('banana', "Default('banana')"),
-        ]
+        ],
     )
     def test_default_immutable_values(value, expected_repr):
         """ Test Default object with different immutable values. """
@@ -80,7 +80,7 @@ class DefaultTest:
             (Default(0), Default('')),
             (Default([]), Default([0])),
             (Default([]), Default({})),
-        ]
+        ],
     )
     def test_default_non_equality(first, second):
         """ Test non-equality between Default and other objects. """
@@ -88,7 +88,15 @@ class DefaultTest:
         assert second != first
 
     @staticmethod
-    @pytest.mark.parametrize('value', [None, 0, 42, 'banana'])
+    @pytest.mark.parametrize(
+        'value',
+        [
+            None,
+            0,
+            42,
+            'banana',
+        ],
+    )
     def test_default_hashable(value):
         """ Test hashability (__hash__) of Default objects. """
         assert hash(Default(value)) == hash(value)
@@ -133,7 +141,9 @@ class DefaultFactoryTest:
         """ Test DefaultFactory with a counter function. """
 
         def counter():
-            """ Function that counts up every time it is called and saves the current number as an attribute of itself. """
+            """
+            Function that counts up every time it is called and saves the current number as an attribute of itself.
+            """
             current = getattr(counter, 'current', 0) + 1
             setattr(counter, 'current', current)
             return current
@@ -166,7 +176,7 @@ class DefaultFactoryTest:
             (DefaultFactory(lambda: 0), 0),
             (DefaultFactory(lambda: 0), Default(0)),
             (DefaultFactory(lambda: 0), DefaultUnset),
-        ]
+        ],
     )
     def test_default_factory_non_equality(first, second):
         """ Test non-equality between DefaultFactory and other objects. """
@@ -208,7 +218,16 @@ class DefaultUnsetTest:
         assert Default(None) != DefaultUnset
 
     @staticmethod
-    @pytest.mark.parametrize('other', [UnsetValue, None, Default(None), Default(0), DefaultFactory(lambda: None)])
+    @pytest.mark.parametrize(
+        'other',
+        [
+            UnsetValue,
+            None,
+            Default(None),
+            Default(0),
+            DefaultFactory(lambda: None),
+        ],
+    )
     def test_default_unset_non_equality(other):
         """ Test non-equality between DefaultUnset and other objects. """
         assert DefaultUnset != other
@@ -243,7 +262,16 @@ class NoDefaultTest:
         assert default1 is default2 is NoDefault
 
     @staticmethod
-    @pytest.mark.parametrize('other', [None, Default(None), UnsetValue, DefaultUnset, DefaultFactory(lambda: None)])
+    @pytest.mark.parametrize(
+        'other',
+        [
+            None,
+            Default(None),
+            UnsetValue,
+            DefaultUnset,
+            DefaultFactory(lambda: None),
+        ],
+    )
     def test_no_default_non_equality(other):
         """ Test non-equality between NoDefault and other objects. """
         assert NoDefault != other

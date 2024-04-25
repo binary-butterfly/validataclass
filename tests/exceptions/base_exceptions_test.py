@@ -16,28 +16,29 @@ class ValidationErrorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'code, kwargs, expected_repr', [
+        'code, kwargs, expected_repr',
+        [
             (
                 None,
                 {},
-                "ValidationError(code='unknown_error')"
+                "ValidationError(code='unknown_error')",
             ),
             (
                 'unit_test_error',
                 {},
-                "ValidationError(code='unit_test_error')"
+                "ValidationError(code='unit_test_error')",
             ),
             (
                 None,
                 {'reason': 'This is fine.'},
-                "ValidationError(code='unknown_error', reason='This is fine.')"
+                "ValidationError(code='unknown_error', reason='This is fine.')",
             ),
             (
                 'unit_test_error',
                 {'reason': 'This is fine.', 'fruit': 'banana', 'number': 123},
                 "ValidationError(code='unit_test_error', reason='This is fine.', fruit='banana', number=123)",
             ),
-        ]
+        ],
     )
     def test_validation_error_with_parameters(code, kwargs, expected_repr):
         """ Tests ValidationError with various parameters. """
@@ -53,23 +54,24 @@ class ValidationErrorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'code, kwargs, expected_repr', [
+        'code, kwargs, expected_repr',
+        [
             (
                 None,
                 {},
-                "UnitTestValidatonError(code='unit_test_error')"
+                "UnitTestValidatonError(code='unit_test_error')",
             ),
             (
                 None,
                 {'reason': 'This is fine.'},
-                "UnitTestValidatonError(code='unit_test_error', reason='This is fine.')"
+                "UnitTestValidatonError(code='unit_test_error', reason='This is fine.')",
             ),
             (
                 'unit_test_error',
                 {'reason': 'This is fine.', 'fruit': 'banana', 'number': 123},
                 "UnitTestValidatonError(code='unit_test_error', reason='This is fine.', fruit='banana', number=123)",
             ),
-        ]
+        ],
     )
     def test_validation_error_subclass(code, kwargs, expected_repr):
         """ Tests subclassing ValidationError. """

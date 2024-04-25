@@ -10,7 +10,7 @@ import pytest
 
 from validataclass.exceptions import ValidationError
 from validataclass.helpers import UnsetValue
-from validataclass.validators import NoneToUnsetValue, DecimalValidator
+from validataclass.validators import DecimalValidator, NoneToUnsetValue
 
 
 class NoneToUnsetValueTest:
@@ -22,9 +22,15 @@ class NoneToUnsetValueTest:
     @pytest.mark.parametrize(
         'input_data, expected_result',
         [
-            (None, UnsetValue),
-            ('12.34', Decimal('12.34')),
-        ]
+            (
+                None,
+                UnsetValue,
+            ),
+            (
+                '12.34',
+                Decimal('12.34'),
+            ),
+        ],
     )
     def test_valid(input_data, expected_result):
         """ Test NoneToUnsetValue with different valid input (None and non-None). """

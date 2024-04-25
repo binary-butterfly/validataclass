@@ -15,6 +15,7 @@ class HelpersCompatibilityImportsTest:
         """ Tests deprecated imports from the compatibility module validataclass.helpers.dataclasses. """
         with pytest.deprecated_call():
             from validataclass.helpers.dataclasses import validataclass, validataclass_field
+
             assert callable(validataclass)
             assert callable(validataclass_field)
 
@@ -23,6 +24,7 @@ class HelpersCompatibilityImportsTest:
         """ Tests deprecated imports from the compatibility module validataclass.helpers.dataclass_defaults. """
         with pytest.deprecated_call():
             from validataclass.helpers.dataclass_defaults import Default, DefaultFactory, DefaultUnset, NoDefault
+
             assert type(Default) is type
             assert issubclass(DefaultFactory, Default)
             assert isinstance(DefaultUnset, Default)
@@ -33,6 +35,7 @@ class HelpersCompatibilityImportsTest:
         """ Tests deprecated imports from the compatibility module validataclass.helpers.dataclass_mixins. """
         with pytest.deprecated_call():
             from validataclass.helpers.dataclass_mixins import ValidataclassMixin
+
             assert type(ValidataclassMixin) is type
 
     @staticmethod

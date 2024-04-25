@@ -16,16 +16,37 @@ class InvalidTypeErrorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'types, expected_types_repr, expected_types_dict', [
+        'types, expected_types_repr, expected_types_dict',
+        [
             # Single expected type (as type or as string)
-            (int, "expected_type='int'", {'expected_type': 'int'}),
-            (type(None), "expected_type='none'", {'expected_type': 'none'}),
-            ('banana', "expected_type='banana'", {'expected_type': 'banana'}),
+            (
+                int,
+                "expected_type='int'",
+                {'expected_type': 'int'},
+            ),
+            (
+                type(None),
+                "expected_type='none'",
+                {'expected_type': 'none'},
+            ),
+            (
+                'banana',
+                "expected_type='banana'",
+                {'expected_type': 'banana'},
+            ),
 
             # List of expected types (as types or as strings; lists will be sorted alphabetically)
-            ([int, float], "expected_types=['float', 'int']", {'expected_types': ['float', 'int']}),
-            (['banana', type(None), int], "expected_types=['banana', 'int', 'none']", {'expected_types': ['banana', 'int', 'none']}),
-        ]
+            (
+                [int, float],
+                "expected_types=['float', 'int']",
+                {'expected_types': ['float', 'int']},
+            ),
+            (
+                ['banana', type(None), int],
+                "expected_types=['banana', 'int', 'none']",
+                {'expected_types': ['banana', 'int', 'none']},
+            ),
+        ],
     )
     def test_invalid_type_error(types, expected_types_repr, expected_types_dict):
         """ Tests InvalidTypeError with different expected_types parameters. """
@@ -33,7 +54,10 @@ class InvalidTypeErrorTest:
 
         assert repr(error) == f"InvalidTypeError(code='invalid_type', {expected_types_repr})"
         assert str(error) == repr(error)
-        assert error.to_dict() == {'code': 'invalid_type', **expected_types_dict}
+        assert error.to_dict() == {
+            'code': 'invalid_type',
+            **expected_types_dict,
+        }
 
     @staticmethod
     def test_add_expected_types():
@@ -42,7 +66,10 @@ class InvalidTypeErrorTest:
 
         # Check error before adding types
         assert repr(error) == "InvalidTypeError(code='invalid_type', expected_type='int')"
-        assert error.to_dict() == {'code': 'invalid_type', 'expected_type': 'int'}
+        assert error.to_dict() == {
+            'code': 'invalid_type',
+            'expected_type': 'int',
+        }
 
         # Add additional types
         error.add_expected_type(float)
@@ -50,7 +77,10 @@ class InvalidTypeErrorTest:
 
         # Check error after adding types
         assert repr(error) == "InvalidTypeError(code='invalid_type', expected_types=['banana', 'float', 'int'])"
-        assert error.to_dict() == {'code': 'invalid_type', 'expected_types': ['banana', 'float', 'int']}
+        assert error.to_dict() == {
+            'code': 'invalid_type',
+            'expected_types': ['banana', 'float', 'int'],
+        }
 
     @staticmethod
     def test_add_duplicate_to_expected_types():
@@ -62,4 +92,7 @@ class InvalidTypeErrorTest:
 
         # Check 'int' is not added to error
         assert repr(error) == "InvalidTypeError(code='invalid_type', expected_types=['int', 'str'])"
-        assert error.to_dict() == {'code': 'invalid_type', 'expected_types': ['int', 'str']}
+        assert error.to_dict() == {
+            'code': 'invalid_type',
+            'expected_types': ['int', 'str'],
+        }
