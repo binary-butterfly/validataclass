@@ -244,7 +244,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
 
         return validated_dict
 
-    def validate(self, input_data: Any, **kwargs: Any) -> T_Dataclass:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_Dataclass:  # type: ignore[override]
         """
         Validate an input dictionary according to the specified dataclass. Returns an instance of the dataclass.
         """

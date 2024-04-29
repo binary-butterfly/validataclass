@@ -343,7 +343,7 @@ class DateTimeValidator(StringValidator):
         # Precompile regular expression for datetime format
         self.datetime_format_regex = re.compile(self.datetime_format.regex_str)
 
-    def validate(self, input_data: Any, **kwargs: Any) -> datetime:
+    def validate(self, input_data: Any, **kwargs: Any) -> datetime:  # type: ignore[override]
         """
         Validates input as a valid datetime string and convert it to a `datetime.datetime` object.
         """
