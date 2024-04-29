@@ -24,7 +24,7 @@ build:
 # Test suite
 # ----------
 
-# Run complete tox suite
+# Run complete tox suite with local Python interpreter
 .PHONY: tox
 tox:
 	tox run
@@ -37,7 +37,7 @@ venv-tox:
 # Only run pytest
 .PHONY: test
 test:
-	tox run --skip-env flake8,mypy
+	tox run -e clean,py,report
 
 # Only run flake8 linter
 .PHONY: flake8
@@ -67,25 +67,25 @@ docker-tox:
 
 # Run partial tox test suites in Docker
 .PHONY: docker-tox-py312 docker-tox-py311 docker-tox-py310 docker-tox-py39 docker-tox-py38
-docker-tox-py312: TOX_ARGS="-e clean,py312,py312-report"
-docker-tox-py312: docker-tox
-docker-tox-py311: TOX_ARGS="-e clean,py311,py311-report"
-docker-tox-py311: docker-tox
-docker-tox-py310: TOX_ARGS="-e clean,py310,py310-report"
-docker-tox-py310: docker-tox
-docker-tox-py39: TOX_ARGS="-e clean,py39,py39-report"
-docker-tox-py39: docker-tox
-docker-tox-py38: TOX_ARGS="-e clean,py38,py38-report"
-docker-tox-py38: docker-tox
+docker-test-py312: TOX_ARGS="-e clean,py312,py312-report"
+docker-test-py312: docker-tox
+docker-test-py311: TOX_ARGS="-e clean,py311,py311-report"
+docker-test-py311: docker-tox
+docker-test-py310: TOX_ARGS="-e clean,py310,py310-report"
+docker-test-py310: docker-tox
+docker-test-py39: TOX_ARGS="-e clean,py39,py39-report"
+docker-test-py39: docker-tox
+docker-test-py38: TOX_ARGS="-e clean,py38,py38-report"
+docker-test-py38: docker-tox
 
 # Run all tox test suites, but separately to check code coverage individually
 .PHONY: docker-tox-all
-docker-tox-all:
-	make docker-tox-py38
-	make docker-tox-py39
-	make docker-tox-py310
-	make docker-tox-py311
-	make docker-tox-py312
+docker-test-all:
+	make docker-test-py38
+	make docker-test-py39
+	make docker-test-py310
+	make docker-test-py311
+	make docker-test-py312
 
 # Run mypy using all different (or specific) Python versions in Docker
 .PHONY: docker-mypy-all docker-mypy-py312 docker-mypy-py311 docker-mypy-py310 docker-mypy-py39 docker-mypy-py38
