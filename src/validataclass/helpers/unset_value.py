@@ -48,7 +48,7 @@ class UnsetValueType:
 
 # Create sentinel object and redefine __new__ so that the object cannot be cloned
 UnsetValue = UnsetValueType()
-UnsetValueType.__new__ = lambda cls: UnsetValue
+UnsetValueType.__new__ = lambda cls: UnsetValue  # type: ignore
 
 # Type alias OptionalUnset[T] for fields with DefaultUnset: Allows either the type T or UnsetValue
 OptionalUnset = Union[T, UnsetValueType]

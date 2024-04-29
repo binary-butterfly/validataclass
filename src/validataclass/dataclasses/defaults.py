@@ -125,7 +125,7 @@ class _DefaultUnset(Default):
 
 # Create sentinel object DefaultUnset, redefine __new__ to always return the same instance, and delete temporary class
 DefaultUnset = _DefaultUnset()
-_DefaultUnset.__new__ = lambda cls: DefaultUnset
+_DefaultUnset.__new__ = lambda cls: DefaultUnset  # type: ignore
 del _DefaultUnset
 
 
@@ -162,5 +162,5 @@ class _NoDefault(Default):
 
 # Create sentinel object NoDefault, redefine __new__ to always return the same instance, and delete temporary class
 NoDefault = _NoDefault()
-_NoDefault.__new__ = lambda cls: NoDefault
+_NoDefault.__new__ = lambda cls: NoDefault  # type: ignore
 del _NoDefault
