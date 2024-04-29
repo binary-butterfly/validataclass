@@ -1067,28 +1067,22 @@ class DataclassValidatorTest:
         )
 
     @staticmethod
-    def test_invalid_dataclass_validator_with_invalid_dataclass():
+    @pytest.mark.parametrize(
+        'dataclass_cls_param',
+        [
+            # Type that is not a dataclass (anonymous class)
+            type('UnitTestClass', (), {}),
+
+            # Instance of a dataclass (but not the class itself)
+            UnitTestDataclass(name='bluenana', color='blue', amount=3, weight=Decimal('1.234')),
+        ],
+    )
+    def test_invalid_dataclass_validator_with_invalid_dataclass(dataclass_cls_param):
         """ Test that a DataclassValidator cannot be created with a class that is not a dataclass. """
-
-        class Foo:
-            bar: int = IntegerValidator()
-
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
-            DataclassValidator(Foo)
+            DataclassValidator(dataclass_cls_param)  # noqa
 
         assert str(exception_info.value) == 'Parameter "dataclass_cls" must be a dataclass type.'
-
-    @staticmethod
-    def test_invalid_dataclass_validator_with_dataclass_instance():
-        """ Test that a DataclassValidator cannot be created with an *instance* of a dataclass. """
-        with pytest.raises(InvalidValidatorOptionException) as exception_info:
-            dataclass_instance = UnitTestDataclass(name='bluenana', color='blue', amount=3, weight=Decimal('1.234'))
-            DataclassValidator(dataclass_instance)  # noqa
-
-        assert (
-            str(exception_info.value)
-            == 'Parameter "dataclass_cls" is a dataclass instance, but must be a dataclass type.'
-        )
 
     # Test DataclassValidator with incompatible dataclasses
 

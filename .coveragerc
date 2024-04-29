@@ -18,6 +18,7 @@ skip_covered = True
 exclude_lines =
     pragma: nocover
     @overload
+    if TYPE_CHECKING:
 
 [html]
 directory = reports/coverage_html/
