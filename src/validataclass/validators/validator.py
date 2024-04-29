@@ -32,7 +32,7 @@ class Validator(ABC):
 
         super().__init_subclass__(**kwargs)
 
-    @abstractmethod  # pragma: nocover
+    @abstractmethod
     def validate(self, input_data: Any, **kwargs: Any) -> Any:
         """
         Validates input data. Returns sanitized data or raises a `ValidationError` (or any subclass).

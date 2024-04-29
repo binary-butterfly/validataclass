@@ -24,14 +24,14 @@ class BaseDateTimeRange(ABC):
     Abstract base class to implement datetime ranges (to be used with `DateTimeValidator`).
     """
 
-    @abstractmethod  # pragma: nocover
+    @abstractmethod
     def contains_datetime(self, dt: datetime, local_timezone: Optional[tzinfo] = None) -> bool:
         """
         Abstract method to be implemented by subclasses. Should return `True` if a datetime is contained in the range.
         """
         raise NotImplementedError()
 
-    @abstractmethod  # pragma: nocover
+    @abstractmethod
     def to_dict(self, local_timezone: Optional[tzinfo] = None) -> Dict[str, str]:
         """
         Abstract method to be implemented by subclasses. Should return a dictionary with string representations of the
