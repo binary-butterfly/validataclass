@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import warnings
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 from typing_extensions import Self
 
@@ -39,7 +39,10 @@ class ValidataclassMixin:
         Parameters:
             `keep_unset_values`: If true, keep fields with value `UnsetValue` in the dictionary (default: False)
         """
-        data = dataclasses.asdict(self)  # noqa
+        # Technically, there is no guarantee that this class is used as a mixin in an actual dataclass.
+        # However, if that's not the case, calling to_dict() doesn't make sense and will just fail with an exception.
+        # For all intents and purposes, we can safely assume that `self` is a dataclass instance.
+        data = cast(Dict[str, Any], dataclasses.asdict(self))  # type: ignore[call-overload]  # noqa
 
         # Filter out all UnsetValues (unless said otherwise)
         if not keep_unset_values:
