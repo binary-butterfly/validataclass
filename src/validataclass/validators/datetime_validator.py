@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from datetime import datetime, tzinfo
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Pattern
 
 from validataclass.exceptions import DateTimeRangeError, InvalidDateTimeError, InvalidValidatorOptionException
 from validataclass.helpers import BaseDateTimeRange
@@ -282,7 +282,7 @@ class DateTimeValidator(StringValidator):
     datetime_format: DateTimeFormat
 
     # Precompiled regular expression for the specified datetime string format
-    datetime_format_regex: re.Pattern
+    datetime_format_regex: Pattern[str]
 
     # Whether to discard milli- and microseconds in the output datetime
     discard_milliseconds: bool = False
