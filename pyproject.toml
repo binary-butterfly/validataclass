@@ -12,3 +12,9 @@ version_scheme = "post-release"
 
 [tool.mypy]
 files = "src/"
+
+# Enable strict type checking
+strict = true
+
+# Ignore errors like `Module "validataclass.exceptions" does not explicitly export attribute "..."`
+no_implicit_reexport = false
