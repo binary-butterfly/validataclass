@@ -16,7 +16,7 @@ __all__ = [
 
 # Type aliases used for type hinting
 _DateTimeCallable = Callable[[], datetime]
-_DateTimeBoundary = Optional[Union[datetime, _DateTimeCallable]]
+_DateTimeBoundary = Union[datetime, _DateTimeCallable]
 
 
 class BaseDateTimeRange(ABC):
@@ -42,7 +42,10 @@ class BaseDateTimeRange(ABC):
     # Helper methods
 
     @staticmethod
-    def _get_datetime(boundary: _DateTimeBoundary, local_timezone: Optional[tzinfo] = None) -> Optional[datetime]:
+    def _resolve_datetime_boundary(
+        boundary: _DateTimeBoundary,
+        local_timezone: Optional[tzinfo] = None,
+    ) -> datetime:
         """
         Helper method to resolve callables to datetime objects and to apply `local_timezone` if necessary.
         """
@@ -50,8 +53,9 @@ class BaseDateTimeRange(ABC):
         boundary_datetime = boundary() if callable(boundary) else boundary
 
         # For local datetimes, set timezone if local_timezone is given
-        if boundary_datetime is not None and boundary_datetime.tzinfo is None and local_timezone is not None:
+        if boundary_datetime.tzinfo is None and local_timezone is not None:
             boundary_datetime = boundary_datetime.replace(tzinfo=local_timezone)
+
         return boundary_datetime
 
 
@@ -69,10 +73,14 @@ class DateTimeRange(BaseDateTimeRange):
     """
 
     # Boundaries (static datetimes or callables)
-    lower_boundary: _DateTimeBoundary = None
-    upper_boundary: _DateTimeBoundary = None
+    lower_boundary: Optional[_DateTimeBoundary] = None
+    upper_boundary: Optional[_DateTimeBoundary] = None
 
-    def __init__(self, lower_boundary: _DateTimeBoundary = None, upper_boundary: _DateTimeBoundary = None):
+    def __init__(
+        self,
+        lower_boundary: Optional[_DateTimeBoundary] = None,
+        upper_boundary: Optional[_DateTimeBoundary] = None,
+    ):
         """
         Creates a `DateTimeRange` with a lower and an upper boundary (both are optional and can be either static
         `datetime` objects or callables that return `datetime` objects).
@@ -126,14 +134,20 @@ class DateTimeRange(BaseDateTimeRange):
         Helper method to get the lower boundary as a `datetime` (or `None`), resolving callables and applying
         `local_timezone` if necessary.
         """
-        return self._get_datetime(self.lower_boundary, local_timezone)
+        if self.lower_boundary is None:
+            return None
+        else:
+            return self._resolve_datetime_boundary(self.lower_boundary, local_timezone)
 
     def _get_upper_datetime(self, local_timezone: Optional[tzinfo] = None) -> Optional[datetime]:
         """
         Helper method to get the upper boundary as a `datetime` (or `None`), resolving callables and applying
         `local_timezone` if necessary.
         """
-        return self._get_datetime(self.upper_boundary, local_timezone)
+        if self.upper_boundary is None:
+            return None
+        else:
+            return self._resolve_datetime_boundary(self.upper_boundary, local_timezone)
 
 
 class DateTimeOffsetRange(BaseDateTimeRange):
@@ -155,7 +169,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
     """
 
     # Pivot datetime (static or callable)
-    pivot: _DateTimeBoundary = None
+    pivot: Optional[_DateTimeBoundary] = None
 
     # Offset timedeltas
     offset_minus: Optional[timedelta] = None
@@ -163,7 +177,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
 
     def __init__(
         self,
-        pivot: _DateTimeBoundary = None,
+        pivot: Optional[_DateTimeBoundary] = None,
         offset_minus: Optional[timedelta] = None,
         offset_plus: Optional[timedelta] = None,
     ):
@@ -224,15 +238,15 @@ class DateTimeOffsetRange(BaseDateTimeRange):
 
     # Helper methods to resolve callables to datetimes and apply local_timezone
 
-    def _get_pivot_datetime(self, local_timezone: Optional[tzinfo] = None) -> Optional[datetime]:
+    def _get_pivot_datetime(self, local_timezone: Optional[tzinfo] = None) -> datetime:
         """
         Helper method to get the pivot as a datetime, resolving callables and applying `local_timezone` if necessary,
         and defaulting to the current time in UTC.
         """
-        if self.pivot is not None:
-            return self._get_datetime(self.pivot, local_timezone)
-        else:
+        if self.pivot is None:
             return datetime.now(timezone.utc).replace(microsecond=0)
+        else:
+            return self._resolve_datetime_boundary(self.pivot, local_timezone)
 
     def _get_boundaries(self, local_timezone: Optional[tzinfo] = None) -> Tuple[datetime, datetime]:
         """
