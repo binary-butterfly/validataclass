@@ -438,10 +438,20 @@ class EnumValidatorTest:
     # Invalid validator parameters
 
     @staticmethod
-    def test_enum_cls_invalid():
+    @pytest.mark.parametrize(
+        'enum_cls_param',
+        [
+            # Member of an Enum class
+            UnitTestStringEnum.STRAWBERRY,
+
+            # Type that is not an Enum class (anonymous class)
+            type('UnitTestClass', (), {}),
+        ],
+    )
+    def test_enum_cls_invalid(enum_cls_param):
         """ Check that EnumValidator raises exception when enum_cls is not an Enum. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
-            EnumValidator('banana')  # noqa
+            EnumValidator(enum_cls_param)  # noqa
 
         assert str(exception_info.value) == 'Parameter "enum_cls" must be an Enum class.'
 

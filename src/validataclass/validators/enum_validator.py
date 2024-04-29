@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from enum import Enum, EnumMeta
+from enum import Enum
 from typing import Any, Generic, Iterable, Optional, Type, TypeVar, Union
 
 from validataclass.exceptions import InvalidValidatorOptionException, ValueNotAllowedError
@@ -69,13 +69,13 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
     """
 
     # Enum class used to determine the list of allowed values
-    enum_cls: Type[Enum]
+    enum_cls: Type[T_Enum]
 
     # TODO: For version 1.0, remove the old parameter "case_insensitive" completely and set a real default value for the
     #  new "case_sensitive" parameter. (See base AnyOfValidator.)
     def __init__(
         self,
-        enum_cls: Type[Enum],
+        enum_cls: Type[T_Enum],
         *,
         allowed_values: Optional[Iterable[Any]] = None,
         allowed_types: Optional[Union[type, Iterable[type]]] = None,
@@ -93,7 +93,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
             `case_insensitive`: DEPRECATED. Validator is case-insensitive by default (see `case_sensitive`)
         """
         # Ensure parameter is an Enum class
-        if not isinstance(enum_cls, EnumMeta):
+        if not isinstance(enum_cls, type) or not issubclass(enum_cls, Enum):
             raise InvalidValidatorOptionException('Parameter "enum_cls" must be an Enum class.')
 
         self.enum_cls = enum_cls
