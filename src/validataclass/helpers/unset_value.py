@@ -64,4 +64,4 @@ def unset_to_none(value: OptionalUnset[T]) -> Optional[T]:
 
     Returns `None` if the given value is `UnsetValue`, otherwise the value is returned unmodified.
     """
-    return None if value is UnsetValue else value
+    return None if isinstance(value, UnsetValueType) else value
