@@ -11,10 +11,25 @@ write_to = "src/validataclass/_version.py"
 version_scheme = "post-release"
 
 [tool.mypy]
+# TODO: Don't add tests permanently yet, there's too much that can't be fixed right now.
+# files = ["src/", "tests/"]
 files = "src/"
+mypy_path = "src/"
+explicit_package_bases = true
 
 # Enable strict type checking
 strict = true
 
 # Ignore errors like `Module "validataclass.exceptions" does not explicitly export attribute "..."`
 no_implicit_reexport = false
+
+[[tool.mypy.overrides]]
+module = 'tests.*'
+
+# Don't enforce typed definitions in tests, this is a lot of unnecessary work (most parameters would be Any anyway).
+allow_untyped_defs = true
+
+# TODO: This is the main issue with mypy and validataclass right now.
+# Defining dataclasses with validators using the @validataclass decorator, like `some_field: str = StringValidator()`,
+# will cause "Incompatible types in assignment" errors. Until we find a way to solve this, ignore this error for now.
+disable_error_code = "assignment"

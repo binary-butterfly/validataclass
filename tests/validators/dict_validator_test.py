@@ -563,7 +563,7 @@ class DictValidatorTest:
                 'value': DecimalValidator(),
                 'optional_value': DecimalValidator(),
             }
-            required_fields = ['name', 'value']
+            required_fields = {'name', 'value'}
 
         validator = UnitTestDictValidator()
         assert validator.validate(input_dict) == expected_output
@@ -608,7 +608,7 @@ class DictValidatorTest:
                 'value': DecimalValidator(),
                 'optional_value': DecimalValidator(),
             }
-            required_fields = ['name', 'value']
+            required_fields = {'name', 'value'}
 
         validator = UnitTestDictValidator()
 

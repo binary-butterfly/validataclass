@@ -506,10 +506,14 @@ class DateTimeValidatorTest:
         assert validated_dt == expected_datetime
 
         # Check timezone of datetimes by comparing their offset to UTC
-        assert (
-            validated_dt.tzinfo == expected_datetime.tzinfo
-            or validated_dt.tzinfo.utcoffset(validated_dt) == expected_datetime.tzinfo.utcoffset(expected_datetime)
-        )
+        if expected_datetime.tzinfo is None:
+            assert validated_dt.tzinfo is None
+        else:
+            assert validated_dt.tzinfo is not None
+            assert (
+                validated_dt.tzinfo == expected_datetime.tzinfo
+                or validated_dt.tzinfo.utcoffset(validated_dt) == expected_datetime.tzinfo.utcoffset(expected_datetime)
+            )
 
     # Test DateTimeValidator with target_timezone parameter
 

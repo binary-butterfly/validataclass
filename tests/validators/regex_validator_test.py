@@ -438,7 +438,7 @@ class RegexValidatorTest:
         Test that RegexValidator raises an error on init if the custom error class is not a ValidatonError subclass.
         """
         with pytest.raises(TypeError, match='Custom error class must be a subclass of ValidationError'):
-            RegexValidator('[0-9]', custom_error_class=Exception)  # noqa
+            RegexValidator('[0-9]', custom_error_class=Exception)  # type: ignore[arg-type]  # noqa
 
     # Tests with length requirements
 

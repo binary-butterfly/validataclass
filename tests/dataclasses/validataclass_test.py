@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import pytest
 
@@ -19,7 +19,7 @@ from validataclass.dataclasses import (
     validataclass_field,
 )
 from validataclass.exceptions import DataclassValidatorFieldException
-from validataclass.helpers import OptionalUnset, UnsetValue
+from validataclass.helpers import OptionalUnset, UnsetValue, UnsetValueType
 from validataclass.validators import (
     DictValidator,
     IntegerValidator,
@@ -279,7 +279,7 @@ class ValidatorDataclassTest:
         # Check type annotations
         assert all(fields[field].type is int for field in ['required1', 'required2', 'optional2', 'optional4'])
         assert all(fields[field].type is Optional[int] for field in ['required3', 'optional1'])
-        assert all(fields[field].type is OptionalUnset[int] for field in ['required4', 'optional3'])
+        assert all(fields[field].type is Union[int, UnsetValueType] for field in ['required4', 'optional3'])
 
         # Check validators
         assert all(type(field.metadata.get('validator')) is IntegerValidator for field in fields.values())
@@ -391,7 +391,7 @@ class ValidatorDataclassTest:
             field_both: str = StringValidator()
 
         @validataclass
-        class SubClass(BaseB, BaseA):
+        class SubClass(BaseB, BaseA):  # type: ignore[misc]
             # Override the defaults to test that the decorator recognizes all fields of both base classes.
             # If it does not, a "no validator for field X" error would be raised.
             field_a: int = Default(42)

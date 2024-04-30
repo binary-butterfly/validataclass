@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from copy import copy
+from typing import Any, List
 
 import pytest
 
@@ -42,7 +43,7 @@ class DefaultTest:
     @staticmethod
     def test_default_list_deepcopied():
         """ Test Default object with a list, make sure that it is deepcopied. """
-        default_list = []
+        default_list: List[Any] = []
         default = Default(default_list)
 
         # Check string representation and value

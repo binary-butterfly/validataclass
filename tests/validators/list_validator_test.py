@@ -29,21 +29,21 @@ class ListValidatorTest:
     @staticmethod
     def test_valid_integer_list():
         """ Test ListValidator with IntegerValidator as item validator with valid integers. """
-        validator = ListValidator(item_validator=IntegerValidator())
+        validator: ListValidator[int] = ListValidator(item_validator=IntegerValidator())
 
         assert validator.validate([123, 0, -42, 123]) == [123, 0, -42, 123]
 
     @staticmethod
     def test_valid_integer_list_empty():
         """ Test ListValidator with IntegerValidator as item validator with an empty list. """
-        validator = ListValidator(item_validator=IntegerValidator())
+        validator: ListValidator[int] = ListValidator(item_validator=IntegerValidator())
 
         assert validator.validate([]) == []
 
     @staticmethod
     def test_valid_decimal_list():
         """ Test ListValidator with DecimalValidator as item validator with valid decimal strings. """
-        validator = ListValidator(item_validator=DecimalValidator())
+        validator: ListValidator[Decimal] = ListValidator(item_validator=DecimalValidator())
         output_list = validator.validate(['3.1415', '-0.42', '0'])
 
         assert all(isinstance(item, Decimal) for item in output_list)
@@ -86,7 +86,7 @@ class ListValidatorTest:
     )
     def test_valid_nested_list(input_list, expected_output):
         """ Test nested ListValidator to validate lists of lists of decimals. """
-        validator = ListValidator(ListValidator(DecimalValidator()))
+        validator: ListValidator[Decimal] = ListValidator(ListValidator(DecimalValidator()))
         output_list = validator.validate(input_list)
 
         for sublist in output_list:
@@ -100,7 +100,7 @@ class ListValidatorTest:
     @staticmethod
     def test_invalid_none():
         """ Check that ListValidator raises exceptions for None as value. """
-        validator = ListValidator(item_validator=IntegerValidator())
+        validator: ListValidator[int] = ListValidator(item_validator=IntegerValidator())
 
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
@@ -119,7 +119,7 @@ class ListValidatorTest:
     )
     def test_invalid_not_a_list(input_data):
         """ Check that ListValidator raises exceptions for values that are not of type 'list'. """
-        validator = ListValidator(item_validator=StringValidator())
+        validator: ListValidator[str] = ListValidator(item_validator=StringValidator())
 
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
@@ -132,7 +132,7 @@ class ListValidatorTest:
     @staticmethod
     def test_invalid_decimal_list_items():
         """ Test ListValidator with DecimalValidator as item validator with invalid list items. """
-        validator = ListValidator(item_validator=DecimalValidator())
+        validator: ListValidator[Decimal] = ListValidator(item_validator=DecimalValidator())
 
         with pytest.raises(ListItemsValidationError) as exception_info:
             # Indices 1 and 4 are valid; indices 0, 2, 3 raise errors
@@ -158,7 +158,7 @@ class ListValidatorTest:
     @staticmethod
     def test_with_context_arguments():
         """ Test that ListValidator passes context arguments down to the item validator. """
-        validator = ListValidator(item_validator=UnitTestContextValidator())
+        validator: ListValidator[str] = ListValidator(item_validator=UnitTestContextValidator())
 
         assert validator.validate(['unit', 'test']) == [
             "unit / {}",
@@ -201,7 +201,7 @@ class ListValidatorTest:
     )
     def test_list_length_valid(min_length, max_length, input_data):
         """ Test ListValidator with length requirements with lists of the correct length. """
-        validator = ListValidator(
+        validator: ListValidator[int] = ListValidator(
             IntegerValidator(),
             min_length=min_length,
             max_length=max_length,
@@ -239,7 +239,7 @@ class ListValidatorTest:
     )
     def test_list_length_invalid(min_length, max_length, input_data):
         """ Test ListValidator with length requirements with lists of the wrong length. """
-        validator = ListValidator(
+        validator: ListValidator[int] = ListValidator(
             IntegerValidator(),
             min_length=min_length,
             max_length=max_length,
@@ -276,7 +276,7 @@ class ListValidatorTest:
     )
     def test_discarding_invalid_items(input_data, expected_output):
         """ Test that ListValidator with discard_invalid=True discards invalid items. """
-        validator = ListValidator(
+        validator: ListValidator[int] = ListValidator(
             item_validator=IntegerValidator(),
             discard_invalid=True,
         )
@@ -305,7 +305,7 @@ class ListValidatorTest:
         """
         Test that ListValidator with discard_invalid=True handles length requirements correctly, with valid input.
         """
-        validator = ListValidator(
+        validator: ListValidator[int] = ListValidator(
             IntegerValidator(),
             min_length=2,
             max_length=4,
@@ -339,7 +339,7 @@ class ListValidatorTest:
         Before item validation, minimum and maximum length must be checked. After item validation (and potential
         discarding), the minimum length needs to be checked again.
         """
-        validator = ListValidator(
+        validator: ListValidator[int] = ListValidator(
             IntegerValidator(),
             min_length=2,
             max_length=4,

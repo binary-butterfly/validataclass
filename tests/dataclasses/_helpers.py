@@ -6,24 +6,35 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import sys
-from typing import Any
+from typing import Any, Dict, Type, TYPE_CHECKING
 
 import pytest
 
 from validataclass.dataclasses import Default
+from validataclass.validators import T_Dataclass
+
+# TODO: Replace type alias with dataclasses.Field[Any] when removing Python 3.9 support. (#15)
+if TYPE_CHECKING:
+    T_DataclassField = dataclasses.Field[Any]
+else:
+    T_DataclassField = dataclasses.Field
 
 
 # Test helpers for dataclass tests
 
-def assert_field_default(field: dataclasses.Field, default_value: Any):
+def assert_field_default(field: T_DataclassField, default_value: Any) -> None:
     """
     Asserts that a given (vali-)dataclass field has a specified default value.
     """
-    # Check regular dataclass defaults
-    assert (
-        (field.default == default_value and field.default_factory is dataclasses.MISSING)
-        or (field.default is dataclasses.MISSING and field.default_factory() == default_value)
-    )
+    # Check that the field has a regular dataclass default VALUE or default FACTORY, but not both
+    assert field.default is not dataclasses.MISSING or field.default_factory is not dataclasses.MISSING
+    assert field.default is dataclasses.MISSING or field.default_factory is dataclasses.MISSING
+
+    # Check regular dataclass default
+    if field.default_factory is not dataclasses.MISSING:
+        assert field.default_factory() == default_value
+    else:
+        assert field.default == default_value
 
     # Check defaults in dataclass metadata
     metadata_default = field.metadata.get('validator_default')
@@ -31,7 +42,7 @@ def assert_field_default(field: dataclasses.Field, default_value: Any):
     assert metadata_default.get_value() == default_value
 
 
-def assert_field_no_default(field: dataclasses.Field):
+def assert_field_no_default(field: T_DataclassField) -> None:
     """
     Asserts that a given (vali-)dataclass field has no default value.
     """
@@ -49,9 +60,13 @@ def assert_field_no_default(field: dataclasses.Field):
         assert field.default_factory is dataclasses.MISSING
 
 
-def get_dataclass_fields(cls) -> dict:
+def get_dataclass_fields(cls: Type[T_Dataclass]) -> Dict[str, T_DataclassField]:
     """
     Returns a dictionary containing all fields of a given dataclass.
     """
+    # Make sure the class is really a dataclass
+    assert dataclasses.is_dataclass(cls) and isinstance(cls, type)
+
+    # Get fields and return them as a dictionary
     fields_tuple = dataclasses.fields(cls)
     return {field.name: field for field in fields_tuple}
