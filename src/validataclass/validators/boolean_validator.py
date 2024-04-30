@@ -47,7 +47,7 @@ class BooleanValidator(Validator):
         """
         self.allow_strings = allow_strings
 
-    def validate(self, input_data: Any, **kwargs) -> bool:
+    def validate(self, input_data: Any, **kwargs: Any) -> bool:
         """
         Validates type of input data. Returns a boolean.
         """

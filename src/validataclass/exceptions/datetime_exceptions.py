@@ -4,7 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from validataclass.exceptions import ValidationError
+from typing import Any
+
+from .base_exceptions import ValidationError
 
 __all__ = [
     'InvalidDateError',
@@ -23,7 +25,7 @@ class InvalidDateError(ValidationError):
     """
     code = 'invalid_date'
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(date_format='YYYY-MM-DD', **kwargs)
 
 
@@ -37,7 +39,7 @@ class InvalidTimeError(ValidationError):
     """
     code = 'invalid_time'
 
-    def __init__(self, *, time_format_str: str, **kwargs):
+    def __init__(self, *, time_format_str: str, **kwargs: Any):
         super().__init__(time_format=time_format_str, **kwargs)
 
 
@@ -58,7 +60,7 @@ class InvalidDateTimeError(ValidationError):
     """
     code = 'invalid_datetime'
 
-    def __init__(self, *, datetime_format_str: str, **kwargs):
+    def __init__(self, *, datetime_format_str: str, **kwargs: Any):
         super().__init__(datetime_format=datetime_format_str, **kwargs)
 
 

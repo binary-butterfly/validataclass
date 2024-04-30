@@ -4,9 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
-from validataclass.exceptions import ValidationError
+from .base_exceptions import ValidationError
 
 __all__ = [
     'ListItemsValidationError',
@@ -27,7 +27,7 @@ class ListItemsValidationError(ValidationError):
     code = 'list_item_errors'
     item_errors: Dict[int, ValidationError]
 
-    def __init__(self, *, item_errors: Dict[int, ValidationError], **kwargs):
+    def __init__(self, *, item_errors: Dict[int, ValidationError], **kwargs: Any):
         super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in item_errors.values())
         self.item_errors = item_errors
@@ -39,7 +39,7 @@ class ListItemsValidationError(ValidationError):
             'item_errors': repr(self.item_errors),
         }
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         base_dict = super().to_dict()
         return {
             **base_dict,
@@ -58,7 +58,9 @@ class ListLengthError(ValidationError):
     """
     code = 'list_invalid_length'
 
-    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None, **kwargs):
-        min_length_args = {'min_length': min_length} if min_length is not None else {}
-        max_length_args = {'max_length': max_length} if max_length is not None else {}
-        super().__init__(**min_length_args, **max_length_args, **kwargs)
+    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None, **kwargs: Any):
+        if min_length is not None:
+            kwargs.update(min_length=min_length)
+        if max_length is not None:
+            kwargs.update(max_length=max_length)
+        super().__init__(**kwargs)

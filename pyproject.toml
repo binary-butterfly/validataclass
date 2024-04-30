@@ -9,3 +9,12 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 write_to = "src/validataclass/_version.py"
 version_scheme = "post-release"
+
+[tool.mypy]
+files = "src/"
+
+# Enable strict type checking
+strict = true
+
+# Ignore errors like `Module "validataclass.exceptions" does not explicitly export attribute "..."`
+no_implicit_reexport = false

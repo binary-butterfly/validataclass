@@ -4,9 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Optional
+from typing import Any, Optional
 
-from validataclass.exceptions import ValidationError
+from .base_exceptions import ValidationError
 
 __all__ = [
     'StringInvalidLengthError',
@@ -26,10 +26,12 @@ class StringInvalidLengthError(ValidationError):
     # Placeholder, will be overridden by the subclasses
     code = 'string_invalid_length'
 
-    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None, **kwargs):
-        min_length_args = {'min_length': min_length} if min_length is not None else {}
-        max_length_args = {'max_length': max_length} if max_length is not None else {}
-        super().__init__(**min_length_args, **max_length_args, **kwargs)
+    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None, **kwargs: Any):
+        if min_length is not None:
+            kwargs.update(min_length=min_length)
+        if max_length is not None:
+            kwargs.update(max_length=max_length)
+        super().__init__(**kwargs)
 
 
 class StringTooShortError(StringInvalidLengthError):
@@ -41,7 +43,7 @@ class StringTooShortError(StringInvalidLengthError):
     """
     code = 'string_too_short'
 
-    def __init__(self, *, min_length: int, max_length: Optional[int] = None, **kwargs):
+    def __init__(self, *, min_length: int, max_length: Optional[int] = None, **kwargs: Any):
         super().__init__(min_length=min_length, max_length=max_length, **kwargs)
 
 
@@ -54,7 +56,7 @@ class StringTooLongError(StringInvalidLengthError):
     """
     code = 'string_too_long'
 
-    def __init__(self, *, min_length: Optional[int] = None, max_length: int, **kwargs):
+    def __init__(self, *, min_length: Optional[int] = None, max_length: int, **kwargs: Any):
         super().__init__(min_length=min_length, max_length=max_length, **kwargs)
 
 

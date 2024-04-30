@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from datetime import datetime, tzinfo
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Pattern
 
 from validataclass.exceptions import DateTimeRangeError, InvalidDateTimeError, InvalidValidatorOptionException
 from validataclass.helpers import BaseDateTimeRange
@@ -36,7 +36,7 @@ class DateTimeFormat(Enum):
     - `regex_str`: Regular expression pattern as string
     """
 
-    def __init__(self, format_str, regex_str):
+    def __init__(self, format_str: str, regex_str: str):
         self.format_str = format_str
         self.regex_str = regex_str
 
@@ -44,7 +44,11 @@ class DateTimeFormat(Enum):
         """
         Returns `True` if the format allows local datetimes (i.e. datetime strings without timezone info).
         """
-        return True if self in [self.ALLOW_TIMEZONE, self.LOCAL_ONLY, self.LOCAL_OR_UTC] else False
+        return bool(self in [
+            DateTimeFormat.ALLOW_TIMEZONE,
+            DateTimeFormat.LOCAL_ONLY,
+            DateTimeFormat.LOCAL_OR_UTC,
+        ])
 
     # Allows datetimes both with and without timezone info, the latter being interpreted as local time (default)
     ALLOW_TIMEZONE = ('<DATE>T<TIME>[<TIMEZONE>]', f'{_REGEX_DATE_AND_TIME}{_REGEX_TIMEZONE}?')
@@ -278,7 +282,7 @@ class DateTimeValidator(StringValidator):
     datetime_format: DateTimeFormat
 
     # Precompiled regular expression for the specified datetime string format
-    datetime_format_regex: re.Pattern
+    datetime_format_regex: Pattern[str]
 
     # Whether to discard milli- and microseconds in the output datetime
     discard_milliseconds: bool = False
@@ -339,7 +343,7 @@ class DateTimeValidator(StringValidator):
         # Precompile regular expression for datetime format
         self.datetime_format_regex = re.compile(self.datetime_format.regex_str)
 
-    def validate(self, input_data: Any, **kwargs) -> datetime:
+    def validate(self, input_data: Any, **kwargs: Any) -> datetime:  # type: ignore[override]
         """
         Validates input as a valid datetime string and convert it to a `datetime.datetime` object.
         """

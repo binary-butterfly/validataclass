@@ -4,9 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Optional
+from typing import Any, List, Optional
 
-from validataclass.exceptions import ValidationError
+from .base_exceptions import ValidationError
 
 __all__ = [
     'ValueNotAllowedError',
@@ -22,5 +22,5 @@ class ValueNotAllowedError(ValidationError):
     """
     code = 'value_not_allowed'
 
-    def __init__(self, *, allowed_values: Optional[list] = None, **kwargs):
+    def __init__(self, *, allowed_values: Optional[List[Any]] = None, **kwargs: Any):
         super().__init__(allowed_values=allowed_values, **kwargs)

@@ -132,7 +132,7 @@ class DictValidator(Validator):
         if optional_fields is not None:
             self.required_fields = self.required_fields - set(optional_fields)
 
-    def validate(self, input_data: Any, **kwargs) -> dict:
+    def validate(self, input_data: Any, **kwargs: Any) -> Dict[str, Any]:
         """
         Validates input data. Returns a validated dict.
         """
@@ -143,8 +143,8 @@ class DictValidator(Validator):
             if type(key) is not str:
                 raise DictInvalidKeyTypeError()
 
-        field_errors = {}
-        validated_dict = {}
+        field_errors: Dict[str, ValidationError] = {}
+        validated_dict: Dict[str, Any] = {}
 
         # Check that required fields exist in input data
         for field_name in self.required_fields:

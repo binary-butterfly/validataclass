@@ -58,10 +58,10 @@ class AnyOfValidator(Validator):
     max_allowed_values_in_validation_error: int = 20
 
     # Values allowed as input
-    allowed_values: List[Any] = None
+    allowed_values: List[Any]
 
     # Types allowed for input data (set by parameter or autodetermined from allowed_values)
-    allowed_types: List[type] = None
+    allowed_types: List[type]
 
     # If set, strings will be matched case-sensitively
     case_sensitive: bool = False
@@ -119,7 +119,7 @@ class AnyOfValidator(Validator):
         # Set case_sensitive parameter, defaulting to False.
         self.case_sensitive = case_sensitive if case_sensitive is not None else False
 
-    def validate(self, input_data: Any, **kwargs) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> Any:
         """
         Validate that input is in the list of allowed values. Returns the value (as defined in the list).
         """
@@ -152,6 +152,6 @@ class AnyOfValidator(Validator):
 
         # Compare strings case-insensitively (unless case_sensitive option is set)
         if type(input_value) is str and not self.case_sensitive:
-            return input_value.lower() == allowed_value.lower()
+            return bool(input_value.lower() == allowed_value.lower())
         else:
-            return input_value == allowed_value
+            return bool(input_value == allowed_value)

@@ -62,7 +62,7 @@ class AllowEmptyString(Validator):
         self.wrapped_validator = validator
         self.default_value = default
 
-    def validate(self, input_data: Any, **kwargs) -> Optional[Any]:
+    def validate(self, input_data: Any, **kwargs: Any) -> Optional[Any]:
         """
         Validates input data.
 

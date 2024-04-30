@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any
+from typing import Any, Pattern
 
 from validataclass.exceptions import InvalidEmailError
 from validataclass.internal import internet_helpers
@@ -51,7 +51,7 @@ class EmailValidator(StringValidator):
     """
 
     # Precompiled regular expression
-    email_regex: re.Pattern = re.compile(
+    email_regex: Pattern[str] = re.compile(
         f'(?P<local_part> {_REGEX_LOCAL_PART_CHARS}+ (?: \\.{_REGEX_LOCAL_PART_CHARS}+)* ) '
         f'@ (?P<domain> [^@?]+ )',
         re.IGNORECASE | re.VERBOSE,
@@ -88,7 +88,7 @@ class EmailValidator(StringValidator):
         self.allow_empty = allow_empty
         self.to_lowercase = to_lowercase
 
-    def validate(self, input_data: Any, **kwargs) -> str:
+    def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates that input is a valid email address string. Returns unmodified string.
         """

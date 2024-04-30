@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Pattern, Type, Union
 
 from validataclass.exceptions import RegexMatchError, ValidationError
 from .string_validator import StringValidator
@@ -85,7 +85,7 @@ class RegexValidator(StringValidator):
     """
 
     # Precompiled regex pattern
-    regex_pattern: re.Pattern
+    regex_pattern: Pattern[str]
 
     # Output template
     output_template: Optional[str]
@@ -101,13 +101,13 @@ class RegexValidator(StringValidator):
 
     def __init__(
         self,
-        pattern: Union[re.Pattern, str],
+        pattern: Union[Pattern[str], str],
         output_template: Optional[str] = None,
         *,
         custom_error_class: Type[ValidationError] = RegexMatchError,
         custom_error_code: Optional[str] = None,
         allow_empty: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Creates a `RegexValidator` with a specified regex pattern (as string or precompiled `re.Pattern` object).
@@ -144,7 +144,7 @@ class RegexValidator(StringValidator):
 
         self.allow_empty = allow_empty
 
-    def validate(self, input_data: Any, **kwargs) -> str:
+    def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates input as string and match full string against regular expression.
 

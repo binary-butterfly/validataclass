@@ -7,6 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 from copy import copy, deepcopy
 from typing import Any, Callable, NoReturn
 
+from typing_extensions import Self
+
 from validataclass.helpers import UnsetValue, UnsetValueType
 
 __all__ = [
@@ -33,15 +35,15 @@ class Default:
     def __init__(self, value: Any = None):
         self.value = deepcopy(value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{type(self).__name__}({self.value!r})'
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(self, type(other)):
-            return self.value == other.value
+            return bool(self.value == other.value)
         return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.value)
 
     def get_value(self) -> Any:
@@ -74,21 +76,21 @@ class DefaultFactory(Default):
     DefaultFactory(lambda: date.today())
     ```
     """
-    factory: Callable
+    factory: Callable[[], Any]
 
-    def __init__(self, factory: Callable):
+    def __init__(self, factory: Callable[[], Any]):
         super().__init__()
         self.factory = factory
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{type(self).__name__}({self.factory!r})'
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(self, type(other)):
-            return isinstance(other, DefaultFactory) and self.factory == other.factory
+            return isinstance(other, DefaultFactory) and bool(self.factory == other.factory)
         return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.factory)
 
     def get_value(self) -> Any:
@@ -104,10 +106,10 @@ class _DefaultUnset(Default):
     Class for creating the sentinel object `DefaultUnset`, which is a shortcut for `Default(UnsetValue)`.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(UnsetValue)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'DefaultUnset'
 
     def get_value(self) -> UnsetValueType:
@@ -117,13 +119,13 @@ class _DefaultUnset(Default):
         return False
 
     # For convenience: Allow DefaultUnset to be used as `DefaultUnset()`, returning the sentinel itself.
-    def __call__(self):
+    def __call__(self) -> Self:
         return self
 
 
 # Create sentinel object DefaultUnset, redefine __new__ to always return the same instance, and delete temporary class
 DefaultUnset = _DefaultUnset()
-_DefaultUnset.__new__ = lambda cls: DefaultUnset
+_DefaultUnset.__new__ = lambda cls: DefaultUnset  # type: ignore
 del _DefaultUnset
 
 
@@ -136,17 +138,17 @@ class _NoDefault(Default):
     A validataclass field with `NoDefault` is equivalent to a validataclass field without specified default.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'NoDefault'
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         # Nothing is equal to NoDefault except itself
         return type(self) is type(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # Use default implementation
         return object.__hash__(self)
 
@@ -154,11 +156,11 @@ class _NoDefault(Default):
         raise ValueError('No default value specified!')
 
     # For convenience: Allow NoDefault to be used as `NoDefault()`, returning the sentinel itself.
-    def __call__(self):
+    def __call__(self) -> Self:
         return self
 
 
 # Create sentinel object NoDefault, redefine __new__ to always return the same instance, and delete temporary class
 NoDefault = _NoDefault()
-_NoDefault.__new__ = lambda cls: NoDefault
+_NoDefault.__new__ = lambda cls: NoDefault  # type: ignore
 del _NoDefault

@@ -7,7 +7,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import inspect
 import warnings
-from typing import Any, Dict, Generic, Optional, Type, TypeVar
+from typing import Any, Dict, Generic, Optional, Type, TypeVar, TYPE_CHECKING
+
+from typing_extensions import TypeGuard
 
 from validataclass.dataclasses import Default, NoDefault
 from validataclass.exceptions import (
@@ -25,8 +27,17 @@ __all__ = [
     'T_Dataclass',
 ]
 
-# Type variable for type hints in DataclassValidator
-T_Dataclass = TypeVar('T_Dataclass')
+# Type variable for an instance of a dataclass
+T_Dataclass = TypeVar('T_Dataclass', bound=object)
+
+# Define type alias for dataclasses.Field
+# NOTE: In Python >= 3.9, dataclasses.Field is a Generic, so mypy will complain if no type parameter is given.
+# However, Field[Any] will raise a runtime error in Python 3.8 because there the type is not parametrized yet.
+# TODO: Replace type alias with dataclasses.Field[Any] when removing Python 3.9 support. (#15)
+if TYPE_CHECKING:
+    T_DataclassField = dataclasses.Field[Any]
+else:
+    T_DataclassField = dataclasses.Field
 
 
 class DataclassValidator(Generic[T_Dataclass], DictValidator):
@@ -107,10 +118,10 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
     """
 
     # Dataclass type that the validated dictionary will be converted to
-    dataclass_cls: Type[T_Dataclass] = None
+    dataclass_cls: Type[T_Dataclass]
 
     # Field default values
-    field_defaults: Dict[str, Default] = None
+    field_defaults: Dict[str, Default]
 
     def __init__(self, dataclass_cls: Optional[Type[T_Dataclass]] = None) -> None:
         # For easier subclassing: If 'self.dataclass_cls' is already set (e.g. as class member in a subclass), use that
@@ -118,31 +129,24 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         if dataclass_cls is None:
             dataclass_cls = getattr(self, 'dataclass_cls', None)
 
-        # Check that dataclass_cls is actually a dataclass, and that it is the class itself and not an instance of it
+        # Ensure that dataclass_cls is either given as a parameter or predefined in a subclass
         if dataclass_cls is None:
             raise InvalidValidatorOptionException(
                 'Parameter "dataclass_cls" must be specified (or set as class member in a subclass).'
             )
-        if not dataclasses.is_dataclass(dataclass_cls):
-            raise InvalidValidatorOptionException('Parameter "dataclass_cls" must be a dataclass type.')
-        if not isinstance(dataclass_cls, type):
-            raise InvalidValidatorOptionException(
-                'Parameter "dataclass_cls" is a dataclass instance, but must be a dataclass type.'
-            )
 
-        self.dataclass_cls = dataclass_cls  # noqa (PyCharm thinks the type is incompatible, which is nonsense)
+        # Check that dataclass_cls is actually a dataclass, and that it is the class itself and not an instance of it
+        if not _is_dataclass_type(dataclass_cls):
+            raise InvalidValidatorOptionException('Parameter "dataclass_cls" must be a dataclass type.')
+
+        self.dataclass_cls = dataclass_cls
         self.field_defaults = {}
 
         # Collect field validators and required fields for the DictValidator by examining the dataclass fields
         field_validators = {}
         required_fields = []
 
-        # Note: Pycharm falsely complains that we're calling dataclasses.fields() on something that is neither a
-        # dataclass instance nor a type, even though we explicitly checked the type beforehand to ensure that it's
-        # really a dataclass type. Whatever, Pycharm...
-        for field in dataclasses.fields(dataclass_cls):  # noqa
-            field: dataclasses.Field  # (Type hint)
-
+        for field in dataclasses.fields(dataclass_cls):
             # Skip fields with init=False, those are not validated
             if field.init is False:
                 continue
@@ -163,7 +167,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         super().__init__(field_validators=field_validators, required_fields=required_fields)
 
     @staticmethod
-    def _get_field_validator(field: dataclasses.Field) -> Validator:
+    def _get_field_validator(field: T_DataclassField) -> Validator:
         # Parse field metadata to get Validator
         validator = field.metadata.get('validator')
 
@@ -178,7 +182,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         return validator
 
     @staticmethod
-    def _get_field_default(field: dataclasses.Field) -> Default:
+    def _get_field_default(field: T_DataclassField) -> Default:
         # Parse field metadata to get Default object
         default = field.metadata.get('validator_default', NoDefault)
 
@@ -194,22 +198,23 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
 
         return default
 
-    def _pre_validate(self, input_data: Any, **kwargs) -> dict:
+    def _pre_validate(self, input_data: Any, **kwargs: Any) -> Dict[str, Any]:
         """
         Pre-validation steps: Validates the input as a dictionary and fills in the default values.
         """
         # Custom pre-validation using the __pre_validate__() method (class or static) in the dataclass (if defined)
-        if hasattr(self.dataclass_cls, '__pre_validate__'):
+        pre_validate_func = getattr(self.dataclass_cls, '__pre_validate__', None)
+        if pre_validate_func is not None:
             # Ensure type before calling the DictValidator to make sure __pre_validate__ gets a dict
             self._ensure_type(input_data, dict)
 
             # Inspect the __pre_validate__() method
-            pre_validate_spec = inspect.getfullargspec(self.dataclass_cls.__pre_validate__)
-            pre_validate_is_method = inspect.ismethod(self.dataclass_cls.__pre_validate__)
+            pre_validate_spec = inspect.getfullargspec(pre_validate_func)
+            pre_validate_expected_arg_count = 2 if inspect.ismethod(pre_validate_func) else 1
 
             # Ensure __pre_validate__() has exactly one positional arguments (input_data), or two if it is a class
             # method (cls, input_data)
-            if len(pre_validate_spec.args) != (2 if pre_validate_is_method else 1) or pre_validate_spec.varargs:
+            if len(pre_validate_spec.args) != pre_validate_expected_arg_count or pre_validate_spec.varargs:
                 raise DataclassInvalidPreValidateSignatureException(
                     f'{self.dataclass_cls.__name__}.__pre_validate__() must have exactly one positional argument'
                     ' (not counting the class object if it is a class method).'
@@ -227,7 +232,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
                 }
 
             # Filter input dictionary through __pre_validate__()
-            input_data = self.dataclass_cls.__pre_validate__(input_data, **context_kwargs)
+            input_data = pre_validate_func(input_data, **context_kwargs)
 
         # Validate raw dictionary using underlying DictValidator
         validated_dict = super().validate(input_data, **kwargs)
@@ -239,7 +244,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
 
         return validated_dict
 
-    def validate(self, input_data: Any, **kwargs) -> T_Dataclass:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_Dataclass:  # type: ignore[override]
         """
         Validate an input dictionary according to the specified dataclass. Returns an instance of the dataclass.
         """
@@ -260,7 +265,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         # by the user)
 
     @staticmethod
-    def _post_validate(validated_object: T_Dataclass, **kwargs) -> T_Dataclass:
+    def _post_validate(validated_object: T_Dataclass, **kwargs: Any) -> T_Dataclass:
         """
         Post-validation steps: Calls the `__post_validate__()` method on the dataclass object (if it is defined).
         """
@@ -289,3 +294,10 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
             validated_object.__post_validate__(**context_kwargs)
 
         return validated_object
+
+
+def _is_dataclass_type(obj: Any) -> TypeGuard[Type[T_Dataclass]]:
+    """
+    Type-safe helper function that checks if the given object is a dataclass (specifically a class, not an instance).
+    """
+    return dataclasses.is_dataclass(obj) and isinstance(obj, type)

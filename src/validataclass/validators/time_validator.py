@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from datetime import time
 from enum import Enum
-from typing import Any
+from typing import Any, Pattern
 
 from validataclass.exceptions import InvalidTimeError
 from .string_validator import StringValidator
@@ -28,7 +28,7 @@ class TimeFormat(Enum):
     - `regex_str`: Regular expression pattern as string
     """
 
-    def __init__(self, format_str, regex_str):
+    def __init__(self, format_str: str, regex_str: str):
         self.format_str = format_str
         self.regex_str = regex_str
 
@@ -78,7 +78,7 @@ class TimeValidator(StringValidator):
     time_format: TimeFormat
 
     # Precompiled regular expression for the specified time string format
-    time_format_regex: re.Pattern
+    time_format_regex: Pattern[str]
 
     def __init__(self, time_format: TimeFormat = TimeFormat.WITH_SECONDS):
         """
@@ -94,7 +94,7 @@ class TimeValidator(StringValidator):
         self.time_format = time_format
         self.time_format_regex = re.compile(self.time_format.regex_str)
 
-    def validate(self, input_data: Any, **kwargs) -> time:
+    def validate(self, input_data: Any, **kwargs: Any) -> time:  # type: ignore[override]
         """
         Validates input as a valid time string and convert it to a `datetime.time` object.
         """

@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any, Optional
 
-from validataclass.exceptions import ValidationError
+from .base_exceptions import ValidationError
 
 __all__ = [
     'NumberRangeError',
@@ -27,10 +27,12 @@ class NumberRangeError(ValidationError):
     """
     code = 'number_range_error'
 
-    def __init__(self, *, min_value: Optional[Any] = None, max_value: Optional[Any] = None, **kwargs):
-        min_value_args = {'min_value': min_value} if min_value is not None else {}
-        max_value_args = {'max_value': max_value} if max_value is not None else {}
-        super().__init__(**min_value_args, **max_value_args, **kwargs)
+    def __init__(self, *, min_value: Optional[Any] = None, max_value: Optional[Any] = None, **kwargs: Any):
+        if min_value is not None:
+            kwargs.update(min_value=min_value)
+        if max_value is not None:
+            kwargs.update(max_value=max_value)
+        super().__init__(**kwargs)
 
 
 class DecimalPlacesError(ValidationError):
@@ -42,10 +44,12 @@ class DecimalPlacesError(ValidationError):
     """
     code = 'decimal_places'
 
-    def __init__(self, *, min_places: Optional[Any] = None, max_places: Optional[Any] = None, **kwargs):
-        min_places_args = {'min_places': min_places} if min_places is not None else {}
-        max_places_args = {'max_places': max_places} if max_places is not None else {}
-        super().__init__(**min_places_args, **max_places_args, **kwargs)
+    def __init__(self, *, min_places: Optional[Any] = None, max_places: Optional[Any] = None, **kwargs: Any):
+        if min_places is not None:
+            kwargs.update(min_places=min_places)
+        if max_places is not None:
+            kwargs.update(max_places=max_places)
+        super().__init__(**kwargs)
 
 
 class InvalidIntegerError(ValidationError):

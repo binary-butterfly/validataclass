@@ -96,8 +96,8 @@ class FloatToDecimalValidator(DecimalValidator):
         """
         # Initialize base DecimalValidator
         super().__init__(
-            min_value=str(min_value) if type(min_value) in [float, int] else min_value,
-            max_value=str(max_value) if type(max_value) in [float, int] else max_value,
+            min_value=str(min_value) if isinstance(min_value, float) else min_value,
+            max_value=str(max_value) if isinstance(max_value, float) else max_value,
             output_places=output_places,
             rounding=rounding,
         )
@@ -113,7 +113,7 @@ class FloatToDecimalValidator(DecimalValidator):
         if allow_strings:
             self.allowed_types.append(str)
 
-    def validate(self, input_data: Any, **kwargs) -> Decimal:
+    def validate(self, input_data: Any, **kwargs: Any) -> Decimal:  # type: ignore[override]
         """
         Validates input data as a float (optionally also as integer or string), then converts it to a `Decimal` object.
         """

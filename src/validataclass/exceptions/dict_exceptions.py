@@ -4,9 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Dict
+from typing import Any, Dict
 
-from validataclass.exceptions import ValidationError
+from .base_exceptions import ValidationError
 
 __all__ = [
     'DictFieldsValidationError',
@@ -28,7 +28,7 @@ class DictFieldsValidationError(ValidationError):
     code = 'field_errors'
     field_errors: Dict[str, ValidationError]
 
-    def __init__(self, *, field_errors: Dict[str, ValidationError], **kwargs):
+    def __init__(self, *, field_errors: Dict[str, ValidationError], **kwargs: Any):
         super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in field_errors.values())
         self.field_errors = field_errors
@@ -40,7 +40,7 @@ class DictFieldsValidationError(ValidationError):
             'field_errors': repr(self.field_errors),
         }
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         base_dict = super().to_dict()
         return {
             **base_dict,

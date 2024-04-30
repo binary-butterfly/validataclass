@@ -33,7 +33,7 @@ class DateValidator(StringValidator):
     Output: `datetime.date`
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Creates a `DateValidator`.
 
@@ -42,7 +42,7 @@ class DateValidator(StringValidator):
         # Initialize StringValidator without any parameters
         super().__init__()
 
-    def validate(self, input_data: Any, **kwargs) -> date:
+    def validate(self, input_data: Any, **kwargs: Any) -> date:  # type: ignore[override]
         """
         Validates input as a valid date string and convert it to a `datetime.date` object.
         """

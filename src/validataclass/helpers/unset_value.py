@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Optional, TypeVar, Union
 
+from typing_extensions import Self
+
 __all__ = [
     'UnsetValue',
     'UnsetValueType',
@@ -28,16 +30,16 @@ class UnsetValueType:
     or to create a copy of `UnsetValue` will always result in the same instance.
     """
 
-    def __call__(self):
+    def __call__(self) -> Self:
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'UnsetValue'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<UnsetValue>'
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
     # Don't define __eq__ because the default implementation is fine (identity check), and because we would then have to
@@ -46,7 +48,7 @@ class UnsetValueType:
 
 # Create sentinel object and redefine __new__ so that the object cannot be cloned
 UnsetValue = UnsetValueType()
-UnsetValueType.__new__ = lambda cls: UnsetValue
+UnsetValueType.__new__ = lambda cls: UnsetValue  # type: ignore
 
 # Type alias OptionalUnset[T] for fields with DefaultUnset: Allows either the type T or UnsetValue
 OptionalUnset = Union[T, UnsetValueType]
@@ -62,4 +64,4 @@ def unset_to_none(value: OptionalUnset[T]) -> Optional[T]:
 
     Returns `None` if the given value is `UnsetValue`, otherwise the value is returned unmodified.
     """
-    return None if value is UnsetValue else value
+    return None if isinstance(value, UnsetValueType) else value

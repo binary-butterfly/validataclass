@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, Optional, List
+from typing import Any, List, Optional, Pattern
 
 from validataclass.exceptions import InvalidUrlError
 from validataclass.internal import internet_helpers
@@ -84,7 +84,7 @@ class UrlValidator(StringValidator):
     allow_empty: bool
 
     # Precompiled regular expression
-    url_regex: re.Pattern = re.compile(
+    url_regex: Pattern[str] = re.compile(
         r'''
             (?P<scheme> [a-z][a-z0-9.+-]* )
             ://
@@ -138,7 +138,7 @@ class UrlValidator(StringValidator):
         self.allow_userinfo = allow_userinfo
         self.allow_empty = allow_empty
 
-    def validate(self, input_data: Any, **kwargs) -> str:
+    def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates that input is a valid URL string. Returns unmodified string.
         """

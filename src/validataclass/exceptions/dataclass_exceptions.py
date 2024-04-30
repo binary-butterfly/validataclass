@@ -4,9 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
-from validataclass.exceptions import ValidationError
+from .base_exceptions import ValidationError
 
 __all__ = [
     'DataclassPostValidationError',
@@ -60,7 +60,7 @@ class DataclassPostValidationError(ValidationError):
         *,
         error: Optional[ValidationError] = None,
         field_errors: Optional[Dict[str, ValidationError]] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         super().__init__(**kwargs)
 
@@ -84,7 +84,7 @@ class DataclassPostValidationError(ValidationError):
 
         return base_dict
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         base_dict = super().to_dict()
 
         # Convert inner errors to dicts recursively
