@@ -11,9 +11,7 @@ write_to = "src/validataclass/_version.py"
 version_scheme = "post-release"
 
 [tool.mypy]
-# TODO: Don't add tests permanently yet, there's too much that can't be fixed right now.
-# files = ["src/", "tests/"]
-files = "src/"
+files = ["src/", "tests/"]
 mypy_path = "src/"
 explicit_package_bases = true
 
