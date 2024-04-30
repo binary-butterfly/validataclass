@@ -54,6 +54,7 @@ def assert_field_no_default(field: T_DataclassField) -> None:
 
     # For Python under 3.10, check that an exception raising default_factory is set
     if sys.version_info < (3, 10):
+        assert field.default_factory is not dataclasses.MISSING
         with pytest.raises(TypeError, match="required keyword-only argument"):
             field.default_factory()
     else:
