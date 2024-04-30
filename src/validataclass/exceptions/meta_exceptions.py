@@ -16,30 +16,27 @@ __all__ = [
 
 class InvalidValidatorOptionException(ValueError):
     """
-    Exception that is raised when attempting to create a validator with invalid options (e.g. setting two options that are
-    mutually exclusive).
+    Exception that is raised when attempting to create a validator with invalid options (e.g. setting two options that
+    are mutually exclusive).
 
     (This is not an input validation error.)
     """
-    pass
 
 
 class DataclassValidatorFieldException(Exception):
     """
-    Exception that is raised at creation of a dataclass with `@validataclass` or at creation of a `DataclassValidator` when a field of
-    the dataclass does not match the requirements. For example if no validator is specified for a field, or an object of invalid type is
-    specified as in the field metadata.
+    Exception that is raised at creation of a dataclass with `@validataclass` or at creation of a `DataclassValidator`
+    when a field of the dataclass does not match the requirements. For example if no validator is specified for a field,
+    or an object of invalid type is specified as in the field metadata.
 
     (This is not an input validation error.)
     """
-    pass
 
 
 class DataclassInvalidPreValidateSignatureException(Exception):
     """
-    Exception that is raised by the DataclassValidator when used with a dataclass that has a `__pre_validate__()` method
-    with an invalid method signature (i.e. not enough or too many positional arguments.)
+    Exception that is raised by the `DataclassValidator` when used with a dataclass that has a `__pre_validate__()`
+    method with an invalid method signature (i.e. not enough or too many positional arguments.)
 
     (This is not an input validation error.)
     """
-    pass

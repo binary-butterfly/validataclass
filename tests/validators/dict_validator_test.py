@@ -5,15 +5,32 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
+
 import pytest
 
 from tests.test_utils import UnitTestContextValidator
-from validataclass.exceptions import DictFieldsValidationError, DictInvalidKeyTypeError, InvalidTypeError, RequiredValueError, \
-    InvalidValidatorOptionException, ListItemsValidationError
-from validataclass.validators import DictValidator, DecimalValidator, IntegerValidator, StringValidator, Noneable, ListValidator
+from validataclass.exceptions import (
+    DictFieldsValidationError,
+    DictInvalidKeyTypeError,
+    InvalidTypeError,
+    InvalidValidatorOptionException,
+    RequiredValueError,
+)
+from validataclass.validators import (
+    DecimalValidator,
+    DictValidator,
+    IntegerValidator,
+    ListValidator,
+    Noneable,
+    StringValidator,
+)
 
 
 class DictValidatorTest:
+    """
+    Unit tests for DictValidator.
+    """
+
     # Tests for DictValidator only with default_validator (no field_validators)
 
     @staticmethod
@@ -29,14 +46,17 @@ class DictValidatorTest:
     def test_simple_dict_invalid_none():
         """ Validate a "simple" dictionary without field definitions with empty input. """
         validator = DictValidator(default_validator=IntegerValidator())
+
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
+
         assert exception_info.value.to_dict() == {'code': 'required_value'}
 
     @staticmethod
     def test_simple_dict_valid():
         """ Validate a "simple" dictionary without field definitions with valid input. """
         validator = DictValidator(default_validator=DecimalValidator())
+
         validated_data = validator.validate({
             'foo': '3.1415',
             'bar': '-0.42',
@@ -52,8 +72,9 @@ class DictValidatorTest:
 
     @staticmethod
     def test_simple_dict_invalid_fields():
-        """ Validate a "simple" dictionary with input data that has invalid fields (that fail the default_validator). """
+        """ Validate a simple dictionary with input data that has invalid fields (that fail the default_validator). """
         validator = DictValidator(default_validator=DecimalValidator())
+
         with pytest.raises(DictFieldsValidationError) as exception_info:
             # Validate a dict that has one valid field and three invalid fields
             validator.validate({
@@ -77,6 +98,7 @@ class DictValidatorTest:
     def test_simple_dict_invalid_not_a_dict():
         """ Validate a dictionary that is not a dictionary, resulting in an InvalidTypeError. """
         validator = DictValidator(default_validator=DecimalValidator())
+
         with pytest.raises(InvalidTypeError) as exception_info:
             # Try to validate a list as a dictionary
             validator.validate(['1.23', '4.56'])
@@ -89,7 +111,12 @@ class DictValidatorTest:
     @staticmethod
     def test_simple_dict_with_required_fields_valid():
         """ Validate a simple dictionary that has required keys with valid data. """
-        validator = DictValidator(default_validator=DecimalValidator(), required_fields=['foo', 'bar'])
+        validator = DictValidator(
+            default_validator=DecimalValidator(),
+            required_fields=['foo', 'bar'],
+
+        )
+
         validated_data = validator.validate({
             'foo': '3.1415',
             'bar': '-0.42',
@@ -106,7 +133,10 @@ class DictValidatorTest:
     @staticmethod
     def test_simple_dict_with_required_fields_missing():
         """ Validate a simple dictionary that has required keys with valid data. """
-        validator = DictValidator(default_validator=DecimalValidator(), required_fields=['foo', 'bar', 'baz'])
+        validator = DictValidator(
+            default_validator=DecimalValidator(),
+            required_fields=['foo', 'bar', 'baz'],
+        )
 
         with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
@@ -127,11 +157,20 @@ class DictValidatorTest:
     # Tests for DictValidator with defined field_validators (with and without default_validator)
 
     @staticmethod
-    def test_empty_dict_validator_valid():
-        """ Test a validator that only returns empty dictionaries (input dictionaries might contain fields, but they will be ignored). """
+    @pytest.mark.parametrize(
+        'input_dict',
+        [
+            {},
+            {'foo': 42},
+        ],
+    )
+    def test_empty_dict_validator_valid(input_dict):
+        """
+        Test a DictValidator with no field validators, which only returns empty dictionaries. Input dictionaries might
+        contain fields, but they will be ignored.
+        """
         validator = DictValidator(field_validators={})
-        assert validator.validate({}) == {}
-        assert validator.validate({'foo': 42}) == {}
+        assert validator.validate(input_dict) == {}
 
     @staticmethod
     def test_field_dict_without_default_validator_valid():
@@ -140,6 +179,7 @@ class DictValidatorTest:
             'test_int': IntegerValidator(),
             'test_dec': DecimalValidator(),
         })
+
         validated_data = validator.validate({
             'test_dec': '13.37',
             'test_int': 123,
@@ -160,6 +200,7 @@ class DictValidatorTest:
             'test_int': IntegerValidator(),
             'test_dec': DecimalValidator(),
         })
+
         with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
                 'test_dec': '13.37',
@@ -180,8 +221,9 @@ class DictValidatorTest:
                 'test_int': IntegerValidator(),
                 'test_dec': DecimalValidator(),
             },
-            default_validator=DecimalValidator()
+            default_validator=DecimalValidator(),
         )
+
         validated_data = validator.validate({
             'test_dec': '13.37',
             'test_int': 123,
@@ -204,8 +246,9 @@ class DictValidatorTest:
                 'test_int': IntegerValidator(),
                 'test_dec': DecimalValidator(),
             },
-            default_validator=DecimalValidator()
+            default_validator=DecimalValidator(),
         )
+
         with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
                 'test_dec': '13.37',
@@ -222,7 +265,7 @@ class DictValidatorTest:
             },
         }
 
-    # Tests for the required_fields / optional_fields settings (no validation, just checks the internal 'required_fields')
+    # Tests for required_fields / optional_fields (no validation, just checks the internal 'required_fields' attribute)
 
     @staticmethod
     def test_required_fields_without_field_validators_default():
@@ -253,7 +296,7 @@ class DictValidatorTest:
                 'b': DecimalValidator(),
                 'c': StringValidator(),
             },
-            required_fields=['a', 'c']
+            required_fields=['a', 'c'],
         )
 
         # Note: required_fields internally is a set, not a list
@@ -268,7 +311,7 @@ class DictValidatorTest:
                 'b': DecimalValidator(),
                 'c': StringValidator(),
             },
-            optional_fields=['a', 'b']
+            optional_fields=['a', 'b'],
         )
 
         # Note: required_fields internally is a set, not a list
@@ -283,7 +326,7 @@ class DictValidatorTest:
                 'b': DecimalValidator(),
                 'c': StringValidator(),
             },
-            required_fields=[]
+            required_fields=[],
         )
 
         # Note: required_fields internally is a set, not a list
@@ -298,6 +341,7 @@ class DictValidatorTest:
             'test_a': Noneable(DecimalValidator()),
             'test_b': Noneable(DecimalValidator()),
         })
+
         validated_data = validator.validate({
             'test_a': '13.37',
             'test_b': None,
@@ -315,9 +359,12 @@ class DictValidatorTest:
     def test_with_context_arguments():
         """ Test that DictValidator passes context arguments down to the default and field validators. """
         validator = DictValidator(
-            field_validators={'unittest': UnitTestContextValidator(prefix='FIELD')},
+            field_validators={
+                'unittest': UnitTestContextValidator(prefix='FIELD')
+            },
             default_validator=UnitTestContextValidator(prefix='DEFAULT'),
         )
+
         input_dict = {
             'unittest': 'foo',
             'foobar': 'bar',
@@ -340,8 +387,10 @@ class DictValidatorTest:
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DictValidator()
 
-        assert str(exception_info.value) == \
-               'At least one of the parameters "field_validators" and "default_validator" needs to be specified.'
+        assert (
+            str(exception_info.value)
+            == 'At least one of the parameters "field_validators" and "default_validator" needs to be specified.'
+        )
 
     @staticmethod
     def test_dict_validator_with_required_fields_and_optional_fields():
@@ -353,7 +402,7 @@ class DictValidatorTest:
                     'b': StringValidator(),
                 },
                 required_fields=['a'],
-                optional_fields=['b']
+                optional_fields=['b'],
             )
 
         assert str(exception_info.value) == 'Parameters "required_fields" and "optional_fields" cannot be combined.'
@@ -364,6 +413,7 @@ class DictValidatorTest:
     def test_dict_with_invalid_keys():
         """ Test that DictValidator only allows strings as keys. """
         validator = DictValidator(default_validator=IntegerValidator())
+
         with pytest.raises(DictInvalidKeyTypeError) as exception_info:
             validator.validate({
                 1: 2,
@@ -387,7 +437,7 @@ class DictValidatorTest:
                     'some_decimal': DecimalValidator(),
                 }),
                 'cool_numbers': ListValidator(DecimalValidator()),
-            }
+            },
         )
 
         validated_data = validator.validate({
@@ -471,8 +521,41 @@ class DictValidatorTest:
     # Test subclassing DictValidators
 
     @staticmethod
-    def test_subclassed_dict_valid():
-        """ Create a subclassed DictValidator and test it with valid data. """
+    @pytest.mark.parametrize(
+        'input_dict, expected_output',
+        [
+            # Input dictionary without the optional field, but with an additional field (should be ignored)
+            (
+                {
+                    'name': 'e',
+                    'value': '2.71828',
+                    'ignore_me': 'banana',
+                },
+                {
+                    'name': 'e',
+                    'value': Decimal('2.71828'),
+                },
+            ),
+
+            # Input dictionary with the optional field
+            (
+                {
+                    'name': 'pi',
+                    'value': '3.14159',
+                    'optional_value': '6.28319',
+                },
+                {
+                    'name': 'pi',
+                    'value': Decimal('3.14159'),
+                    'optional_value': Decimal('6.28319'),
+                },
+            ),
+        ],
+    )
+    def test_subclassed_dict_valid(input_dict, expected_output):
+        """
+        Create a subclassed DictValidator that sets field_validators and required_fields and test it with valid data.
+        """
 
         class UnitTestDictValidator(DictValidator):
             field_validators = {
@@ -482,89 +565,70 @@ class DictValidatorTest:
             }
             required_fields = ['name', 'value']
 
-        # Use a ListValidator here to test multiple datasets without needing parametrized tests
-        validator = ListValidator(UnitTestDictValidator())
-        validated_data = validator.validate([
-            {
-                'name': 'e',
-                'value': '2.71828',
-                'ignore_me': 'banana',
-            },
-            {
-                'name': 'pi',
-                'value': '3.14159',
-                'optional_value': '6.28319',
-            },
-        ])
-
-        assert validated_data == [
-            {
-                'name': 'e',
-                'value': Decimal('2.71828'),
-            },
-            {
-                'name': 'pi',
-                'value': Decimal('3.14159'),
-                'optional_value': Decimal('6.28319'),
-            },
-        ]
+        validator = UnitTestDictValidator()
+        assert validator.validate(input_dict) == expected_output
 
     @staticmethod
-    def test_subclassed_dict_invalid():
-        """ Create a subclassed DictValidator and test it with invalid data. """
-
-        class UnitTestDictValidator(DictValidator):
-            field_validators = {
-                'name': StringValidator(),
-                'value': DecimalValidator(),
-                'optional_value': DecimalValidator(),
-            }
-            required_fields = ['name', 'value']
-
-        # Use a ListValidator here to test multiple datasets without needing parametrized tests
-        validator = ListValidator(UnitTestDictValidator())
-        with pytest.raises(ListItemsValidationError) as exception_info:
-            validator.validate([
-                # Dataset 1: Inner validation errors
+    @pytest.mark.parametrize(
+        'input_dict, expected_field_errors',
+        [
+            # Input dictionary with field validation errors
+            (
                 {
                     'name': 123,
                     'value': 'meow',
                     'optional_value': 'banana',
                 },
-                # Dataset 2: Missing required field
+                {
+                    'name': {'code': 'invalid_type', 'expected_type': 'str'},
+                    'value': {'code': 'invalid_decimal'},
+                    'optional_value': {'code': 'invalid_decimal'},
+                },
+            ),
+
+            # Input dictionary with missing required field
+            (
                 {
                     'name': 'pi',
                 },
-            ])
+                {
+                    'value': {'code': 'required_field'},
+                },
+            ),
+        ],
+    )
+    def test_subclassed_dict_invalid(input_dict, expected_field_errors):
+        """
+        Create a subclassed DictValidator that sets field_validators and required_fields and test it with invalid data.
+        """
+
+        class UnitTestDictValidator(DictValidator):
+            field_validators = {
+                'name': StringValidator(),
+                'value': DecimalValidator(),
+                'optional_value': DecimalValidator(),
+            }
+            required_fields = ['name', 'value']
+
+        validator = UnitTestDictValidator()
+
+        with pytest.raises(DictFieldsValidationError) as exception_info:
+            validator.validate(input_dict)
 
         assert exception_info.value.to_dict() == {
-            'code': 'list_item_errors',
-            'item_errors': {
-                0: {
-                    'code': 'field_errors',
-                    'field_errors': {
-                        'name': {'code': 'invalid_type', 'expected_type': 'str'},
-                        'value': {'code': 'invalid_decimal'},
-                        'optional_value': {'code': 'invalid_decimal'},
-                    },
-                },
-                1: {
-                    'code': 'field_errors',
-                    'field_errors': {
-                        'value': {'code': 'required_field'},
-                    },
-                },
-            },
+            'code': 'field_errors',
+            'field_errors': expected_field_errors,
         }
 
     @staticmethod
     def test_subclassed_dict_with_default_validator_valid():
-        """ Create a subclassed DictValidator with default_validator instead of field_validators and test it with valid data. """
+        """ Create a subclassed DictValidator that sets default_validator and test it with valid data. """
 
         class UnitTestDefaultDictValidator(DictValidator):
             default_validator = DecimalValidator()
 
         validator = UnitTestDefaultDictValidator()
+
         validated_data = validator.validate({
             'pi': '3.14159',
             'e': '2.71828',
@@ -579,12 +643,13 @@ class DictValidatorTest:
 
     @staticmethod
     def test_subclassed_dict_with_default_validator_invalid():
-        """ Create a subclassed DictValidator with default_validator instead of field_validators and test it with invalid data. """
+        """ Create a subclassed DictValidator that sets default_validator and test it with invalid data. """
 
         class UnitTestDefaultDictValidator(DictValidator):
             default_validator = DecimalValidator()
 
         validator = UnitTestDefaultDictValidator()
+
         with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
                 'pi': 'meow',

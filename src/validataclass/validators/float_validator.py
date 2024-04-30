@@ -7,8 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 import math
 from typing import Any, Optional, Union
 
-from .validator import Validator
 from validataclass.exceptions import InvalidValidatorOptionException, NumberRangeError, NonFiniteNumberError
+from .validator import Validator
 
 __all__ = [
     'FloatValidator',
@@ -20,10 +20,10 @@ class FloatValidator(Validator):
     Validator for float values (IEEE 754), optionally with value range requirements.
 
     By default, input values must be of type `float`, so integers like `123` will not be accepted. Set the parameter
-    `allow_integers=True` to allow integers as well and convert them to floats, e.g. the integer `123` would be converted
-    to the float `123.0`.
+    `allow_integers=True` to allow integers as well and convert them to floats, e.g. the integer `123` would be
+    converted to the float `123.0`.
 
-    Only allows finite value (i.e. neither Infinity nor NaN).
+    Only allows finite value (i.e. neither `Infinity` nor `NaN`).
 
     Examples:
 
@@ -41,9 +41,9 @@ class FloatValidator(Validator):
     FloatValidator(min_value=-0.5, max_value=0.5)
     ```
 
-    Note: While it is allowed to set `max_value` without setting `min_value`, this might not do what you expect. For example,
-    a `FloatValidator(max_value=10)` allows all values less than or equal to 10. This includes ANY negative number though, so
-    for example `-12345.67` would be valid input!
+    Note: While it is allowed to set `max_value` without setting `min_value`, this might not do what you expect. For
+    example, a `FloatValidator(max_value=10)` allows all values less than or equal to 10. This includes ANY negative
+    number though, so for example `-12345.67` would be valid input!
 
     Valid input: `float` (also `int` if `allow_integers=True`)
     Output: `float`
@@ -57,18 +57,19 @@ class FloatValidator(Validator):
     allow_integers: bool = False
 
     def __init__(
-        self, *,
+        self,
+        *,
         min_value: Optional[Union[float, int]] = None,
         max_value: Optional[Union[float, int]] = None,
         allow_integers: bool = False,
     ):
         """
-        Create a FloatValidator with optional value range.
+        Creates a `FloatValidator` with optional value range.
 
         Parameters:
-            min_value: Float or integer, specifies lowest value an input float may have (default: None, no minimum value)
-            max_value: Float or integer, specifies highest value an input float may have (default: None, no maximum value)
-            allow_integers: Boolean, if True, integers are accepted and converted to floats (default: False)
+            `min_value`: Float or integer, specifies lowest allowed value (default: `None`, no minimum value)
+            `max_value`: Float or integer, specifies highest allowed value (default: `None`, no maximum value)
+            `allow_integers`: Boolean, whether to accept integers and convert them to floats (default: `False`)
         """
         # Check parameter validity
         if min_value is not None and max_value is not None and min_value > max_value:
@@ -80,7 +81,7 @@ class FloatValidator(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> float:
         """
-        Validate type (and optionally value) of input data. Returns unmodified float.
+        Validates type (and optionally value) of input data. Returns unmodified float.
         """
         self._ensure_type(input_data, [float, int] if self.allow_integers else float)
 
@@ -92,7 +93,10 @@ class FloatValidator(Validator):
             raise NonFiniteNumberError()
 
         # Check if value is in allowed range
-        if (self.min_value is not None and input_float < self.min_value) or (self.max_value is not None and input_float > self.max_value):
+        if (
+            (self.min_value is not None and input_float < self.min_value)
+            or (self.max_value is not None and input_float > self.max_value)
+        ):
             raise NumberRangeError(min_value=self.min_value, max_value=self.max_value)
 
         return input_float

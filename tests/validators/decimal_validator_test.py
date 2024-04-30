@@ -10,8 +10,14 @@ from decimal import Decimal
 import pytest
 
 from tests.test_utils import assert_decimal, unpack_params
-from validataclass.exceptions import RequiredValueError, InvalidTypeError, InvalidDecimalError, NumberRangeError, \
-    DecimalPlacesError, InvalidValidatorOptionException
+from validataclass.exceptions import (
+    DecimalPlacesError,
+    InvalidDecimalError,
+    InvalidTypeError,
+    InvalidValidatorOptionException,
+    NumberRangeError,
+    RequiredValueError,
+)
 from validataclass.validators import DecimalValidator
 
 
@@ -31,7 +37,7 @@ class DecimalValidatorTest:
             ('-.1', '-0.1'),
             ('-1.', '-1'),
             ('-123456789.123456789', '-123456789.123456789'),
-        ]
+        ],
     )
     def test_valid_decimal(input_data, expected_decimal_str):
         """ Test DecimalValidator with valid input strings. """
@@ -42,70 +48,104 @@ class DecimalValidatorTest:
     def test_invalid_none():
         """ Check that DecimalValidator raises exceptions for None as value. """
         validator = DecimalValidator()
+
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
+
         assert exception_info.value.to_dict() == {'code': 'required_value'}
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [1234, 1.234, True])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            1234,
+            1.234,
+            True,
+        ],
+    )
     def test_invalid_wrong_type(input_data):
         """ Check that DecimalValidator raises exceptions for values that are not of type 'str'. """
         validator = DecimalValidator()
+
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_type': 'str',
         }
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'bananana', '1234x', '$123', '1,234', 'Infinity', 'NaN', '.', '1e3'])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            '',
+            'bananana',
+            '1234x',
+            '$123',
+            '1,234',
+            'Infinity',
+            'NaN',
+            '.',
+            '1e3',
+        ],
+    )
     def test_invalid_malformed_string(input_data):
         """ Test DecimalValidator with malformed strings. """
         validator = DecimalValidator()
+
         with pytest.raises(InvalidDecimalError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {'code': 'invalid_decimal'}
 
     # Test value range requirement check
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_value, max_value, input_data', [
+        'min_value, max_value, input_data',
+        [
             # min_value only (as Decimal object and as string)
             *unpack_params(
-                Decimal('1'), None,
+                Decimal('1'),
+                None,
                 ['1', '1.000', '1.00001', '+1.1', '42'],
             ),
             *unpack_params(
-                '-3.000', None,
+                '-3.000',
+                None,
                 ['-3', '-2.9999', '-2', '0.000', '1.234', '4.567'],
             ),
 
             # max_value only
             *unpack_params(
-                None, Decimal('-10.5'),
+                None,
+                Decimal('-10.5'),
                 ['-10.5', '-10.6', '-11', '-9999.999'],
             ),
             *unpack_params(
-                None, '-0',
+                None,
+                '-0',
                 ['-1.234', '-0.001', '0', '-0', '+0'],
             ),
 
             # min_value and max_value (as Decimal, integer and string)
             *unpack_params(
-                Decimal('0'), Decimal('10'),
+                Decimal('0'),
+                Decimal('10'),
                 ['0.000', '0.001', '1', '9.9999', '+10.00000'],
             ),
             *unpack_params(
-                -1, 1,
+                -1,
+                1,
                 ['-1.0000', '-0.99999', '-0.0001', '0', '0.001', '0.9999', '1.000'],
             ),
             *unpack_params(
-                Decimal('42'), '42.0',
+                Decimal('42'),
+                '42.0',
                 ['42', '+42', '42.0000000'],
             ),
-        ]
+        ],
     )
     def test_decimal_value_range_valid(min_value, max_value, input_data):
         """ Test DecimalValidator with range requirements with valid decimal strings. """
@@ -114,41 +154,49 @@ class DecimalValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_value, max_value, input_data', [
+        'min_value, max_value, input_data',
+        [
             # min_value only (as Decimal object and as string)
             *unpack_params(
-                Decimal('1'), None,
+                Decimal('1'),
+                None,
                 ['0.9999', '0', '-1.00001', '-42'],
             ),
             *unpack_params(
-                '-3.000', None,
+                '-3.000',
+                None,
                 ['-3.000000001', '-3.1', '-42'],
             ),
 
             # max_value only
             *unpack_params(
-                None, Decimal('-10.5'),
+                None,
+                Decimal('-10.5'),
                 ['-10.499', '-10.000', '-10', '0', '0.001', '42'],
             ),
             *unpack_params(
-                None, '-0',
+                None,
+                '-0',
                 ['0.001', '1', '123.456'],
             ),
 
             # min_value and max_value
             *unpack_params(
-                Decimal('0'), Decimal('10'),
+                Decimal('0'),
+                Decimal('10'),
                 ['-0.001', '-1', '10.0000001', '+42'],
             ),
             *unpack_params(
-                '-1', '1',
+                '-1',
+                '1',
                 ['-1.0001', '-9.999', '1.000001', '1.234', '+42'],
             ),
             *unpack_params(
-                Decimal('42'), '42.0',
+                Decimal('42'),
+                '42.0',
                 ['0', '41.999999', '42.00000001', '-42'],
             ),
-        ]
+        ],
     )
     def test_decimal_value_range_invalid(min_value, max_value, input_data):
         """ Test DecimalValidator with range requirements with decimal strings outside the range. """
@@ -161,13 +209,15 @@ class DecimalValidatorTest:
 
         with pytest.raises(NumberRangeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == expected_error_dict
 
     # Test minimum/maximum decimal places requirements
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_places, max_places, input_data', [
+        'min_places, max_places, input_data',
+        [
             # min_places only
             *unpack_params(
                 0, None,
@@ -209,7 +259,7 @@ class DecimalValidatorTest:
                 2, 2,
                 ['0.00', '0.01', '0.10', '-123.45', '42.00'],
             ),
-        ]
+        ],
     )
     def test_min_max_places_valid(min_places, max_places, input_data):
         """ Test DecimalValidator with a minimum and/or maximum number of decimal places with valid decimal strings. """
@@ -218,7 +268,8 @@ class DecimalValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_places, max_places, input_data', [
+        'min_places, max_places, input_data',
+        [
             # min_places only
             *unpack_params(
                 1, None,
@@ -252,7 +303,7 @@ class DecimalValidatorTest:
                 2, 2,
                 ['0.0', '0.000', '0.001', '0.1', '-123.4', '-123.456', '42'],
             ),
-        ]
+        ],
     )
     def test_min_max_places_invalid(min_places, max_places, input_data):
         """ Test DecimalValidator with a minimum and/or maximum number of decimal places with invalid input. """
@@ -265,6 +316,7 @@ class DecimalValidatorTest:
 
         with pytest.raises(DecimalPlacesError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == expected_error_dict
 
     # Test output_places and rounding parameters
@@ -296,10 +348,10 @@ class DecimalValidatorTest:
 
             # output_places=9
             (9, '1.234', '1.234000000')
-        ]
+        ],
     )
     def test_output_places_default_rounding(output_places, input_data, expected_output):
-        """ Test DecimalValidator with a fixed number of output places and the default rounding mode (ROUND_HALF_UP). """
+        """ Test DecimalValidator with a fixed number of output places and default rounding mode (ROUND_HALF_UP). """
         validator = DecimalValidator(output_places=output_places)
         assert_decimal(validator.validate(input_data), expected_output)
 
@@ -329,7 +381,7 @@ class DecimalValidatorTest:
             (decimal.ROUND_HALF_EVEN, '1.05', '1.0'),
             (decimal.ROUND_HALF_EVEN, '1.14', '1.1'),
             (decimal.ROUND_HALF_EVEN, '1.15', '1.2'),
-        ]
+        ],
     )
     def test_with_different_rounding_modes(rounding, input_data, expected_output):
         """ Test DecimalValidator with a fixed number of output places and different rounding modes. """
@@ -340,6 +392,7 @@ class DecimalValidatorTest:
     def test_with_rounding_mode_from_decimal_context():
         """ Test DecimalValidator with rounding=None to use the rounding mode of the decimal context. """
         validator = DecimalValidator(output_places=1, rounding=None)
+
         with decimal.localcontext() as ctx:
             ctx.rounding = decimal.ROUND_CEILING
             assert_decimal(validator.validate('1.01'), '1.1')
@@ -352,6 +405,7 @@ class DecimalValidatorTest:
         """ Check that DecimalValidator raises exception when min_value is greater than max_value. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DecimalValidator(min_value='4.0', max_value='3.9')
+
         assert str(exception_info.value) == 'Parameter "min_value" cannot be greater than "max_value".'
 
     @staticmethod
@@ -359,6 +413,7 @@ class DecimalValidatorTest:
         """ Check that DecimalValidator raises exception when min_places is less than 0. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DecimalValidator(min_places=-1)
+
         assert str(exception_info.value) == 'Parameter "min_places" cannot be negative.'
 
     @staticmethod
@@ -366,6 +421,7 @@ class DecimalValidatorTest:
         """ Check that DecimalValidator raises exception when max_places is less than 0. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DecimalValidator(max_places=-1)
+
         assert str(exception_info.value) == 'Parameter "max_places" cannot be negative.'
 
     @staticmethod
@@ -373,6 +429,7 @@ class DecimalValidatorTest:
         """ Check that DecimalValidator raises exception when min_places is greater than max_places. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DecimalValidator(min_places=3, max_places=2)
+
         assert str(exception_info.value) == 'Parameter "min_places" cannot be greater than "max_places".'
 
     @staticmethod
@@ -380,4 +437,5 @@ class DecimalValidatorTest:
         """ Check that DecimalValidator raises exception when output_places is less than 0. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DecimalValidator(output_places=-1)
+
         assert str(exception_info.value) == 'Parameter "output_places" cannot be negative.'

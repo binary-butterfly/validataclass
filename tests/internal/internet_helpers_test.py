@@ -15,7 +15,8 @@ class InternetHelpersTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'require_tld, allow_ip, input_string', [
+        'require_tld, allow_ip, input_string',
+        [
             # Hostnames without TLD
             (False, True, 'a'),
             (False, False, 'a'),
@@ -30,7 +31,7 @@ class InternetHelpersTest:
             (True, True, '123.45.67.89'),
             (True, True, '[2001:0123:4567:89ab:cdef:ABCD:EFAB:CDEF]'),
             (True, True, '[2001:abc::1234]'),
-        ]
+        ],
     )
     def test_validate_hostname_valid(require_tld, allow_ip, input_string):
         """ Test validate_hostname() with different options and valid input strings. """
@@ -38,7 +39,8 @@ class InternetHelpersTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'require_tld, allow_ip, input_string', [
+        'require_tld, allow_ip, input_string',
+        [
             # Nonsense input
             (True, True, ''),
             (False, True, ''),
@@ -56,7 +58,7 @@ class InternetHelpersTest:
             (False, False, '123.45.67.78'),
             (True, False, '2001:abc::1234'),
             (False, False, '[2001:abc::1234]'),
-        ]
+        ],
     )
     def test_validate_hostname_invalid(require_tld, allow_ip, input_string):
         """ Test validate_hostname() with different options and invalid input strings. """
@@ -66,19 +68,22 @@ class InternetHelpersTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_string', [
+        'input_string',
+        [
             # IPv4 addresses
             '1.1.1.1',
             '127.0.0.1',
             '123.45.67.89',
             '255.255.255.254',
+
             # IPv6 addresses (full representation)
             '2001:0000:0000:0000:0000:0000:0000:0001',
             '2001:0123:4567:89ab:cdef:ABCD:EFAB:CDEF',
+
             # IPv6 addresses (shortened)
             '2001::1',
             '2001:abc::1234',
-        ]
+        ],
     )
     def test_validate_ip_address_valid(input_string):
         """ Test validate_ip_address() with valid IP address strings. """
@@ -86,20 +91,23 @@ class InternetHelpersTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_string', [
+        'input_string',
+        [
             # Nonsense input
             '',
             'banana',
+
             # Invalid IPv4 addresses
             '1.2.3.256',
             '256.0.0.1',
             '123.45.67',
             'a.b.c.d',
+
             # Invalid IPv6 addresses
             '2001:0000:0000:0000:0000:0000:0000:0000:0001',
             '2001:0123:4567:89ab:cdef:xxxx:xxxx:xxxx',
             '2001:1',
-        ]
+        ],
     )
     def test_validate_ip_address_invalid(input_string):
         """ Test validate_ip_address() with invalid input strings. """
@@ -109,20 +117,24 @@ class InternetHelpersTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'require_tld, input_string', [
+        'require_tld, input_string',
+        [
             # Don't require TLD
             (False, 'example'),
             (False, 'example.com'),
             (False, 'foo-123-bar'),
+
             # Require TLD
             (True, 'example.com'),
             (True, '123.sub.sub.sub.domain.Example.COM'),
             (True, 'xn--hxajbheg2az3al.xn--qxam'),
-            # Domain labels may be up to 63 characters long
-            (False, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'),  # 63x 'a'
+
+            # Domain labels may be up to 63 characters long (example has 63 a's)
+            (False, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'),
+
             # Total domain name may be up to 253 characters long
             (False, ('a.' * 126) + 'a'),
-        ]
+        ],
     )
     def test_validate_domain_name_valid(require_tld, input_string):
         """ Test validate_domain_name() with valid domain name strings. """
@@ -130,26 +142,32 @@ class InternetHelpersTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'require_tld, input_string', [
+        'require_tld, input_string',
+        [
             # Empty strings
             (True, ''),
             (False, ''),
+
             # Invalid characters
             (False, '$example.com'),
             (False, 'foo.-'),
             (False, '-foo.com'),
             (False, 'foo-.com'),
+
             # TLD must not be numeric only
             (True, 'foobar.123'),
             (False, 'foobar.123'),
             (False, '123'),
+
             # TLD required
             (True, 'foo-bar'),
-            # Domain labels may not be longer than 63 characters
-            (False, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'),  # 64x 'a'
+
+            # Domain labels may not be longer than 63 characters (example has 64 a's)
+            (False, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'),
+
             # Total domain name may not be longer than 253 characters
             (False, ('a.' * 126) + 'aa'),
-        ]
+        ],
     )
     def test_validate_domain_name_invalid(require_tld, input_string):
         """ Test validate_domain_name() with invalid input strings. """

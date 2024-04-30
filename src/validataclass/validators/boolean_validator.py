@@ -6,8 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
-from .validator import Validator
 from validataclass.exceptions import InvalidTypeError
+from .validator import Validator
 
 __all__ = [
     'BooleanValidator',
@@ -18,8 +18,8 @@ class BooleanValidator(Validator):
     """
     Validator for boolean values (`True` and `False`).
 
-    By default, input data must be of type `bool`. Optionally allows "boolean strings" (i.e. "true" and "false", case-insensitive),
-    which will be converted to real booleans.
+    By default, input data must be of type `bool`. Optionally allows "boolean strings" (i.e. "true" and "false",
+    case-insensitive), which will be converted to real booleans.
 
     Examples:
 
@@ -31,7 +31,7 @@ class BooleanValidator(Validator):
     BooleanValidator(allow_strings=True)
     ```
 
-    Valid input: `bool` (or `str` with certain values if allow_strings=True)
+    Valid input: `bool` (or `str` with certain values if `allow_strings=True`)
     Output: `bool`
     """
 
@@ -40,16 +40,16 @@ class BooleanValidator(Validator):
 
     def __init__(self, *, allow_strings: bool = False):
         """
-        Create a BooleanValidator, optionally allowing strings as input data.
+        Creates a `BooleanValidator`, optionally allowing strings as input data.
 
         Parameters:
-            allow_strings: Boolean, if set to True, validator allows "true", "false" as valid input strings (default: False)
+            `allow_strings`: Boolean, whether to allow the strings "true", "false" (default: `False`)
         """
         self.allow_strings = allow_strings
 
     def validate(self, input_data: Any, **kwargs) -> bool:
         """
-        Validate type of input data. Returns a boolean.
+        Validates type of input data. Returns a boolean.
         """
         self._ensure_not_none(input_data)
 

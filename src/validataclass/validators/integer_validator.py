@@ -6,8 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any, Optional
 
+from validataclass.exceptions import InvalidIntegerError, InvalidValidatorOptionException, NumberRangeError
 from .validator import Validator
-from validataclass.exceptions import InvalidValidatorOptionException, InvalidIntegerError, NumberRangeError
 
 __all__ = [
     'IntegerValidator',
@@ -20,13 +20,13 @@ class IntegerValidator(Validator):
 
     Use the parameters `min_value` and/or `max_value` to set a value range (smallest and biggest allowed integer).
     By default, these parameters are set so that only 32 bit integers are allowed, i.e. only integers from -2147483648
-    (-2^32) to 2147483647 (2^32 - 1).
+    (`-2^32`) to 2147483647 (`2^32 - 1`).
 
-    However, these are just default values. To allow integers outside the 32 bit range, set `min_value` and `max_value`
+    However, these are just default values. To allow integers outside the 32-bit range, set `min_value` and `max_value`
     to `None`.
 
     By default, only actual integer values (no strings) are allowed. Use the parameter `allow_strings=True` to allow
-    numeric strings, e.g. the strings "-123" and "123" would be accepted and automatically converted to integers.
+    numeric strings, e.g. the strings `-123` and `123` would be accepted and automatically converted to integers.
 
     Examples:
 
@@ -47,9 +47,9 @@ class IntegerValidator(Validator):
     IntegerValidator(allow_strings=True)
     ```
 
-    Note: While it is allowed to set `max_value` without setting `min_value`, this might not do what you expect. For example,
-    an `IntegerValidator(max_value=10)` allows all values less than or equal to 10. This includes ANY negative number though,
-    so for example `-1234567` would be valid input!
+    Note: While it is allowed to set `max_value` without setting `min_value`, this might not do what you expect. For
+    example, an `IntegerValidator(max_value=10)` allows all values less than or equal to 10. This includes ANY negative
+    number though, so for example `-1234567` would be valid input!
 
     Valid input: `int` (also `str` if `allow_strings=True`)
     Output: `int`
@@ -67,18 +67,19 @@ class IntegerValidator(Validator):
     allow_strings: bool = False
 
     def __init__(
-        self, *,
+        self,
+        *,
         min_value: Optional[int] = DEFAULT_MIN_VALUE,
         max_value: Optional[int] = DEFAULT_MAX_VALUE,
         allow_strings: bool = False,
     ):
         """
-        Create a IntegerValidator with optional value range.
+        Creates a `IntegerValidator` with optional value range.
 
         Parameters:
-            min_value: Integer or None, smallest allowed integer value (default: IntegerValidator.DEFAULT_MIN_VALUE = -2147483648)
-            max_value: Integer or None, biggest allowed integer value (default: IntegerValidator.DEFAULT_MAX_VALUE = 2147483647)
-            allow_strings: Boolean, if True, numeric strings (e.g. "123") are accepted and converted to integers (default: False)
+            `min_value`: Integer, smallest allowed value (default: `IntegerValidator.DEFAULT_MIN_VALUE = -2147483648`)
+            `max_value`: Integer, biggest allowed value (default: `IntegerValidator.DEFAULT_MAX_VALUE = 2147483647`)
+            `allow_strings`: Boolean, whether to accept and convert numeric strings (e.g. "123") (default: `False`)
         """
         # Check parameter validity
         if min_value is not None and max_value is not None and min_value > max_value:
@@ -90,7 +91,7 @@ class IntegerValidator(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> int:
         """
-        Validate type (and optionally value) of input data. Returns unmodified integer.
+        Validates type (and optionally value) of input data. Returns unmodified integer.
         """
         self._ensure_type(input_data, [int, str] if self.allow_strings else int)
 
@@ -102,7 +103,10 @@ class IntegerValidator(Validator):
                 raise InvalidIntegerError()
 
         # Check if value is in allowed range
-        if (self.min_value is not None and input_data < self.min_value) or (self.max_value is not None and input_data > self.max_value):
+        if (
+            (self.min_value is not None and input_data < self.min_value)
+            or (self.max_value is not None and input_data > self.max_value)
+        ):
             raise NumberRangeError(min_value=self.min_value, max_value=self.max_value)
 
         return int(input_data)

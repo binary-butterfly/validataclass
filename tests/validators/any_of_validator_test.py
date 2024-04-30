@@ -6,19 +6,30 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import pytest
 
-from validataclass.exceptions import RequiredValueError, InvalidTypeError, ValueNotAllowedError, InvalidValidatorOptionException
+from validataclass.exceptions import (
+    InvalidTypeError,
+    InvalidValidatorOptionException,
+    RequiredValueError,
+    ValueNotAllowedError,
+)
 from validataclass.validators import AnyOfValidator
 
 
 class AnyOfValidatorTest:
+    """
+    Unit tests for the AnyOfValidator.
+    """
+
     # General tests
 
     @staticmethod
     def test_invalid_none():
         """ Check that AnyOfValidator raises an exception for None as value. """
         validator = AnyOfValidator(['foo', 'bar'])
+
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
+
         assert exception_info.value.to_dict() == {'code': 'required_value'}
 
     # Test AnyOfValidator with a string value list
@@ -27,29 +38,49 @@ class AnyOfValidatorTest:
     def test_string_values_valid():
         """ Test AnyOfValidator with string value list with valid input. """
         validator = AnyOfValidator(['red apple', 'green apple', 'STRAWBERRY'])
+
         assert validator.validate('red apple') == 'red apple'
         assert validator.validate('green apple') == 'green apple'
         assert validator.validate('strawberry') == 'STRAWBERRY'
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'bananana', 'red'])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            '',
+            'bananana',
+            'red',
+        ],
+    )
     def test_string_values_invalid_value(input_data):
         """ Test AnyOfValidator with string value list with invalid input. """
         validator = AnyOfValidator(['red apple', 'green apple', 'STRAWBERRY'])
+
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
             'allowed_values': ['red apple', 'green apple', 'STRAWBERRY'],
         }
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [1, 1.234, True, ['red apple']])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            1,
+            1.234,
+            True,
+            ['red apple'],
+        ],
+    )
     def test_string_values_invalid_type(input_data):
         """ Check that AnyOfValidator with string value list raises an exception for values with wrong type. """
         validator = AnyOfValidator(['red apple', 'green apple', 'strawberry'])
+
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_type': 'str',
@@ -61,16 +92,25 @@ class AnyOfValidatorTest:
     def test_integer_values_valid():
         """ Test AnyOfValidator with integer value list with valid input. """
         validator = AnyOfValidator({0, 1, -2, 42})
+
         assert validator.validate(0) == 0
         assert validator.validate(1) == 1
         assert validator.validate(-2) == -2
         assert validator.validate(42) == 42
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [0, 2, 13])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            0,
+            2,
+            13,
+        ],
+    )
     def test_integer_values_invalid_value(input_data):
         """ Test AnyOfValidator with integer value list with invalid input. """
         validator = AnyOfValidator({1, -2, 42})
+
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
 
@@ -80,12 +120,22 @@ class AnyOfValidatorTest:
         assert sorted(exception_dict['allowed_values']) == [-2, 1, 42]
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['banana', 1.234, True, [1]])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            'banana',
+            1.234,
+            True,
+            [1],
+        ],
+    )
     def test_integer_values_invalid_type(input_data):
         """ Check that AnyOfValidator with integer value list raises an exception for values with wrong type. """
         validator = AnyOfValidator({0, 1, -2, 42})
+
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_type': 'int',
@@ -97,30 +147,54 @@ class AnyOfValidatorTest:
     def test_mixed_values_valid():
         """ Test AnyOfValidator with allowed values of mixed types with valid input. """
         validator = AnyOfValidator(allowed_values=('strawberry', 42, None))
+
         assert validator.validate('strawberry') == 'strawberry'
         assert validator.validate('STRAWBERRY') == 'strawberry'
         assert validator.validate(42) == 42
         assert validator.validate(None) is None
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [0, 13, '', 'banana'])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            0,
+            13,
+            '',
+            'banana',
+        ],
+    )
     def test_mixed_values_invalid_value(input_data):
         """ Test AnyOfValidator with allowed values of mixed types with invalid input. """
         validator = AnyOfValidator(allowed_values=('strawberry', 42, None))
+
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
             'allowed_values': ['strawberry', 42, None],
         }
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [1.234, True, False, [1], ['strawberry']])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            1.234,
+            True,
+            False,
+            [1],
+            ['strawberry'],
+        ],
+    )
     def test_mixed_values_invalid_type(input_data):
-        """ Check that AnyOfValidator with allowed values of mixed types raises an exception for values with wrong type. """
+        """
+        Check that AnyOfValidator with allowed values of mixed types raises an exception for values with a wrong type.
+        """
         validator = AnyOfValidator(allowed_values=('strawberry', 42, None))
+
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_types': ['int', 'none', 'str'],
@@ -128,12 +202,13 @@ class AnyOfValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'value_list, invalid_input', [
+        'value_list, invalid_input',
+        [
             ([123, True], 1),
             ([123, False], 0),
             ([0, True], False),
             ([1, False], True),
-        ]
+        ],
     )
     def test_mixed_values_typesafety(value_list, invalid_input):
         """ Check that AnyOfValidator with mixed value lists containing booleans and integers are typesafe. """
@@ -146,6 +221,7 @@ class AnyOfValidatorTest:
         # Check against "false positives" (e.g. don't confuse integer 1 with boolean True, or 0 with False)
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(invalid_input)
+
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
             'allowed_values': value_list,
@@ -155,41 +231,71 @@ class AnyOfValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'allowed_types, expected_type_dict, valid_input_list, invalid_input_list', [
+        'allowed_types, valid_input',
+        [
             # Single allowed type
-            (str, {'expected_type': 'str'}, ['foo'], [42, 1.234, True]),
-            (int, {'expected_type': 'int'}, [42], ['foo', 1.234, True]),
-            (float, {'expected_type': 'float'}, [1.234], ['foo', 42, True]),
+            (str, 'foo'),
+            (int, 42),
+            (float, 1.234),
+
             # List of types
-            ([int], {'expected_type': 'int'}, [42], ['foo', 1.234, True]),
-            ([int, float], {'expected_types': ['float', 'int']}, [42, 1.234], ['foo', True]),
-        ]
+            ([int], 42),
+            ([int, float], 42),
+            ([int, float], 1.234),
+        ],
     )
-    def test_with_specified_allowed_type(allowed_types, expected_type_dict, valid_input_list, invalid_input_list):
-        """ Test AnyOfValidator with mixed value list but restricted allowed types via parameter. """
-        validator = AnyOfValidator(['foo', 42, 1.234], allowed_types=allowed_types)
+    def test_with_specified_allowed_type_valid(allowed_types, valid_input):
+        """ Test AnyOfValidator with mixed value list but restricted allowed types via parameter with valid input. """
+        validator = AnyOfValidator(
+            ['foo', 42, 1.234],
+            allowed_types=allowed_types,
+        )
 
-        # Check that allowed types are accepted
-        for valid_input in valid_input_list:
-            assert validator.validate(valid_input) == valid_input
+        assert validator.validate(valid_input) == valid_input
 
-        # Check that invalid types raise a ValidationError
-        for invalid_input in invalid_input_list:
-            with pytest.raises(InvalidTypeError) as exception_info:
-                validator.validate(invalid_input)
-            assert exception_info.value.to_dict() == {
-                'code': 'invalid_type',
-                **expected_type_dict,
-            }
+    @staticmethod
+    @pytest.mark.parametrize(
+        'allowed_types, expected_type_dict, invalid_input',
+        [
+            # Single allowed type
+            (str, {'expected_type': 'str'}, 42),
+            (str, {'expected_type': 'str'}, True),
+            (int, {'expected_type': 'int'}, 'foo'),
+            (int, {'expected_type': 'int'}, 1.234),
+            (float, {'expected_type': 'float'}, 'foo'),
+            (float, {'expected_type': 'float'}, 42),
+
+            # List of types
+            ([int], {'expected_type': 'int'}, 'foo'),
+            ([int], {'expected_type': 'int'}, 1.234),
+            ([int, float], {'expected_types': ['float', 'int']}, 'foo'),
+            ([int, float], {'expected_types': ['float', 'int']}, True),
+        ],
+    )
+    def test_with_specified_allowed_type_invalid(allowed_types, expected_type_dict, invalid_input):
+        """ Test AnyOfValidator with mixed value list but restricted allowed types via parameter with invalid input. """
+        validator = AnyOfValidator(
+            ['foo', 42, 1.234],
+            allowed_types=allowed_types,
+        )
+
+        with pytest.raises(InvalidTypeError) as exception_info:
+            validator.validate(invalid_input)
+
+        assert exception_info.value.to_dict() == {
+            'code': 'invalid_type',
+            **expected_type_dict,
+        }
 
     @staticmethod
     def test_empty_allowed_values_with_allowed_types():
         """ Test AnyOfValidator with an empty list of allowed values (requires explicit allowed_types). """
         validator = AnyOfValidator([], allowed_types=[str])
 
-        # There can't be any valid input for this validator (in that way it acts like a RejectValidator with a different error)
+        # This validator does not allow any input
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate('banana')
+
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
             'allowed_values': [],
@@ -210,11 +316,15 @@ class AnyOfValidatorTest:
             (False, 'STRAWBERRY', 'Strawberry'),
             (False, 'strawberry', 'Strawberry'),
             (False, 42, 42),
-        ]
+        ],
     )
     def test_case_sensitive_valid(case_sensitive, input_data, expected_result):
         """ Test AnyOfValidator with case-sensitive and case-insensitive string matching, valid input. """
-        validator = AnyOfValidator(allowed_values=['Strawberry', 42], case_sensitive=case_sensitive)
+        validator = AnyOfValidator(
+            allowed_values=['Strawberry', 42],
+            case_sensitive=case_sensitive,
+        )
+
         assert validator.validate(input_data) == expected_result
 
     @staticmethod
@@ -231,13 +341,18 @@ class AnyOfValidatorTest:
             (False, 'straw_berry'),
             (False, 'banana'),
             (False, 13),
-        ]
+        ],
     )
     def test_case_sensitive_invalid(case_sensitive, input_data):
         """ Test AnyOfValidator with case-sensitive and case-insensitive string matching, invalid input. """
-        validator = AnyOfValidator(allowed_values=['Strawberry', 42], case_sensitive=case_sensitive)
+        validator = AnyOfValidator(
+            allowed_values=['Strawberry', 42],
+            case_sensitive=case_sensitive,
+        )
+
         with pytest.raises(ValueNotAllowedError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'value_not_allowed',
             'allowed_values': ['Strawberry', 42],
@@ -248,14 +363,24 @@ class AnyOfValidatorTest:
         'case_insensitive, valid_input, invalid_input',
         [
             # Case-insensitive matching
-            (True, ['Strawberry', 'strawberry', 'STRAWBERRY'], ['banana']),
+            (
+                True,
+                ['Strawberry', 'strawberry', 'STRAWBERRY'],
+                ['banana'],
+            ),
 
             # Case-sensitive matching
-            (False, ['Strawberry'], ['strawberry', 'STRAWBERRY', 'banana']),
-        ]
+            (
+                False,
+                ['Strawberry'],
+                ['strawberry', 'STRAWBERRY', 'banana'],
+            ),
+        ],
     )
     def test_deprecated_case_insensitive(case_insensitive, valid_input, invalid_input):
-        """ Test AnyOfValidator with deprecated case_insensitive parameter, which should issue a deprecation warning. """
+        """
+        Test AnyOfValidator with deprecated case_insensitive parameter, which should issue a deprecation warning.
+        """
         with pytest.deprecated_call():
             # This should issue a DeprecationWarning for the case_insensitive parameter, but continue without problems
             validator = AnyOfValidator(allowed_values=['Strawberry'], case_insensitive=case_insensitive)
@@ -268,6 +393,7 @@ class AnyOfValidatorTest:
         for input_data in invalid_input:
             with pytest.raises(ValueNotAllowedError) as exception_info:
                 validator.validate(input_data)
+
             assert exception_info.value.to_dict() == {
                 'code': 'value_not_allowed',
                 'allowed_values': ['Strawberry'],
@@ -295,17 +421,27 @@ class AnyOfValidatorTest:
 
     @staticmethod
     def test_empty_allowed_values_requires_allowed_types():
-        """ Test that AnyOfValidator raises exception when allowed_values is empty and no allowed_types are specified. """
+        """
+        Test that AnyOfValidator raises exception when allowed_values is empty and no allowed_types are specified.
+         """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             AnyOfValidator([])
-        assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+
+        assert (
+            str(exception_info.value)
+            == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+        )
 
     @staticmethod
     def test_empty_allowed_types():
         """ Test that AnyOfValidator raises exception when allowed_types is empty. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             AnyOfValidator([1, 2, 3], allowed_types=[])
-        assert str(exception_info.value) == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+
+        assert (
+            str(exception_info.value)
+            == 'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+        )
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -315,11 +451,16 @@ class AnyOfValidatorTest:
             (True, False),
             (False, True),
             (False, False),
-        ]
+        ],
     )
     def test_case_insensitive_parameter_mutually_exclusive(case_sensitive, case_insensitive):
-        """ Test that the parameters "case_sensitive" and "case_insensitive" (deprecated) cannot be set at the same time. """
+        """
+        Test that the parameters "case_sensitive" and "case_insensitive" (deprecated) cannot be set at the same time.
+        """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             AnyOfValidator(['banana'], case_sensitive=case_sensitive, case_insensitive=case_insensitive)
-        assert str(exception_info.value) == \
-               'Parameters "case_sensitive" and "case_insensitive" (now deprecated) are mutually exclusive.'
+
+        assert (
+            str(exception_info.value)
+            == 'Parameters "case_sensitive" and "case_insensitive" (now deprecated) are mutually exclusive.'
+        )

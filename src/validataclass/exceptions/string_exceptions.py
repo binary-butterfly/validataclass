@@ -18,10 +18,10 @@ __all__ = [
 
 class StringInvalidLengthError(ValidationError):
     """
-    Base class for `StringTooShortError` and `StringTooLongError`, raised by `StringValidator` (and subclasses) when minimum and/or
-    maximum length requirements are specified and the input string does not match those requirements.
+    Base class for `StringTooShortError` and `StringTooLongError`, raised by `StringValidator` (and subclasses) when
+    minimum and/or maximum length requirements are specified and the input string does not match those requirements.
 
-    May contain the extra fields 'min_length' and 'max_length', depending on whether they are specified.
+    May contain the extra fields `min_length` and `max_length`, depending on whether they are specified.
     """
     # Placeholder, will be overridden by the subclasses
     code = 'string_invalid_length'
@@ -37,7 +37,7 @@ class StringTooShortError(StringInvalidLengthError):
     Validation error raised by `StringValidator` (and subclasses) when a minimum length requirement is specified and the
     input string is too short.
 
-    Contains the extra fields 'min_length' and optionally 'max_length' (if specified in StringValidator as well).
+    Contains the extra fields `min_length` and optionally `max_length` (if specified in `StringValidator` as well).
     """
     code = 'string_too_short'
 
@@ -50,7 +50,7 @@ class StringTooLongError(StringInvalidLengthError):
     Validation error raised by `StringValidator` (and subclasses) when a maximum length requirement is specified and the
     input string is too long.
 
-    Contains the extra fields 'max_length' and optionally 'min_length' (if specified in StringValidator as well).
+    Contains the extra fields `max_length` and optionally `min_length` (if specified in `StringValidator` as well).
     """
     code = 'string_too_long'
 
@@ -60,7 +60,8 @@ class StringTooLongError(StringInvalidLengthError):
 
 class StringInvalidCharactersError(ValidationError):
     """
-    Validation error raised by `StringValidator` (and subclasses) when the input string contains characters that are not allowed,
-    e.g. newlines (unless multiline strings are allowed) or other non-printable characters (unless unsafe mode is used).
+    Validation error raised by `StringValidator` (and subclasses) when the input string contains characters that are not
+    allowed, e.g. newlines (unless multiline strings are allowed) or other non-printable characters (unless unsafe mode
+    is used).
     """
     code = 'string_invalid_characters'

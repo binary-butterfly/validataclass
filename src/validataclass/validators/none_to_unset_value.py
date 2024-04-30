@@ -39,7 +39,7 @@ class NoneToUnsetValue(Noneable):
 
     def __init__(self, validator: Validator):
         """
-        Create a NoneToUnsetValue wrapper for a specified validator.
+        Creates a NoneToUnsetValue wrapper for a specified validator.
         """
         # Initialize base Noneable wrapper
         super().__init__(validator, default=UnsetValue)

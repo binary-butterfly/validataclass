@@ -11,10 +11,15 @@ from validataclass.validators import BooleanValidator
 
 
 class BooleanValidatorTest:
+    """
+    Unit tests for BooleanValidator.
+    """
+
     @staticmethod
     def test_valid_bool():
         """ Test BooleanValidator with valid booleans. """
         validator = BooleanValidator()
+
         assert validator.validate(True) is True
         assert validator.validate(False) is False
 
@@ -22,17 +27,30 @@ class BooleanValidatorTest:
     def test_invalid_none():
         """ Check that BooleanValidator raises exception for None as vvalue. """
         validator = BooleanValidator()
+
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
+
         assert exception_info.value.to_dict() == {'code': 'required_value'}
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['banana', 'True', 1, 1.234, [True]])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            'banana',
+            'True',
+            1,
+            1.234,
+            [True],
+        ],
+    )
     def test_invalid_wrong_type(input_data):
         """ Check that BooleanValidator raises exceptions for values that are not of type 'bool'. """
         validator = BooleanValidator()
+
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_type': 'bool',
@@ -47,16 +65,28 @@ class BooleanValidatorTest:
 
         for input_str in ['True', 'true', 'TRUE']:
             assert validator.validate(input_str) is True
+
         for input_str in ['False', 'false', 'FALSE']:
             assert validator.validate(input_str) is False
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['banana', '', '0', '1', 'tru'])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            'banana',
+            '',
+            '0',
+            '1',
+            'tru',
+        ],
+    )
     def test_allow_strings_invalid_strings(input_data):
         """ Test BooleanValidator with allow_strings=True option with invalid strings. """
         validator = BooleanValidator(allow_strings=True)
+
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_type': 'bool',

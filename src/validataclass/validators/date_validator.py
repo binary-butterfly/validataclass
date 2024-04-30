@@ -7,8 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 from datetime import date
 from typing import Any
 
-from .string_validator import StringValidator
 from validataclass.exceptions import InvalidDateError
+from .string_validator import StringValidator
 
 __all__ = [
     'DateValidator',
@@ -17,7 +17,7 @@ __all__ = [
 
 class DateValidator(StringValidator):
     """
-    Validator that parses date strings in "YYYY-MM-DD" format (e.g. "2021-01-31") to `datetime.date` objects.
+    Validator that parses date strings in `YYYY-MM-DD` format (e.g. `2021-01-31`) to `datetime.date` objects.
 
     Currently no parameters are supported.
 
@@ -29,20 +29,22 @@ class DateValidator(StringValidator):
 
     See also: `TimeValidator`, `DateTimeValidator`
 
-    Valid input: Valid dates in YYYY-MM-DD format as `str`
+    Valid input: Valid dates in `YYYY-MM-DD` format as `str`
     Output: `datetime.date`
     """
 
     def __init__(self):
         """
-        Create a `DateValidator`. No parameters.
+        Creates a `DateValidator`.
+
+        No parameters.
         """
         # Initialize StringValidator without any parameters
         super().__init__()
 
     def validate(self, input_data: Any, **kwargs) -> date:
         """
-        Validate input as a valid date string and convert it to a `datetime.date` object.
+        Validates input as a valid date string and convert it to a `datetime.date` object.
         """
         # First, validate input data as string
         date_string = super().validate(input_data, **kwargs)

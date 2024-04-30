@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from copy import copy, deepcopy
-from typing import Any, NoReturn, Callable
+from typing import Any, Callable, NoReturn
 
 from validataclass.helpers import UnsetValue, UnsetValueType
 
@@ -21,7 +21,8 @@ __all__ = [
 
 class Default:
     """
-    (Base) class for specifying default values for dataclass validator fields. Values are deepcopied on initialization and on retrieval.
+    (Base) class for specifying default values for dataclass validator fields.
+    Values are deepcopied on initialization and on retrieval.
 
     Examples: `Default(None)`, `Default(42)`, `Default('empty')`, `Default([])`
 
@@ -51,7 +52,8 @@ class Default:
         Returns True if a dataclass default_factory is needed for this Default object, for example if the value is a
         mutable object (e.g. a list) that needs to be copied.
         """
-        # If copying the value results in the identical object, no factory is needed (a shallow copy is sufficient to test this)
+        # If copying the value results in the identical object, no factory is needed (a shallow copy is sufficient to
+        # test this)
         return copy(self.value) is not self.value
 
 
@@ -60,9 +62,17 @@ class DefaultFactory(Default):
     Class for specifying factories (functions or classes) to dynamically generate default values.
 
     Examples:
-        `DefaultFactory(list)` (generates an empty list)
-        `DefaultFactory(SomeClass)` (generates new instances of `SomeClass`)
-        `DefaultFactory(lambda: some_expression)` (uses a lambda to evaluate an expression to generate default values)
+
+    ```
+    # Generates an empty list (i.e. list())
+    DefaultFactory(list)
+
+    # Generates new instances of SomeClass (i.e. SomeClass())
+    DefaultFactory(SomeClass)
+
+    # Uses a lambda to evaluate an expression to generate default values (here: a Date object with the current day)
+    DefaultFactory(lambda: date.today())
+    ```
     """
     factory: Callable
 
@@ -120,7 +130,10 @@ del _DefaultUnset
 # Temporary class to create the NoDefault sentinel, class will be deleted afterwards
 class _NoDefault(Default):
     """
-    Class for creating the sentinel object `NoDefault` which specifies that a field has no default value (meaning it is required).
+    Class for creating the sentinel object `NoDefault` which specifies that a field has no default value, i.e. the field
+    is required.
+
+    A validataclass field with `NoDefault` is equivalent to a validataclass field without specified default.
     """
 
     def __init__(self):

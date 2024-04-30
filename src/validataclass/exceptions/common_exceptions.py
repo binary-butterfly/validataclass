@@ -36,12 +36,13 @@ class InvalidTypeError(ValidationError):
     """
     Validation error raised when the input data has the wrong data type.
 
-    Contains either 'expected_type' (string) or 'expected_types' (list of strings) as extra fields, depending on whether there is
-    a single or multiple allowed types.
+    Contains either `expected_type` (string) or `expected_types` (list of strings) as extra fields, depending on whether
+    there is a single or multiple allowed types.
 
-    Note that this is about the raw input data, not about its content. For example, `DecimalValidator` parses a string to a Decimal
-    object, so it would raise this error when the input data is anything else but a string, with 'expected_type' being set to 'str',
-    not to 'Decimal' or similar. If the input is a string but not a valid decimal value, a different ValidationError will be raised.
+    Note that this is about the raw input data, not about its content. For example, `DecimalValidator` parses a string
+    to a `Decimal` object, so it would raise this error when the input data is anything else but a string, with
+    `expected_type` being set to `str`, not to `Decimal` or similar. If the input is a string but not a valid decimal
+    value, a different `ValidationError` will be raised.
     """
     code = 'invalid_type'
     expected_types: List[str]
@@ -62,10 +63,11 @@ class InvalidTypeError(ValidationError):
 
     def add_expected_type(self, new_type: Union[type, str]) -> None:
         """
-        Adds a type in to 'expected_types' in an existing InvalidTypeError exception. Checks for duplicates in 'expected_types'.
+        Adds a type to `expected_types` in an existing `InvalidTypeError` exception, automatically removing duplicates.
         """
-        if self._type_to_string(new_type) not in self.expected_types:
-            self.expected_types.append(self._type_to_string(new_type))
+        new_type = self._type_to_string(new_type)
+        if new_type not in self.expected_types:
+            self.expected_types.append(new_type)
 
     def to_dict(self):
         base_dict = super().to_dict()

@@ -23,18 +23,18 @@ class AnyOfValidator(Validator):
     The allowed values can be specified with any iterable (e.g. a list, a set, a tuple, a generator expression, ...).
 
     The types allowed for input data will be automatically determined from the list of allowed values by default, unless
-    explicitly specified with the parameter 'allowed_types'.
+    explicitly specified with the parameter `allowed_types`.
 
     By default, strings will be matched *case-insensitively*. To change this, set `case_sensitive=True`. The returned
-    value will always be as defined in the list of allowed values (e.g. if the allowed values contain "Apple" and the
-    validator is case-insensitive, then "APPLE" and "apple" will be valid input too, but in all cases "Apple" will be
+    value will always be as defined in the list of allowed values (e.g. if the allowed values contain `Apple` and the
+    validator is case-insensitive, then `APPLE` and `apple` will be valid input too, but in all cases `Apple` will be
     returned).
 
-    NOTE: Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter "case_insensitive"
-    still exists for compatibility, but is deprecated now and will be removed in a future version.
+    NOTE: Prior to version 0.8.0, the validator was NOT case-insensitive by default. The old parameter
+    `case_insensitive` still exists for compatibility, but is deprecated now and will be removed in a future version.
 
-    If the input value is not valid (but has the correct type), a ValueNotAllowedError (code='value_not_allowed') will
-    be raised. This error will include the list of allowed values (as "allowed_values"), as long as this list is not
+    If the input value is not valid (but has the correct type), a `ValueNotAllowedError` (code `value_not_allowed`) will
+    be raised. This error will include the list of allowed values (as `allowed_values`), as long as this list is not
     longer than 20 items. (This limit is defined in the attribute `max_allowed_values_in_validation_error`, which cannot
     be changed via parameters as of now, but can be changed by subclassing the validator and changing the value.)
 
@@ -50,8 +50,8 @@ class AnyOfValidator(Validator):
 
     See also: `EnumValidator` (same principle but using Enum classes instead of raw value lists)
 
-    Valid input: All values contained in allowed_values
-    Output: Value as defined in allowed_values
+    Valid input: All values contained in `allowed_values`
+    Output: Value as defined in `allowed_values`
     """
 
     # If the list of allowed values is longer than this value, do not include allowed values in ValueNotAllowedError
@@ -75,13 +75,13 @@ class AnyOfValidator(Validator):
         case_insensitive: Optional[bool] = None,
     ):
         """
-        Create an AnyOfValidator with a specified list of allowed values.
+        Creates an `AnyOfValidator` with a specified list of allowed values.
 
         Parameters:
-            allowed_values: List (or any other iterable) of values that are allowed as input (required)
-            allowed_types: Types that are allowed for input data (default: None, autodetermine types from allowed_values)
-            case_sensitive: If set, strings will be matched case-sensitively (default: False)
-            case_insensitive: DEPRECATED. Validator is case-insensitive by default, use case_sensitive to change this.
+            `allowed_values`: List (or any other iterable) of values that are allowed as input (required)
+            `allowed_types`: Types that are allowed for input data (default: `None`, autodetermined from allowed values)
+            `case_sensitive`: If set, strings will be matched case-sensitively (default: `False`)
+            `case_insensitive`: DEPRECATED. Validator is case-insensitive by default (see `case_sensitive`)
         """
         # Save list of allowed values
         self.allowed_values = list(allowed_values)
@@ -96,7 +96,9 @@ class AnyOfValidator(Validator):
 
         # Check that list of allowed types is not empty
         if len(self.allowed_types) == 0:
-            raise InvalidValidatorOptionException('Parameter "allowed_types" is an empty list (or types could not be autodetermined).')
+            raise InvalidValidatorOptionException(
+                'Parameter "allowed_types" is an empty list (or types could not be autodetermined).'
+            )
 
         # Changed in 0.8.0: The old "case_insensitive" parameter is now deprecated and replaced by a new parameter
         # "case_sensitive", which is False by default.
@@ -141,8 +143,8 @@ class AnyOfValidator(Validator):
 
     def _compare_values(self, input_value: Any, allowed_value: Any) -> bool:
         """
-        Returns True if input value and allowed value are equal, in the sense of this validator (e.g. case-insensitively
-        if that option is set).
+        Returns `True` if input value and allowed value are equal, in the sense of this validator (e.g.
+        case-insensitively if that option is set).
         """
         # We need to make sure the check is typesafe (e.g. because 1 == True and 0 == False)
         if type(input_value) is not type(allowed_value):

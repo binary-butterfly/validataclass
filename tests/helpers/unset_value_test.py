@@ -40,7 +40,19 @@ class UnsetValueTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'other_value', [None, False, True, object(), 0, '', 'UnsetValue', '<UnsetValue>', (UnsetValue,), [UnsetValue]]
+        'other_value',
+        [
+            None,
+            False,
+            True,
+            object(),
+            0,
+            '',
+            'UnsetValue',
+            '<UnsetValue>',
+            (UnsetValue,),
+            [UnsetValue],
+        ],
     )
     def test_unset_value_not_equal(other_value):
         """ Test that nothing is equal to UnsetValue (except itself). """
@@ -54,7 +66,16 @@ def test_unset_to_none_with_unset_value():
 
 
 @pytest.mark.parametrize(
-    'value', [None, '', 'banana', 0, 42, [], {}]
+    'value',
+    [
+        None,
+        '',
+        'banana',
+        0,
+        42,
+        [],
+        {},
+    ],
 )
 def test_unset_to_none_with_any_value(value):
     """ Test the unset_to_none() helper function with input that is not UnsetValue. """

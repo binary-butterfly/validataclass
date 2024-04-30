@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import decimal
 import math
 from decimal import Decimal
-from typing import Any, Optional, Union, List
+from typing import Any, List, Optional, Union
 
 from validataclass.exceptions import NonFiniteNumberError
 from .decimal_validator import DecimalValidator
@@ -68,7 +68,8 @@ class FloatToDecimalValidator(DecimalValidator):
     allowed_types: List[type]
 
     def __init__(
-        self, *,
+        self,
+        *,
         min_value: Optional[Union[Decimal, str, float, int]] = None,
         max_value: Optional[Union[Decimal, str, float, int]] = None,
         output_places: Optional[int] = None,
@@ -77,20 +78,21 @@ class FloatToDecimalValidator(DecimalValidator):
         allow_strings: bool = False,
     ):
         """
-        Create a FloatToDecimalValidator with optional value range and optional number of decimal places in output value.
+        Creates a `FloatToDecimalValidator` with optional value range and number of output decimal places.
 
-        The parameters `min_value`, `max_value`, `output_places` and `rounding` are passed to the underlying DecimalValidator.
+        The parameters `min_value`, `max_value`, `output_places` and `rounding` are passed to the underlying
+        `DecimalValidator`.
 
-        The parameters `allow_integers` and `allow_strings` can be used to extend the allowed input types. Strings, if
-        accepted, will be simply passed to the DecimalValidator.
+        The parameters `allow_integers` and `allow_strings` can be used to extend the allowed input types. If strings
+        are accepted, they will be simply passed to the `DecimalValidator`.
 
         Parameters:
-            min_value: Decimal, str, float or int, specifies lowest value an input float may have (default: None, no minimum value)
-            max_value: Decimal, str, float or int, specifies highest value an input float may have (default: None, no maximum value)
-            output_places: Integer, number of decimal places the output Decimal object shall have (default: None, output equals input)
-            rounding: Rounding mode for numbers that need to be rounded (default: decimal.ROUND_HALF_UP)
-            allow_integers: Boolean, if True, integers are accepted as input (default: False)
-            allow_strings: Boolean, if True, decimal strings are accepted and will be parsed by a DecimalValidator (default: False)
+            `min_value`: Decimal, str, float or int, specifies lowest allowed value (default: `None`, no minimum)
+            `max_value`: Decimal, str, float or int, specifies highest allowed value (default: `None`, no maximum)
+            `output_places`: Integer, if set, values are rounded to this number of decimal places (default: `None`)
+            `rounding`: Rounding mode for numbers that need to be rounded (default: `decimal.ROUND_HALF_UP`)
+            `allow_integers`: Boolean, whether to accept integers as input (default: False)
+            `allow_strings`: Boolean, whether to accept and parse decimal strings (default: False)
         """
         # Initialize base DecimalValidator
         super().__init__(
@@ -113,7 +115,7 @@ class FloatToDecimalValidator(DecimalValidator):
 
     def validate(self, input_data: Any, **kwargs) -> Decimal:
         """
-        Validate input data as a float (optionally also as integer or string), then convert it to a Decimal object.
+        Validates input data as a float (optionally also as integer or string), then converts it to a `Decimal` object.
         """
         # Check type of input data
         self._ensure_type(input_data, self.allowed_types)

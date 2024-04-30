@@ -12,7 +12,7 @@ import pytest
 
 from tests.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from tests.test_utils import UNSET_PARAMETER
-from validataclass.dataclasses import validataclass_field, Default, DefaultFactory, DefaultUnset, NoDefault
+from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, NoDefault, validataclass_field
 from validataclass.helpers import UnsetValue
 from validataclass.validators import IntegerValidator
 
@@ -30,13 +30,13 @@ class ValidataclassFieldTest:
             # Parameter is set explicitly to these sentinel values that mean "no default"
             dataclasses.MISSING,
             NoDefault,
-        ]
+        ],
     )
     def test_validataclass_field_without_default(param_default):
         """ Test validataclass_field function on its own, without a default value (implicitly and explicitly). """
         # Create field
-        field = validataclass_field(IntegerValidator()) if param_default is UNSET_PARAMETER \
-            else validataclass_field(IntegerValidator(), default=param_default)
+        params = {} if param_default is UNSET_PARAMETER else {'default': param_default}
+        field = validataclass_field(IntegerValidator(), **params)
 
         # Check field metadata
         assert type(field.metadata.get('validator')) is IntegerValidator
@@ -72,7 +72,7 @@ class ValidataclassFieldTest:
             (42, 42, False),
             (None, None, False),
             (UnsetValue, UnsetValue, False),
-        ]
+        ],
     )
     def test_validataclass_field_with_default(param_default, expected_default, expected_as_factory):
         """ Test validataclass_field function on its own, with various default values. """
@@ -109,7 +109,7 @@ class ValidataclassFieldTest:
 
     @staticmethod
     def test_validataclass_field_with_custom_default_class():
-        """ Test validataclass_field function on its own, with a custom default class (which generates a default factory). """
+        """ Test validataclass_field() on its own with a custom default class (which generates a default factory). """
 
         # Create a custom Default subclass
         class CustomDefault(Default):
@@ -140,11 +140,15 @@ class ValidataclassFieldTest:
     def test_validataclass_field_with_metadata():
         """ Test validataclass_field function on its own, with custom metadata. """
         # Create field with custom metadata (validataclass metadata will be overwritten by the function)
-        field = validataclass_field(IntegerValidator(), default=Default(42), metadata={
-            'unittest': 123,
-            'validator': 'gets overwritten',
-            'validator_default': 'gets overwritten',
-        })
+        field = validataclass_field(
+            IntegerValidator(),
+            default=Default(42),
+            metadata={
+                'unittest': 123,
+                'validator': 'gets overwritten',
+                'validator_default': 'gets overwritten',
+            },
+        )
 
         # Check field metadata
         assert type(field.metadata.get('validator')) is IntegerValidator
@@ -190,5 +194,8 @@ class ValidataclassFieldTest:
         with pytest.raises(ValueError) as exception_info:
             validataclass_field(IntegerValidator(), default_factory=list)
 
-        assert str(exception_info.value) == \
-               'Keyword argument "default_factory" is not allowed in validator field (use default=DefaultFactory(...) instead).'
+        assert (
+            str(exception_info.value)
+            == 'Keyword argument "default_factory" is not allowed in validator field (use default=DefaultFactory(...) '
+               'instead).'
+        )

@@ -15,20 +15,42 @@ class DiscardValidatorTest:
     Unit tests for the DiscardValidator.
     """
 
-    example_input_data = [None, True, False, 'banana', 42, [], {}]
+    example_input_data = [
+        None,
+        True,
+        False,
+        'banana',
+        42,
+        [],
+        {},
+    ]
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', example_input_data)
+    @pytest.mark.parametrize(
+        'input_data',
+        example_input_data,
+    )
     def test_discard_and_return_none(input_data):
         """ Test that DiscardValidator accepts anything and always returns None by default. """
         validator = DiscardValidator()
         assert validator.validate(input_data) is None
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', example_input_data)
-    @pytest.mark.parametrize('output_value', [None, True, 'discarded value', UnsetValue])
+    @pytest.mark.parametrize(
+        'input_data',
+        example_input_data,
+    )
+    @pytest.mark.parametrize(
+        'output_value',
+        [
+            None,
+            True,
+            'discarded value',
+            UnsetValue,
+        ],
+    )
     def test_discard_and_return_custom_value(input_data, output_value):
-        """ Test that DiscardValidator with output_value parameter accepts anything and always returns the specified value. """
+        """ Test that DiscardValidator always returns the output_value parameter if it is set. """
         validator = DiscardValidator(output_value=output_value)
         result = validator.validate(input_data)
 
@@ -37,7 +59,10 @@ class DiscardValidatorTest:
 
     @staticmethod
     def test_output_value_is_deepcopied():
-        """ Test that the given output value is deepcopied (e.g. always return a different empty list with `output_value=[]`). """
+        """
+        Test that the given output value is deepcopied, e.g. always return a different instance of an empty list with
+        `output_value=[]`.
+        """
         validator = DiscardValidator(output_value=[42])
         first_list = validator.validate('banana')
         second_list = validator.validate('banana')

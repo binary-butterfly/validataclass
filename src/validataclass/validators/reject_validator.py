@@ -54,8 +54,8 @@ class RejectValidator(Validator):
     RejectValidator(error_class=CustomValidationError, error_reason='This field cannot be changed.')
     ```
 
-    Valid input: Nothing (`None` if allow_none=True)
-    Output: Never returns (`None` if allow_none=True)
+    Valid input: Nothing (`None` if `allow_none=True`)
+    Output: Never returns (`None` if `allow_none=True`)
     """
 
     # Whether to allow None as the only valid input
@@ -67,20 +67,21 @@ class RejectValidator(Validator):
     error_reason: Optional[str]
 
     def __init__(
-        self, *,
+        self,
+        *,
         allow_none: bool = False,
         error_class: Type[ValidationError] = FieldNotAllowedError,
         error_code: Optional[str] = None,
         error_reason: Optional[str] = None,
     ):
         """
-        Create a RejectValidator that rejects any input.
+        Creates a `RejectValidator` that rejects any input.
 
         Parameters:
-            allow_none: `bool`, if True, the validator excepts `None` as the only valid input (default: False)
-            error_class: Subclass of `ValidationError` that is raised by the validator (default: `FieldNotAllowedError`)
-            error_code: `str`, optionally overrides the default error code of the error class (default: None)
-            error_reason: `str`, optionally sets the "reason" field in the error class (default: None)
+            `allow_none`: `bool`, if `True`, the validator excepts `None` as the only valid input (default: `False`)
+            `error_class`: `ValidationError` subclass that is raised by the validator (default: `FieldNotAllowedError`)
+            `error_code`: `str`, optionally overrides the default error code of the error class (default: `None`)
+            `error_reason`: `str`, optionally sets the `reason` field in the error class (default: `None`)
         """
         # Check parameter validity
         if not issubclass(error_class, ValidationError):
@@ -94,7 +95,7 @@ class RejectValidator(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> None:
         """
-        Validate input data. In this case, reject any value (except for `None` if allow_none is set).
+        Validates input data. In this case, reject any value (except for `None` if `allow_none` is set).
         """
         # Accept None (if allowed)
         if self.allow_none and input_data is None:

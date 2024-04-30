@@ -5,22 +5,28 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 import pytest
 
 from tests.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from validataclass.dataclasses import (
-    validataclass,
-    validataclass_field,
     Default,
     DefaultFactory,
     DefaultUnset,
     NoDefault,
+    validataclass,
+    validataclass_field,
 )
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.helpers import OptionalUnset, UnsetValue
-from validataclass.validators import IntegerValidator, StringValidator, Noneable, ListValidator, DictValidator
+from validataclass.validators import (
+    DictValidator,
+    IntegerValidator,
+    ListValidator,
+    Noneable,
+    StringValidator,
+)
 
 
 class ValidatorDataclassTest:
@@ -424,7 +430,8 @@ class ValidatorDataclassTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'field_tuple, expected_exception_msg', [
+        'field_tuple, expected_exception_msg',
+        [
             (
                 # None, missing validator
                 None,
@@ -460,7 +467,7 @@ class ValidatorDataclassTest:
                 (Default(3), Default(None)),
                 'Dataclass field "foo": Only one Default can be specified.',
             ),
-        ]
+        ],
     )
     def test_validataclass_with_invalid_field_tuples(field_tuple, expected_exception_msg):
         """ Test that @validataclass raises exceptions for with various invalid tuples. """
@@ -473,11 +480,12 @@ class ValidatorDataclassTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'cls_name', [
+        'cls_name',
+        [
             'InvalidDataclassA',
             'InvalidDataclassB',
             'InvalidDataclassC',
-        ]
+        ],
     )
     def test_validataclass_with_missing_annotations_invalid(cls_name):
         """

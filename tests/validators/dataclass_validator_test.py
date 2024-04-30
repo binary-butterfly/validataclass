@@ -11,7 +11,7 @@ from typing import Optional, List
 import pytest
 
 from tests.test_utils import UnitTestContextValidator
-from validataclass.dataclasses import validataclass, validataclass_field, Default, DefaultFactory, DefaultUnset
+from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, validataclass, validataclass_field
 from validataclass.exceptions import (
     DataclassInvalidPreValidateSignatureException,
     DataclassPostValidationError,
@@ -307,6 +307,10 @@ PRE_VALIDATE_INVALID_SIGNATURE_ERROR = \
 
 
 class DataclassValidatorTest:
+    """
+    Unit tests for the DataclassValidator.
+    """
+
     # Tests for DataclassValidator with a simple dataclass
 
     @staticmethod
@@ -332,8 +336,10 @@ class DataclassValidatorTest:
     def test_dataclass_invalid_none():
         """ Test a DataclassValidator with 'None' as input. """
         validator = DataclassValidator(UnitTestDataclass)
+
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
+
         assert exception_info.value.to_dict() == {'code': 'required_value'}
 
     @staticmethod
@@ -362,6 +368,7 @@ class DataclassValidatorTest:
     def test_dataclass_optional_field():
         """ Test optional fields in dataclasses. """
         validator = DataclassValidator(UnitTestDataclass)
+
         validated_data = validator.validate({
             'name': 'apple',
             'amount': 3,
@@ -423,6 +430,7 @@ class DataclassValidatorTest:
             field2: str = UnitTestContextValidator(prefix='2')
 
         validator = DataclassValidator(DataclassWithContextSensitiveValidators)
+
         validated_data = validator.validate({
             'field1': 'apple',
             'field2': 'banana',
@@ -437,6 +445,7 @@ class DataclassValidatorTest:
     def test_nested_dataclasses_valid():
         """ Validate nested dataclasses. """
         validator = DataclassValidator(UnitTestNestedDataclass)
+
         validated_data = validator.validate({
             'name': 'something with bananas',
             'test_fruit': {
@@ -498,6 +507,7 @@ class DataclassValidatorTest:
     def test_dataclass_with_post_init():
         """ Validate dataclasses with non-init fields and a __post_init__() method. """
         validator = DataclassValidator(UnitTestPostInitDataclass)
+
         validated_data = validator.validate({
             'base': 'meow',
             'count': 3,
@@ -597,6 +607,7 @@ class DataclassValidatorTest:
     def test_dataclass_with_post_validate():
         """ Validate dataclass with __post_validate__() method. """
         validator = DataclassValidator(UnitTestPostValidationDataclass)
+
         validated_data = validator.validate({
             'start': 3,
             'end': 4,
@@ -629,17 +640,41 @@ class DataclassValidatorTest:
         'validate_kwargs, input_data, expected_value',
         [
             # No context arguments
-            ({}, {'name': 'banana'}, None),
-            ({}, {'name': 'banana', 'value': 13}, 13),
+            (
+                {},
+                {'name': 'banana'},
+                None,
+            ),
+            (
+                {},
+                {'name': 'banana', 'value': 13},
+                13,
+            ),
 
             # Context argument "value_required"
-            ({'value_required': False}, {'name': 'banana'}, None),
-            ({'value_required': False}, {'name': 'banana', 'value': 13}, 13),
-            ({'value_required': True}, {'name': 'banana', 'value': 13}, 13),
+            (
+                {'value_required': False},
+                {'name': 'banana'},
+                None,
+            ),
+            (
+                {'value_required': False},
+                {'name': 'banana', 'value': 13},
+                13,
+            ),
+            (
+                {'value_required': True},
+                {'name': 'banana', 'value': 13},
+                13,
+            ),
 
             # Test that all context arguments are passed to other validators as well
-            ({'value_required': False, 'foo': 42}, {'name': 'banana'}, None),
-        ]
+            (
+                {'value_required': False, 'foo': 42},
+                {'name': 'banana'},
+                None,
+            ),
+        ],
     )
     def test_dataclass_with_context_sensitive_post_validate(validate_kwargs, input_data, expected_value):
         """ Validate dataclass with a context-sensitive __post_validate__() method. """
@@ -721,10 +756,13 @@ class DataclassValidatorTest:
                 'bar',
                 {'any_value': 3, 'some_value': 42},
             ),
-        ]
+        ],
     )
     def test_dataclass_with_context_sensitive_post_validate_with_var_kwargs(
-        validate_kwargs, expected_ctx_a, expected_ctx_b, expected_extra_kwargs,
+        validate_kwargs,
+        expected_ctx_a,
+        expected_ctx_b,
+        expected_extra_kwargs,
     ):
         """
         Validate dataclass with a context-sensitive __post_validate__() method that accepts arbitrary keyword arguments.
@@ -741,7 +779,8 @@ class DataclassValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_example_str, expected_example_int', [
+        'input_data, expected_example_str, expected_example_int',
+        [
             # Use "correct" field names (no mapping necessary)
             (
                 {
@@ -784,13 +823,14 @@ class DataclassValidatorTest:
                 'foo',
                 42,
             ),
-        ]
+        ],
     )
     @pytest.mark.parametrize(
-        'dataclass_cls', [
+        'dataclass_cls',
+        [
             UnitTestPreValidateStaticMethodDataclass,
             UnitTestPreValidateClassMethodDataclass,
-        ]
+        ],
     )
     def test_dataclass_with_pre_validate_methods(
         input_data,
@@ -807,7 +847,8 @@ class DataclassValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_field_errors', [
+        'input_data, expected_field_errors',
+        [
             # Empty dictionary (all fields are required)
             # NOTE: Field names in the validation error are as defined in the dataclass (not mapped back to camelCase)
             (
@@ -841,13 +882,14 @@ class DataclassValidatorTest:
                     'example_int': {'code': 'invalid_type', 'expected_type': 'int'},
                 },
             ),
-        ]
+        ],
     )
     @pytest.mark.parametrize(
-        'dataclass_cls', [
+        'dataclass_cls',
+        [
             UnitTestPreValidateStaticMethodDataclass,
             UnitTestPreValidateClassMethodDataclass,
-        ]
+        ],
     )
     def test_dataclass_with_pre_validate_methods_invalid(
         input_data,
@@ -871,7 +913,7 @@ class DataclassValidatorTest:
         [
             ({'foo': 42, 'bar': 23}, 'foo', 42),
             ({'foo': 42, 'bar': 23}, 'bar', 23),
-        ]
+        ],
     )
     def test_dataclass_with_context_sensitive_pre_validate(input_data, source_field_name, expected_value):
         """ Validate dataclass with a context-sensitive __pre_validate__() method. """
@@ -935,7 +977,7 @@ class DataclassValidatorTest:
                 'foo',
                 42,
             ),
-        ]
+        ],
     )
     def test_dataclass_with_context_sensitive_pre_validate_with_var_kwargs(
         input_data,
@@ -972,7 +1014,7 @@ class DataclassValidatorTest:
                     'example_int': {'code': 'required_field'},
                 },
             ),
-        ]
+        ],
     )
     def test_dataclass_with_context_sensitive_pre_validate_with_var_kwargs_invalid(
         input_data,
@@ -994,14 +1036,15 @@ class DataclassValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'dataclass_cls', [
+        'dataclass_cls',
+        [
             UnitTestInvalidPreValidateDataclass1,
             UnitTestInvalidPreValidateDataclass2,
             UnitTestInvalidPreValidateDataclass3,
             UnitTestInvalidPreValidateDataclass4,
             UnitTestInvalidPreValidateDataclass5,
             UnitTestInvalidPreValidateDataclass6,
-        ]
+        ],
     )
     def test_dataclass_with_invalid_forms_of_pre_validate(dataclass_cls):
         """ Test error handling for dataclasses with __pre_validate__() methods with an invalid method signature. """
@@ -1032,6 +1075,7 @@ class DataclassValidatorTest:
 
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             DataclassValidator(Foo)
+
         assert str(exception_info.value) == 'Parameter "dataclass_cls" must be a dataclass type.'
 
     @staticmethod
@@ -1039,7 +1083,7 @@ class DataclassValidatorTest:
         """ Test that a DataclassValidator cannot be created with an *instance* of a dataclass. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             dataclass_instance = UnitTestDataclass(name='bluenana', color='blue', amount=3, weight=Decimal('1.234'))
-            DataclassValidator(dataclass_instance)
+            DataclassValidator(dataclass_instance)  # noqa
 
         assert (
             str(exception_info.value)
@@ -1059,6 +1103,7 @@ class DataclassValidatorTest:
 
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
+
         assert str(exception_info.value) == 'Dataclass field "foo" has no defined Validator.'
 
     @staticmethod
@@ -1072,6 +1117,7 @@ class DataclassValidatorTest:
 
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
+
         assert str(exception_info.value) == 'Validator specified for dataclass field "foo" is not of type "Validator".'
 
     @staticmethod
@@ -1088,4 +1134,5 @@ class DataclassValidatorTest:
 
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
+
         assert str(exception_info.value) == 'Default specified for dataclass field "foo" is not of type "Default".'

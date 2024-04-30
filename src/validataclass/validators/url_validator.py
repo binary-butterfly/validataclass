@@ -7,9 +7,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from typing import Any, Optional, List
 
-from .string_validator import StringValidator
 from validataclass.exceptions import InvalidUrlError
 from validataclass.internal import internet_helpers
+from .string_validator import StringValidator
 
 __all__ = [
     'UrlValidator',
@@ -20,18 +20,23 @@ class UrlValidator(StringValidator):
     """
     Validator that parses URLs. Valid URLs are returned unmodified.
 
-    Please note that this validator is a bit opinionated and simplified in that it does *not* allow every valid URL. It's intended to be
-    used primarily for HTTP URLs and thus only allows URLs with authority component (the "//host" part after the colon).
+    Please note that this validator is a bit opinionated and simplified in that it does *not* allow every valid URL.
+    It's intended to be used primarily for HTTP URLs and thus only allows URLs with an authority component (the `//host`
+    part after the colon).
 
-    By default the validator allows only the URI schemes "http" and "https". This can be changed by setting the parameter 'allowed_schemes'
-    to a list of strings. To allow arbitrary (but valid) URI schemes, use the empty list (e.g. `allowed_schemes=[]`). Schemes are checked
-    case-insensitive, e.g. "https://..." and "HTTPS://..." are equivalent (the output string will be unmodified though).
+    By default the validator allows only the URI schemes `http` and `https`. This can be changed by setting the
+    parameter `allowed_schemes` to a list of strings. To allow arbitrary (but valid) URI schemes, use the empty list
+    (e.g. `allowed_schemes=[]`). Schemes are checked case-insensitive, e.g. `https://...` and `HTTPS://...` are
+    equivalent (the output string will be unmodified though).
 
     Additionally the following boolean parameters can be used to specify further validation options:
 
-    - require_tld: Whether hostnames are required to have a top level domain (e.g. "example.com" but not "example"; default: True)
-    - allow_ip: Whether IP addresses are allowed as hosts (e.g. "https://1.2.3.4/foo" or "https://[2001:abc::1]/foo"; default: True)
-    - allow_userinfo: Whether the URL may have a userinfo component (e.g. "https://username:password@example.com"; default: False)
+    - `require_tld`: Whether hostnames are required to have a top level domain (e.g. `example.com` but not `example`;
+      default: `True`)
+    - `allow_ip`: Whether IP addresses are allowed as hosts (e.g. `https://1.2.3.4/foo` or `https://[2001:abc::1]/foo`;
+      default: True)
+    - `allow_userinfo`: Whether the URL may have a userinfo component (e.g. `https://username:password@example.com`;
+      default: False)
 
     Examples:
 
@@ -46,7 +51,8 @@ class UrlValidator(StringValidator):
     #   Invalid: any URL with a different scheme
     UrlValidator(allowed_schemes=['ftp', 'sftp'], allow_userinfo=True)
 
-    # Allow arbitrary schemes (as long as they are valid, i.e. only consist of the characters a-z, 0-9, ".+-" and start with a letter)
+    # Allow arbitrary schemes (as long as they are valid, i.e. only consist of the characters a-z, 0-9, ".+-" and start
+    # with a letter)
     #   Valid: "https://example.com", "foo+bar-baz://example.com"
     #   Invalid: "://example.com", "-foo://example.com"
     UrlValidator(allowed_schemes=[])
@@ -78,17 +84,21 @@ class UrlValidator(StringValidator):
     allow_empty: bool
 
     # Precompiled regular expression
-    url_regex: re.Pattern = re.compile(r'''
-        (?P<scheme> [a-z][a-z0-9.+-]* )
-        ://
-        ((?P<userinfo> [^@/?#\[\]]+ )@)?
-        (?P<host> [^@:/?#\[\]]+ | \[[0-9a-f:]+] )
-        (:(?P<port> [1-9][0-9]* ))?
-        (?P<path_etc> [/?#] ([^%] | %[0-9a-f]{2})* )?
-    ''', re.IGNORECASE | re.VERBOSE)
+    url_regex: re.Pattern = re.compile(
+        r'''
+            (?P<scheme> [a-z][a-z0-9.+-]* )
+            ://
+            ((?P<userinfo> [^@/?#\[\]]+ )@)?
+            (?P<host> [^@:/?#\[\]]+ | \[[0-9a-f:]+] )
+            (:(?P<port> [1-9][0-9]* ))?
+            (?P<path_etc> [/?#] ([^%] | %[0-9a-f]{2})* )?
+        ''',
+        re.IGNORECASE | re.VERBOSE,
+    )
 
     def __init__(
-        self, *,
+        self,
+        *,
         allowed_schemes: Optional[List[str]] = None,
         require_tld: bool = True,
         allow_ip: bool = True,
@@ -97,18 +107,18 @@ class UrlValidator(StringValidator):
         max_length: int = 2000,
     ):
         """
-        Create a `UrlValidator` with optional parameters.
+        Creates a `UrlValidator` with optional parameters.
 
-        Specify `allowed_schemes` to set a list of allowed URI schemes, which defaults to "http" and "https". As a special value, the
-        empty list can be used to allow any valid schemes.
+        Specify `allowed_schemes` to set a list of allowed URI schemes, which defaults to `http` and `https`. As a
+        special value, the empty list can be used to allow any valid schemes.
 
         Parameters:
-            allowed_schemes: `list[str]`, specifies allowed URI schemes (default: `['http', 'https']`)
-            require_tld: `bool`, whether hostnames must have a top level domain (default: True)
-            allow_ip: `bool`, whether IP addresses are allowed as host (default: True)
-            allow_userinfo: `bool`, whether URLs may contain userinfo (default: False)
-            allow_empty: `bool`, whether empty strings should pass validation (default: False)
-            max_length: `int`, specifies maximum length of input strings (default: 2000)
+            `allowed_schemes`: `list[str]`, specifies allowed URI schemes (default: `['http', 'https']`)
+            `require_tld`: `bool`, whether hostnames must have a top level domain (default: `True`)
+            `allow_ip`: `bool`, whether IP addresses are allowed as host (default: `True`)
+            `allow_userinfo`: `bool`, whether URLs may contain userinfo (default: `False`)
+            `allow_empty`: `bool`, whether empty strings should pass validation (default: `False`)
+            `max_length`: `int`, specifies maximum length of input strings (default: 2000)
         """
         # Set allow_empty and StringValidator's min_length
         min_length = 0 if allow_empty else 1
@@ -130,7 +140,7 @@ class UrlValidator(StringValidator):
 
     def validate(self, input_data: Any, **kwargs) -> str:
         """
-        Validate that input is a valid URL string. Returns unmodified string.
+        Validates that input is a valid URL string. Returns unmodified string.
         """
         # Validate input data as string
         input_url = super().validate(input_data, **kwargs)

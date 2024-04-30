@@ -49,11 +49,11 @@ class Noneable(Validator):
 
     def __init__(self, validator: Validator, *, default: Any = None):
         """
-        Create a Noneable wrapper validator.
+        Creates a `Noneable` wrapper validator.
 
         Parameters:
-            validator: Validator that will be wrapped (required)
-            default: Value of any type that is returned instead of None (default: None)
+            `validator`: Validator that will be wrapped (required)
+            `default`: Value of any type that is returned instead of `None` (default: `None`)
         """
         # Check parameter validity
         if not isinstance(validator, Validator):
@@ -64,10 +64,10 @@ class Noneable(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> Optional[Any]:
         """
-        Validate input data.
+        Validates input data.
 
-        If the input is None, return None (or the value specified in the `default` parameter). Otherwise, pass the input
-        to the wrapped validator and return its result.
+        If the input is `None`, return `None` (or the value specified in the `default` parameter). Otherwise, pass the
+        input to the wrapped validator and return its result.
         """
         if input_data is None:
             return deepcopy(self.default_value)

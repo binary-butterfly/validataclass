@@ -22,8 +22,8 @@ class NumberRangeError(ValidationError):
     Validation error raised by number validators (e.g. `IntegerValidator`, `DecimalValidator`, ...) when a number range
     requirement (minimal and/or maximal value) is specified and the input does not match those requirements.
 
-    May contain the extra fields 'min_value' and 'max_value', depending on which are specified. The type of these fields
-    depends on the validator, e.g. an IntegerValidator sets integers, while a DecimalValidator sets decimal strings.
+    May contain the extra fields `min_value` and `max_value`, depending on which are specified. The type of these fields
+    depends on the validator, e.g. an `IntegerValidator` sets integers, while a `DecimalValidator` sets decimal strings.
     """
     code = 'number_range_error'
 
@@ -38,7 +38,7 @@ class DecimalPlacesError(ValidationError):
     Validation error raised by `DecimalValidator` when a minimum or maximum number of decimal places is specified and
     the input number has too many or too little decimal places.
 
-    May contain the extra fields 'min_places' and 'max_places' (integers), depending on which are specified.
+    May contain the extra fields `min_places` and `max_places` (integers), depending on which are specified.
     """
     code = 'decimal_places'
 
@@ -67,6 +67,6 @@ class InvalidDecimalError(ValidationError):
 class NonFiniteNumberError(ValidationError):
     """
     Validation error raised by `FloatValidator` (and subclasses) when an input string can be parsed as a float, but does
-    not have a finite value (i.e. it is either (+/-)Infinity or NaN).
+    not have a finite value (i.e. it is either `(+/-)Infinity` or `NaN`).
     """
     code = 'not_a_finite_number'

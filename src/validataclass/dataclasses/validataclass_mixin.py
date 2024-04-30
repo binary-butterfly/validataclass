@@ -34,7 +34,7 @@ class ValidataclassMixin:
         Filters out all fields with `UnsetValue`, unless the optional parameter `keep_unset_values` is True.
 
         Parameters:
-            keep_unset_values: If true, fields with value `UnsetValue` are NOT removed from the dictionary (default: False)
+            `keep_unset_values`: If true, keep fields with value `UnsetValue` in the dictionary (default: False)
         """
         data = dataclasses.asdict(self)  # noqa
 
@@ -47,7 +47,9 @@ class ValidataclassMixin:
     @classmethod
     def create_with_defaults(cls, **kwargs):
         """
-        (Deprecated.) Creates an object of the dataclass (with its default values).
+        (Deprecated.)
+
+        Creates an object of the dataclass (with its default values).
 
         Since version 0.6.0, this method is no longer necessary and therefore deprecated. You can now use the regular
         dataclass constructor, e.g. `MyDataclass(foo=42)` instead of `MyDataclass.create_with_defaults(foo=42)`.
@@ -55,8 +57,9 @@ class ValidataclassMixin:
         This method will be removed in a future version (presumably in version 1.0.0).
         """
         warnings.warn(
-            "create_with_defaults() is deprecated and will be removed in a future version. To instantiate a validataclass, "
-            "you can now use the regular constructor, e.g. `MyDataclass(...)` instead of `MyDataclass.create_with_defaults(...)`.",
+            "create_with_defaults() is deprecated and will be removed in a future version. To instantiate a "
+            "validataclass, you can now use the regular constructor, e.g. `MyDataclass(...)` instead of "
+            "`MyDataclass.create_with_defaults(...)`.",
             DeprecationWarning
         )
         return cls(**kwargs)  # noqa

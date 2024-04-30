@@ -46,15 +46,16 @@ class DiscardValidator(Validator):
 
     def __init__(self, *, output_value: Any = None):
         """
-        Create a DiscardValidator.
+        Creates a `DiscardValidator`.
 
         Parameters:
-            output_value: Value of any type that is returned for any input (default: None)
+            `output_value`: Value of any type that is returned for any input (default: `None`)
         """
         self.output_value = output_value
 
     def validate(self, input_data: Any, **kwargs) -> Any:
         """
-        Validate input data. Discards any input and always returns None (or the specified `output_value`).
+        Validates input data.
+        Discards any input and always returns `None` (or the specified `output_value`).
         """
         return deepcopy(self.output_value)

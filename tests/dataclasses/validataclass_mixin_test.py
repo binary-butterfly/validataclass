@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from validataclass.dataclasses import validataclass, ValidataclassMixin, Default, DefaultUnset
+from validataclass.dataclasses import Default, DefaultUnset, ValidataclassMixin, validataclass
 from validataclass.helpers import OptionalUnset, UnsetValue
 from validataclass.validators import DataclassValidator, DecimalValidator, IntegerValidator, StringValidator
 
@@ -29,6 +29,7 @@ class ValidataclassMixinTest:
     def test_validataclass_to_dict():
         """ Tests ValidataclassMixin.to_dict() using the regular constructor. """
         obj = UnitTestDataclass(foo=42, bar='meep', baz=Decimal('-1.23'))
+
         assert obj.to_dict() == {
             'foo': 42,
             'bar': 'meep',
@@ -40,6 +41,7 @@ class ValidataclassMixinTest:
         """ Tests ValidataclassMixin.to_dict() using a DataclassValidator. """
         validator = DataclassValidator(UnitTestDataclass)
         obj: UnitTestDataclass = validator.validate({'foo': 42, 'bar': 'meep', 'baz': '-1.23'})
+
         assert obj.to_dict() == {
             'foo': 42,
             'bar': 'meep',
@@ -51,6 +53,7 @@ class ValidataclassMixinTest:
         """ Tests ValidataclassMixin.to_dict() using a DataclassValidator, with default values. """
         validator = DataclassValidator(UnitTestDataclass)
         obj: UnitTestDataclass = validator.validate({'foo': 42})
+
         assert obj.to_dict() == {
             'foo': 42,
             'bar': 'bloop',
@@ -62,6 +65,7 @@ class ValidataclassMixinTest:
         validator = DataclassValidator(UnitTestDataclass)
         obj: UnitTestDataclass = validator.validate({'foo': 42})
         obj_as_dict = obj.to_dict(keep_unset_values=True)
+
         assert obj_as_dict == {
             'foo': 42,
             'bar': 'bloop',

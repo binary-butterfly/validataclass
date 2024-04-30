@@ -10,15 +10,26 @@ from decimal import Decimal
 import pytest
 
 from tests.test_utils import assert_decimal, unpack_params
-from validataclass.exceptions import RequiredValueError, InvalidTypeError, InvalidDecimalError, NumberRangeError, \
-    NonFiniteNumberError, InvalidValidatorOptionException
+from validataclass.exceptions import (
+    InvalidDecimalError,
+    InvalidTypeError,
+    InvalidValidatorOptionException,
+    NonFiniteNumberError,
+    NumberRangeError,
+    RequiredValueError,
+)
 from validataclass.validators import NumericValidator
 
 
 class NumericValidatorTest:
+    """
+    Unit tests for the NumericValidator.
+    """
+
     @staticmethod
     @pytest.mark.parametrize(
-        'input_data, expected_decimal_str', [
+        'input_data, expected_decimal_str',
+        [
             # Integers (shouldn't have trailing '.0' in the output)
             (0, '0'),
             (42, '42'),
@@ -38,7 +49,7 @@ class NumericValidatorTest:
             ('123.0', '123.0'),
             ('-1.23456', '-1.23456'),
             ('+.001', '0.001'),
-        ]
+        ],
     )
     def test_valid_input(input_data, expected_decimal_str):
         """ Test NumericValidator with valid input data. """
@@ -49,50 +60,89 @@ class NumericValidatorTest:
     def test_invalid_none():
         """ Check that NumericValidator raises exception for None as value. """
         validator = NumericValidator()
+
         with pytest.raises(RequiredValueError) as exception_info:
             validator.validate(None)
+
         assert exception_info.value.to_dict() == {'code': 'required_value'}
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [True, False, [1.234]])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            True,
+            False,
+            [1.234],
+        ],
+    )
     def test_invalid_wrong_type(input_data):
-        """ Check that NumericValidator raises exceptions for values that are neither of the types float, int and str. """
+        """
+        Check that NumericValidator raises exceptions for values that are neither of the types float, int and str.
+        """
         validator = NumericValidator()
+
         with pytest.raises(InvalidTypeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_type',
             'expected_types': ['float', 'int', 'str'],
         }
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', ['', 'banana', '1234x', '$123', '1,234', 'Infinity', 'NaN', '.', '1e3'])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            '',
+            'banana',
+            '1234x',
+            '$123',
+            '1,234',
+            'Infinity',
+            'NaN',
+            '.',
+            '1e3',
+        ],
+    )
     def test_invalid_decimal_strings(input_data):
         """ Test that NumericValidator raises exceptions for invalid or malformed strings. """
         validator = NumericValidator()
+
         with pytest.raises(InvalidDecimalError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'invalid_decimal',
         }
 
     @staticmethod
-    @pytest.mark.parametrize('input_data', [float('infinity'), float('-infinity'), float('nan')])
+    @pytest.mark.parametrize(
+        'input_data',
+        [
+            float('infinity'),
+            float('-infinity'),
+            float('nan'),
+        ],
+    )
     def test_invalid_non_finite_numbers(input_data):
         """ Test NumericValidator with non-finite values (infinity, NaN). """
         validator = NumericValidator()
+
         with pytest.raises(NonFiniteNumberError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {'code': 'not_a_finite_number'}
 
     # Test value range requirements
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_value, max_value, input_data, expected_decimal_str', [
+        'min_value, max_value, input_data, expected_decimal_str',
+        [
             # min_value only (as integer)
             *unpack_params(
-                1, None,
+                1,
+                None,
                 [
                     (1, '1'),
                     (1.0, '1.0'),
@@ -105,7 +155,8 @@ class NumericValidatorTest:
 
             # max_value only (as float)
             *unpack_params(
-                None, 10.0,
+                None,
+                10.0,
                 [
                     (-9999, '-9999'),
                     (-9999.0, '-9999.0'),
@@ -118,7 +169,8 @@ class NumericValidatorTest:
 
             # min_value and max_value (as strings)
             *unpack_params(
-                '0', '1',
+                '0',
+                '1',
                 [
                     (0, '0'),
                     (0.0, '0.0'),
@@ -133,7 +185,8 @@ class NumericValidatorTest:
 
             # min_value and max_value (as Decimal)
             *unpack_params(
-                Decimal('-0.5'), Decimal('0.5'),
+                Decimal('-0.5'),
+                Decimal('0.5'),
                 [
                     (-0.5, '-0.5'),
                     ('-0.5', '-0.5'),
@@ -144,7 +197,7 @@ class NumericValidatorTest:
                     ('0.500', '0.500'),
                 ],
             ),
-        ]
+        ],
     )
     def test_value_range_valid(min_value, max_value, input_data, expected_decimal_str):
         """ Test NumericValidator with different range requirements and different types of input values. """
@@ -153,10 +206,12 @@ class NumericValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'min_value, max_value, input_data', [
+        'min_value, max_value, input_data',
+        [
             # min_value only (as integer)
             *unpack_params(
-                1, None,
+                1,
+                None,
                 [
                     -1,
                     '-1.0',
@@ -169,7 +224,8 @@ class NumericValidatorTest:
 
             # max_value only (as float)
             *unpack_params(
-                None, 10.0,
+                None,
+                10.0,
                 [
                     10.001,
                     '10.001',
@@ -181,7 +237,8 @@ class NumericValidatorTest:
 
             # min_value and max_value (as strings)
             *unpack_params(
-                '0', '1',
+                '0',
+                '1',
                 [
                     -1,
                     -0.001,
@@ -194,7 +251,8 @@ class NumericValidatorTest:
 
             # min_value and max_value (as Decimal)
             *unpack_params(
-                Decimal('-0.5'), Decimal('0.5'),
+                Decimal('-0.5'),
+                Decimal('0.5'),
                 [
                     -1,
                     -0.6,
@@ -204,7 +262,7 @@ class NumericValidatorTest:
                     1,
                 ],
             ),
-        ]
+        ],
     )
     def test_value_range_invalid(min_value, max_value, input_data):
         """ Test NumericValidator with range requirements with invalid input values. """
@@ -212,6 +270,7 @@ class NumericValidatorTest:
 
         with pytest.raises(NumberRangeError) as exception_info:
             validator.validate(input_data)
+
         assert exception_info.value.to_dict() == {
             'code': 'number_range_error',
             **({'min_value': str(min_value)} if min_value is not None else {}),
@@ -222,20 +281,22 @@ class NumericValidatorTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'output_places, input_data, expected_decimal_str', [
+        'output_places, input_data, expected_decimal_str',
+        [
             # output_places=0
             (0, 0.0, '0'),
             (0, -42.0, '-42'),
             (0, 42.0, '42'),
             (0, 123.456, '123'),  # rounded down
             (0, 123.567, '124'),  # rounded up
+
             # output_places=2
             (2, 0.0, '0.00'),
             (2, -42.0, '-42.00'),
             (2, 42.0, '42.00'),
             (2, 123.454, '123.45'),  # rounded down
             (2, 123.455, '123.46'),  # rounded up
-        ]
+        ],
     )
     def test_output_places(output_places, input_data, expected_decimal_str):
         """ Test NumericValidator with output_places parameter (fixed number of decimal places in output value). """
@@ -250,7 +311,7 @@ class NumericValidatorTest:
             (decimal.ROUND_DOWN, 1.09, '1.0'),
             (decimal.ROUND_UP, 1.01, '1.1'),
             (decimal.ROUND_UP, 1.09, '1.1'),
-        ]
+        ],
     )
     def test_with_different_rounding_modes(rounding, input_data, expected_output):
         """ Test NumericValidator with a fixed number of output places and different rounding modes. """
@@ -264,6 +325,7 @@ class NumericValidatorTest:
         """ Check that NumericValidator raises exception when min_value is greater than max_value. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             NumericValidator(min_value=2, max_value=1.9)
+
         assert str(exception_info.value) == 'Parameter "min_value" cannot be greater than "max_value".'
 
     @staticmethod
@@ -271,4 +333,5 @@ class NumericValidatorTest:
         """ Check that NumericValidator raises exception when output_places is less than 0. """
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
             NumericValidator(output_places=-1)
+
         assert str(exception_info.value) == 'Parameter "output_places" cannot be negative.'

@@ -4,7 +4,7 @@ Copyright (c) 2022, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional, Union, List, Iterable
+from typing import Any, List, Iterable, Optional, Union
 
 from validataclass.exceptions import InvalidValidatorOptionException
 from .validator import Validator
@@ -67,12 +67,13 @@ class AnythingValidator(Validator):
     allowed_types: Optional[List[type]]
 
     def __init__(
-        self, *,
+        self,
+        *,
         allow_none: Optional[bool] = None,
         allowed_types: Optional[Union[Iterable[Union[type, None]], type]] = None,
     ):
         """
-        Create an AnythingValidator that accepts any input.
+        Creates an `AnythingValidator` that accepts any input.
 
         The optional `allowed_types` parameter can be specified as any iterable of types (e.g. a list of types). As a
         convenience, a single type can be specified as well (e.g. `allowed_types=[dict]` and `allowed_types=dict` are
@@ -80,15 +81,16 @@ class AnythingValidator(Validator):
 
         The default of the `allow_none` parameter depends on whether `allowed_types` is set. If it's not set, anything
         should be valid input, including None, so the default is True. If `allowed_types` is set, `allow_none` will
-        default to True if `type(None)` is part of `allowed_types`, and False otherwise.
+        default to `True` if `type(None)` is part of `allowed_types`, and `False` otherwise.
 
         If you set both `allow_none` and `allowed_types` explicitly, `allow_none` takes precedence. This means that if
-        you set `allow_none=True`, `type(None)` will be automatically added to `allowed_types`. If you set it to False,
-        the NoneType will be automatically removed from `allowed_types` (if it was specified in the first place).
+        you set `allow_none=True`, `type(None)` will be automatically added to `allowed_types`. If you set it to
+        `False`, the `NoneType` will be automatically removed from `allowed_types` (if it was specified in the first
+        place).
 
         Parameters:
-            allow_none: Boolean, whether to allow None as the input value (default: depends on context, see above)
-            allowed_types: One or multiple types, specifies which input types are allowed (default: None, allow any type)
+            `allow_none`: Boolean, whether to allow None as the input value (default: depends on context, see above)
+            `allowed_types`: One or multiple types, specifies allowed input types (default: `None`, allow any type)
         """
         # Normalize list of allowed types (remove duplicates, replace None with type(None), etc.)
         if allowed_types is not None:
@@ -110,10 +112,10 @@ class AnythingValidator(Validator):
         allow_none: Optional[bool],
     ) -> List[type]:
         """
-        Helper method to normalize the allowed_types parameter to a unique list that contains only types.
+        Helper method to normalize the `allowed_types` parameter to a unique list that contains only types.
         """
-        # If allowed_types is not already an Iterable, put it in a list. (Treating strings as iterable doesn't make sense
-        # here, so we make an exception for strings to give the user a more meaningful error messsage in the next step.)
+        # If allowed_types is not already an Iterable, put it in a list. (Treating strings as iterable doesn't make
+        # sense here, so we make an exception for strings to give the user a more meaningful error message.)
         if not isinstance(allowed_types, Iterable) or type(allowed_types) is str:
             allowed_types = [allowed_types]
 
@@ -139,7 +141,7 @@ class AnythingValidator(Validator):
 
     def validate(self, input_data: Any, **kwargs) -> Any:
         """
-        Validate input data. Accepts anything (or only specific types) and returns data unmodified.
+        Validates input data. Accepts anything (or only specific types) and returns data unmodified.
         """
         # Accept None (if allowed explicitly with allow_none=True or implicitly with NoneType in allowed_types)
         if self.allow_none and input_data is None:
@@ -149,7 +151,7 @@ class AnythingValidator(Validator):
         if self.allowed_types is not None:
             self._ensure_type(input_data, self.allowed_types)
         else:
-            # No type restrictions, but we still need to check for None (the allow_none=True case is already covered above)
+            # No type restrictions, but we still need to check for None (the allow_none case is already covered above)
             self._ensure_not_none(input_data)
 
         # Return input unmodified

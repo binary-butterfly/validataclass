@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import pytest
 
 from tests.test_utils import UNSET_PARAMETER
-from validataclass.exceptions import RequiredValueError, InvalidTypeError, InvalidValidatorOptionException
+from validataclass.exceptions import InvalidTypeError, InvalidValidatorOptionException, RequiredValueError
 from validataclass.validators import AnythingValidator
 
 
@@ -33,22 +33,35 @@ class AnythingValidatorTest:
             ['foobar', 42],
             {},
             {'foo': 'banana', 'bar': 42},
-        ]
+        ],
     )
-    @pytest.mark.parametrize('allow_none', [UNSET_PARAMETER, True, False])
+    @pytest.mark.parametrize(
+        'allow_none',
+        [
+            UNSET_PARAMETER,
+            True,
+            False,
+        ],
+    )
     def test_accept_anything_except_none(input_data, allow_none):
         """ Test that AnythingValidator accepts anything that is not None regardless of the allow_none parameter. """
-        validator = AnythingValidator() if allow_none is UNSET_PARAMETER \
-            else AnythingValidator(allow_none=allow_none)
+        params = {} if allow_none is UNSET_PARAMETER else {'allow_none': allow_none}
+        validator = AnythingValidator(**params)
 
         assert validator.validate(input_data) == input_data
 
     @staticmethod
-    @pytest.mark.parametrize('allow_none', [UNSET_PARAMETER, True])
+    @pytest.mark.parametrize(
+        'allow_none',
+        [
+            UNSET_PARAMETER,
+            True,
+        ],
+    )
     def test_accept_none(allow_none):
         """ Test that AnythingValidator accepts None by default (no allow_none parameter) and when allow_none=True. """
-        validator = AnythingValidator() if allow_none is UNSET_PARAMETER \
-            else AnythingValidator(allow_none=allow_none)
+        params = {} if allow_none is UNSET_PARAMETER else {'allow_none': allow_none}
+        validator = AnythingValidator(**params)
 
         assert validator.validate(None) is None
 
@@ -59,6 +72,7 @@ class AnythingValidatorTest:
 
         with pytest.raises(RequiredValueError) as exc_info:
             validator.validate(None)
+
         assert exc_info.value.to_dict() == {'code': 'required_value'}
 
     # Tests with allowed_types (and allow_none)
@@ -101,7 +115,7 @@ class AnythingValidatorTest:
 
             # List that contains NoneType, but explicitly REMOVING NoneType with allow_none=False
             (False, [int, type(None)], 42),
-        ]
+        ],
     )
     def test_allowed_types_valid(allow_none, allowed_types, input_data):
         """ Test AnythingValidator with allowed_types and/or allow_none parameters with valid input. """
@@ -150,7 +164,7 @@ class AnythingValidatorTest:
 
             # List that contains NoneType, but explicitly REMOVING NoneType with allow_none=False
             (False, [int, type(None)], 'banana', 'int'),
-        ]
+        ],
     )
     def test_allowed_types_invalid(allow_none, allowed_types, input_data, error_expected_types):
         """ Test AnythingValidator with allowed_types and/or allow_none parameters with invalid input. """
@@ -181,7 +195,7 @@ class AnythingValidatorTest:
 
             # allowed_types contains NoneType, but is explicitly REMOVED with allow_none=False
             (False, [int, type(None)]),
-        ]
+        ],
     )
     def test_allowed_types_invalid_none(allow_none, allowed_types):
         """ Test AnythingValidator with allowed_types and/or allow_none parameters with None as invalid input. """
@@ -190,6 +204,7 @@ class AnythingValidatorTest:
 
         with pytest.raises(RequiredValueError) as exc_info:
             validator.validate(None)
+
         assert exc_info.value.to_dict() == {'code': 'required_value'}
 
     # Invalid parameter tests
@@ -205,12 +220,16 @@ class AnythingValidatorTest:
             (['banana'], "'banana'"),
             ([int, [str]], "[<class 'str'>]"),
             ({int, str, 42}, '42'),
-        ]
+        ],
     )
     def test_invalid_allowed_types(allowed_types, error_type_repr):
-        """ Test that AnythingValidator raises an error on construction if allowed_types contains something that is not a type. """
+        """
+        Test that AnythingValidator raises an error on construction if allowed_types contains something that is not a
+        type.
+        """
         with pytest.raises(InvalidValidatorOptionException) as exc_info:
             AnythingValidator(allowed_types=allowed_types)
+
         assert str(exc_info.value) == f'Element of allowed_types is not a type: {error_type_repr}'
 
     @staticmethod
@@ -218,4 +237,5 @@ class AnythingValidatorTest:
         """ Test that AnythingValidator raises an error on construction if allowed_types is empty. """
         with pytest.raises(InvalidValidatorOptionException) as exc_info:
             AnythingValidator(allowed_types=[])
+
         assert str(exc_info.value) == 'allowed_types is empty. Use the RejectValidator instead.'
