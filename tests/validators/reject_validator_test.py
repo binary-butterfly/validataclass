@@ -80,7 +80,7 @@ class RejectValidatorTest:
     def test_allow_none():
         """ Test that RejectValidator allows None if allow_none is True. """
         validator = RejectValidator(allow_none=True)
-        assert validator.validate(None) is None
+        assert validator.validate(None) is None  # type: ignore[func-returns-value]
 
     # Tests with custom errors
 
@@ -180,4 +180,4 @@ class RejectValidatorTest:
         Test that RejectValidator raises an error on construction if the error class is not a ValidatonError subclass.
         """
         with pytest.raises(TypeError, match='Error class must be a subclass of ValidationError'):
-            RejectValidator(error_class=Exception)  # noqa
+            RejectValidator(error_class=Exception)  # type: ignore[arg-type]  # noqa

@@ -4,6 +4,8 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+from typing import Any, Dict
+
 import pytest
 
 from validataclass.exceptions import (
@@ -131,7 +133,7 @@ class FloatValidatorTest:
         validator = FloatValidator(min_value=min_value, max_value=max_value)
 
         # Construct error dict with min_value and/or max_value, depending on which is specified
-        expected_error_dict = {'code': 'number_range_error'}
+        expected_error_dict: Dict[str, Any] = {'code': 'number_range_error'}
         expected_error_dict.update({'min_value': float(min_value)} if min_value is not None else {})
         expected_error_dict.update({'max_value': float(max_value)} if max_value is not None else {})
 

@@ -24,7 +24,7 @@ class ValidatorTest:
         # Ensure that Validator creation causes a DeprecationWarning
         with pytest.deprecated_call():
             class ValidatorWithoutKwargs(Validator):
-                def validate(self, input_data: Any) -> Any:  # noqa (missing parameter)
+                def validate(self, input_data: Any) -> Any:  # type: ignore[override]  # noqa
                     return input_data
 
         # Check that validate_with_context() calls validate() without errors
