@@ -2,8 +2,80 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+
+## [Unreleased](https://github.com/binary-butterfly/validataclass/compare/0.10.0...HEAD)
+
+
+## [0.10.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.10.0) - 2024-05-07
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.9.0...0.10.0)
+
+This release features custom pre-validation in dataclasses using the `__pre_validate__()` method and a change to the
+accepted format of datetimes in the `DateTimeValidator` to accept arbitrary decimal places after seconds.
+
+This also is a "spring cleaning" release that contains a lot of miscellaneous refactorings and code cleanup, as well as
+some preparation for full [mypy](https://mypy-lang.org/) support ([#116]).
+
+It also drops support for Python 3.7 and adds support for Python 3.12.
+
+### Added
+
+- Official support for Python 3.12. [#112]
+- Custom pre-validation in dataclasses using the `__pre_validate__` class method. [#115]
+
+### Changed
+
+- `DateTimeValidator`: Accept datetimes with arbitrary precision (by [@flauschzelle]). [#111], [#113]
+  - This is not a breaking change, unless you specifically want to restrict datetime input strings to exactly 0, 3 or 6
+    decimal places after the seconds. It does not really matter for the result.
+- Move `ValidationError` base class to separate module `validataclass.exceptions.base_exceptions`. [#117]
+  - This should not break any code as long as you import `ValidationError` from the `validataclass.exceptions` package
+    instead of the `validataclass.exceptions.common_exceptions` module. If you do import it from the module, it should
+    still work because the class is imported there as well, but you might get linter warnings.
+- `DataclassValidator`: Simplify check and error handling for when the specified dataclass is not a dataclass. [#120]
+
+### Removed
+
+- **Breaking change:** Drop support for Python 3.7. [#118]
+- Remove `python-dateutil` from install requirements. [#122]
+  - This library was previously a dependency of validataclass. However, it was only needed in the unit tests, so it has
+    been moved to the `testing` extra requirements.
+
+### Fixed
+
+- Fix style of type comparisons in some unit tests (by [@flauschzelle]). [#110]
+- Fix various typing issues reported by mypy, add missing type annotations and other related changes. [#120], [#121]
+
+### Testing / CI
+
+- Add [mypy](https://mypy-lang.org/) to development environment and CI pipeline. [#120]
+
+### Miscellaneous
+
+- `DateTimeValidator`: Unify class docstring with Markdown documentation. [#113]
+- Miscellaneous code reformatting, more consistent docstrings, unit test refactoring. [#119]
+
+### New contributors
+
+- [@flauschzelle] made her first contributions in [#110] and [#111].
+
+[#110]: https://github.com/binary-butterfly/validataclass/pull/110
+[#111]: https://github.com/binary-butterfly/validataclass/pull/111
+[#112]: https://github.com/binary-butterfly/validataclass/pull/112
+[#113]: https://github.com/binary-butterfly/validataclass/pull/113
+[#115]: https://github.com/binary-butterfly/validataclass/pull/115
+[#116]: https://github.com/binary-butterfly/validataclass/issues/116
+[#117]: https://github.com/binary-butterfly/validataclass/pull/117
+[#118]: https://github.com/binary-butterfly/validataclass/pull/118
+[#119]: https://github.com/binary-butterfly/validataclass/pull/119
+[#120]: https://github.com/binary-butterfly/validataclass/pull/120
+[#121]: https://github.com/binary-butterfly/validataclass/pull/121
+[#122]: https://github.com/binary-butterfly/validataclass/pull/122
+
+[@flauschzelle]: https://github.com/flauschzelle
 
 
 ## [0.9.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.9.0) - 2023-05-24
@@ -378,8 +450,10 @@ negatively affected by it.
 
 ### Changed
 
-- `ValidataclassMixin`: The `to_dict()` method now removes UnsetValues from the dictionary, unless the optional parameter
-  `keep_unset_values=True` is set. [#28](https://github.com/binary-butterfly/validataclass/pull/28)
+- `ValidataclassMixin`: The `to_dict()` method now removes UnsetValues from the dictionary, unless the optional
+  parameter `keep_unset_values=True` is set. [#28]
+
+[#28]: https://github.com/binary-butterfly/validataclass/pull/28
 
 
 ## [0.3.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.1) - 2021-11-11
@@ -388,13 +462,14 @@ negatively affected by it.
 
 ### Changed
 
-- `@validataclass` decorator detects fields with validator but without type annotations and will raise errors about that now.
-  [#27](https://github.com/binary-butterfly/validataclass/pull/27)
+- `@validataclass` decorator detects fields with validator but without type annotations and will raise errors about that
+  now. [#27]
 
 ### Fixed
 
-- `@validataclass` allows empty dataclasses now (raised an AttributeError before).
-  [#27](https://github.com/binary-butterfly/validataclass/pull/27)
+- `@validataclass` allows empty dataclasses now (raised an AttributeError before). [#27]
+
+[#27]: https://github.com/binary-butterfly/validataclass/pull/27
 
 
 ## [0.3.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.3.0) - 2021-11-10
@@ -403,20 +478,24 @@ negatively affected by it.
 
 ### Added
 
-- Support for class inheritance of validataclasses, e.g. extend an existing validataclass by adding new fields setting different default
-  values for existing fields. [#11](https://github.com/binary-butterfly/validataclass/pull/11)
-- Type aliases `OptionalUnset[T]` and `OptionalUnsetNone[T]`. [#12](https://github.com/binary-butterfly/validataclass/pull/12)
-- Mixin class `ValidataclassMixin` with methods `to_dict()` and `create_with_defaults()`.
-  [#13](https://github.com/binary-butterfly/validataclass/pull/13)
+- Support for class inheritance of validataclasses, e.g. extend an existing validataclass by adding new fields setting
+  different default values for existing fields. [#11]
+- Type aliases `OptionalUnset[T]` and `OptionalUnsetNone[T]`. [#12]
+- Mixin class `ValidataclassMixin` with methods `to_dict()` and `create_with_defaults()`. [#13]
 
 ### Changed
 
-- Tuples for specifying field validators and defaults in a validataclass can now be in any order, so `(default, validator)` instead
-  of `(validator, default)` is allowed now. (Side effect of [#11](https://github.com/binary-butterfly/validataclass/pull/11))
+- Tuples for specifying field validators and defaults in a validataclass can now be in any order, so
+  `(default, validator)` instead of `(validator, default)` is allowed now. (Side effect of [#11])
 
 ### Fixed
 
-- Fix link to docs in README.md to make link work on PyPI. [#8](https://github.com/binary-butterfly/validataclass/pull/8)
+- Fix link to docs in README.md to make link work on PyPI. [#8]
+
+[#8]: https://github.com/binary-butterfly/validataclass/pull/8
+[#11]: https://github.com/binary-butterfly/validataclass/pull/11
+[#12]: https://github.com/binary-butterfly/validataclass/pull/12
+[#13]: https://github.com/binary-butterfly/validataclass/pull/13
 
 
 ## [0.2.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.2.0) - 2021-10-25
@@ -425,17 +504,23 @@ negatively affected by it.
 
 ### Added
 
-- Initial version of [documentation](docs/index.md). [#6](https://github.com/binary-butterfly/validataclass/pull/6)
-- Added changelog file. [#7](https://github.com/binary-butterfly/validataclass/pull/7)
+- Initial version of [documentation](docs/index.md). [#6]
+- Added changelog file. [#7]
 
 ### Changed
 
-- `DefaultUnset` is now a sentinel object instead of a class. [#4](https://github.com/binary-butterfly/validataclass/pull/4)
+- `DefaultUnset` is now a sentinel object instead of a class. [#4]
 
 ### Fixed
 
-- Value in `Default` class is now deepcopied on retrieval. [#3](https://github.com/binary-butterfly/validataclass/pull/3)
-- Typesafe comparisons of integers and booleans in `AnyOfValidator`. [#5](https://github.com/binary-butterfly/validataclass/pull/5)
+- Value in `Default` class is now deepcopied on retrieval. [#3]
+- Typesafe comparisons of integers and booleans in `AnyOfValidator`. [#5]
+
+[#3]: https://github.com/binary-butterfly/validataclass/pull/3
+[#4]: https://github.com/binary-butterfly/validataclass/pull/4
+[#5]: https://github.com/binary-butterfly/validataclass/pull/5
+[#6]: https://github.com/binary-butterfly/validataclass/pull/6
+[#7]: https://github.com/binary-butterfly/validataclass/pull/7
 
 
 ## [0.1.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.1.0) - 2021-10-07

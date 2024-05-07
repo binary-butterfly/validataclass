@@ -648,7 +648,7 @@ Since version 0.10.0, there is another more generic way for defining pre-validat
 The `__pre_validate__()` method.
 
 If a validataclass defines a static or class method called `__pre_validate__()`, the `DataclassValidator` will call
-this method on the input dictionary before validating it. 
+this method on the input dictionary before validating it.
 
 - The method **must** accept **exactly one** positional argument (except for the class object if it is a class method).
   This argument is the input dictionary. The `DataclassValidator` ensures that this is always a `dict` (although at this
@@ -683,7 +683,7 @@ class ExamplePreValidateDataclass:
             # The API uses UpperCamelCase, but we want to use snake_case
             'FirstName': 'first_name',
             'LastName': 'last_name',
-            
+
             # Someone apparently thought mixing languages in API fields was a good idea...
             'Straße': 'street',
             'Strasse': 'street',
