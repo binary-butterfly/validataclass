@@ -53,11 +53,8 @@ jobs:
           name: dist_packages
           path: dist/
 
-      - name: Install test dependencies
-        run: pip install pytest pytest-cov
-
-      - name: Install built package
-        run: pip install dist/validataclass-*.whl
+      - name: Install built package with testing dependencies
+        run: pip install "$(find dist/ -name 'validataclass-*.whl')[testing]"
 
       - name: Run unit tests
         run: python -m pytest
