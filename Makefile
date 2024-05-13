@@ -79,7 +79,7 @@ docker-test-py38: TOX_ARGS="-e clean,py38,py38-report"
 docker-test-py38: docker-tox
 
 # Run all tox test suites, but separately to check code coverage individually
-.PHONY: docker-tox-all
+.PHONY: docker-test-all
 docker-test-all:
 	make docker-test-py38
 	make docker-test-py39
