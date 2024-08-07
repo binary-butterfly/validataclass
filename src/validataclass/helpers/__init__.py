@@ -4,17 +4,34 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+# Requirements for the __getattr__ definition below
 import importlib
 import warnings
 from typing import Any
 
-from .datetime_range import BaseDateTimeRange, DateTimeRange, DateTimeOffsetRange
-from .unset_value import UnsetValue, UnsetValueType, OptionalUnset, OptionalUnsetNone, unset_to_none
+# Re-export symbols from modules
+from .datetime_range import (
+    BaseDateTimeRange,
+    DateTimeOffsetRange,
+    DateTimeRange,
+)
+from .unset_value import (
+    OptionalUnset,
+    OptionalUnsetNone,
+    UnsetValue,
+    UnsetValueType,
+    unset_to_none,
+)
 
-# Defining __all__ is necessary here because of the definition of __getattr__() below.
 __all__ = [
-    'BaseDateTimeRange', 'DateTimeRange', 'DateTimeOffsetRange',
-    'UnsetValue', 'UnsetValueType', 'OptionalUnset', 'OptionalUnsetNone', 'unset_to_none',
+    'BaseDateTimeRange',
+    'DateTimeOffsetRange',
+    'DateTimeRange',
+    'OptionalUnset',
+    'OptionalUnsetNone',
+    'UnsetValue',
+    'UnsetValueType',
+    'unset_to_none',
 ]
 
 

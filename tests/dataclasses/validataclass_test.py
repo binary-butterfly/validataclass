@@ -3,6 +3,8 @@ validataclass
 Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
+# (Ignore comparison-overlap errors, which happen in comparisons like `assert fields['baz'].type is Optional[str]`)
+# mypy: no-strict-equality
 
 import dataclasses
 from typing import Dict, List, Optional, Union
