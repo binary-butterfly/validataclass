@@ -18,9 +18,6 @@ explicit_package_bases = true
 # Enable strict type checking
 strict = true
 
-# Ignore errors like `Module "validataclass.exceptions" does not explicitly export attribute "..."`
-no_implicit_reexport = false
-
 [[tool.mypy.overrides]]
 module = 'tests.*'
 

@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade pip tox
 
-      - name: Run unit tests with tox
+      - name: Run test suite with tox
         # Run tox using the version of Python in `PATH`
         run: tox run -e clean,py,report,flake8,mypy -- --junit-xml=reports/pytest_${{ matrix.python-version }}.xml
 
