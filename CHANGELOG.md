@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/binary-butterfly/validataclass/compare/0.10.0...HEAD)
 
 
+## [0.10.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.10.1) - 2024-08-08
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.10.0...0.10.1)
+
+This release makes the library PEP 561 compatible by adding a `py.typed` file. It also fixes some mypy issues that were
+previously ignored.
+
+While there is still some work necessary to make the library fully compatible with mypy (see [#116]), this release
+enables mypy to detect the type annotations in the library without the need for stub files.
+
+### Added
+
+- Add `py.typed` file to make the package PEP 561 compatible. [#125]
+
+### Fixed
+
+- Explicitly re-export imports in `__init__.py` by defining `__all__` to fix mypy issues. [#125]
+
+[#116]: https://github.com/binary-butterfly/validataclass/issues/116
+[#125]: https://github.com/binary-butterfly/validataclass/pull/125
+
+
 ## [0.10.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.10.0) - 2024-05-07
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.9.0...0.10.0)
