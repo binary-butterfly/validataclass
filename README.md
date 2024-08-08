@@ -24,7 +24,7 @@ If you add the package to your dependencies, it is recommended to use
 always get the latest version of the library but without running into breaking changes:
 
 ```shell
-pip install validataclass~=0.10
+pip install validataclass~=0.11.0
 ```
 
 However, keep in mind that the library still is in its beta phase (as indicated by the major version of 0). There can
