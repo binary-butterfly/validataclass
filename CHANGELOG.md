@@ -9,15 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/binary-butterfly/validataclass/compare/0.10.0...HEAD)
 
 
-## [0.10.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.10.1) - 2024-08-08
+## [0.11.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.11.0) - 2024-08-12
 
-[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.10.0...0.10.1)
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.10.0...0.11.0)
 
 This release makes the library PEP 561 compatible by adding a `py.typed` file. It also fixes some mypy issues that were
 previously ignored.
 
 While there is still some work necessary to make the library fully compatible with mypy (see [#116]), this release
 enables mypy to detect the type annotations in the library without the need for stub files.
+
+### Important note / breaking changes
+
+This update was originally released as patch version 0.10.1, but was then yanked and later re-released as a new minor
+version instead.
+
+The update does not introduce any breaking changes **in the code**. However, it **may** result in mypy errors in your
+project which have previously not been discovered by mypy, thus leading to failing CI pipelines. Keep this in mind when
+updating the library.
+
+Some of the issues found by mypy currently need to be ignored using `# type: ignore` comments, until the library is
+fully compatible with mypy ([#116]). Examples:
+
+- `Return type "X" of "validate" incompatible with return type "Y" in supertype "SomeBaseValidator" [override]`:
+  This can happen when you subclass a validator and change the return type of the `validate` method, which technically
+  violates the Liskov substitution principle. However, in the case of validators, that's intentional.
+- `Item "UnsetValueType" of "X | UnsetValueType" has no attribute "Y"`: This can happen despite of conditions like
+  `if some_field is not UnsetValue:`, because mypy doesn't know that `UnsetValue` is a sentinel object, thus not being
+  able to narrow down the type. A possible workaround that doesn't require `# type: ignore` would be to define a
+  [Type Guard](https://mypy.readthedocs.io/en/stable/type_narrowing.html#user-defined-type-guards) and use that instead
+  of the bare condition.
+
+We will hopefully find better solutions for these problems in the future.
 
 ### Added
 
@@ -28,6 +51,26 @@ enables mypy to detect the type annotations in the library without the need for 
 - Explicitly re-export imports in `__init__.py` by defining `__all__` to fix mypy issues. [#125]
 
 [#116]: https://github.com/binary-butterfly/validataclass/issues/116
+[#125]: https://github.com/binary-butterfly/validataclass/pull/125
+
+
+## [0.10.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.10.1) - 2024-08-08 [YANKED]
+
+_This release was yanked from PyPI and re-released as 0.11.0. (See release notes above.)_
+
+_Reason: Starting with this release, the library is PEP 561 compatible, which means that mypy recognized it as a typed
+package. This can uncover some typing issues that have previously been ignored by mypy, leading to failing CI pipelines
+in projects that use the library with the recommended version constraint of `~=0.10.0`. To prevent this, we yanked the
+version from PyPI and re-released it as a new minor release instead of a patch release._
+
+### Added
+
+- Add `py.typed` file to make the package PEP 561 compatible. [#125]
+
+### Fixed
+
+- Explicitly re-export imports in `__init__.py` by defining `__all__` to fix mypy issues. [#125]
+
 [#125]: https://github.com/binary-butterfly/validataclass/pull/125
 
 
