@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import sys
-from typing import Any, Dict, Type
+from typing import Any
 
 import pytest
 
@@ -55,7 +55,7 @@ def assert_field_no_default(field: dataclasses.Field[Any]) -> None:
         assert field.default_factory is dataclasses.MISSING
 
 
-def get_dataclass_fields(cls: Type[T_Dataclass]) -> Dict[str, dataclasses.Field[Any]]:
+def get_dataclass_fields(cls: type[T_Dataclass]) -> dict[str, dataclasses.Field[Any]]:
     """
     Returns a dictionary containing all fields of a given dataclass.
     """

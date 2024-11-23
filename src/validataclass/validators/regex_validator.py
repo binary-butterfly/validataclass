@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Union
 
 from validataclass.exceptions import RegexMatchError, ValidationError
 from .string_validator import StringValidator
@@ -91,7 +91,7 @@ class RegexValidator(StringValidator):
     output_template: Optional[str]
 
     # Exception class to use when regex matching fails
-    custom_error_class: Type[ValidationError]
+    custom_error_class: type[ValidationError]
 
     # Custom error code to use in the regex match exception (use default if None)
     custom_error_code: Optional[str]
@@ -104,7 +104,7 @@ class RegexValidator(StringValidator):
         pattern: Union[re.Pattern[str], str],
         output_template: Optional[str] = None,
         *,
-        custom_error_class: Type[ValidationError] = RegexMatchError,
+        custom_error_class: type[ValidationError] = RegexMatchError,
         custom_error_code: Optional[str] = None,
         allow_empty: bool = False,
         **kwargs: Any,

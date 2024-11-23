@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import inspect
 import warnings
-from typing import Any, Dict, Generic, Optional, Type, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 from typing_extensions import TypeGuard
 
@@ -109,12 +109,12 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
     """
 
     # Dataclass type that the validated dictionary will be converted to
-    dataclass_cls: Type[T_Dataclass]
+    dataclass_cls: type[T_Dataclass]
 
     # Field default values
-    field_defaults: Dict[str, Default]
+    field_defaults: dict[str, Default]
 
-    def __init__(self, dataclass_cls: Optional[Type[T_Dataclass]] = None) -> None:
+    def __init__(self, dataclass_cls: Optional[type[T_Dataclass]] = None) -> None:
         # For easier subclassing: If 'self.dataclass_cls' is already set (e.g. as class member in a subclass), use that
         # class as the default.
         if dataclass_cls is None:
@@ -189,7 +189,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
 
         return default
 
-    def _pre_validate(self, input_data: Any, **kwargs: Any) -> Dict[str, Any]:
+    def _pre_validate(self, input_data: Any, **kwargs: Any) -> dict[str, Any]:
         """
         Pre-validation steps: Validates the input as a dictionary and fills in the default values.
         """
@@ -287,7 +287,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         return validated_object
 
 
-def _is_dataclass_type(obj: Any) -> TypeGuard[Type[T_Dataclass]]:
+def _is_dataclass_type(obj: Any) -> TypeGuard[type[T_Dataclass]]:
     """
     Type-safe helper function that checks if the given object is a dataclass (specifically a class, not an instance).
     """

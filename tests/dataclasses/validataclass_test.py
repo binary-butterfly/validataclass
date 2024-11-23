@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 # mypy: no-strict-equality
 
 import dataclasses
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pytest
 
@@ -215,8 +215,8 @@ class ValidatorDataclassTest:
 
         @validataclass
         class UnitTestDataclass:
-            field_list: List[int] = ListValidator(IntegerValidator()), Default([])
-            field_dict: Dict[str, int] = (
+            field_list: list[int] = ListValidator(IntegerValidator()), Default([])
+            field_dict: dict[str, int] = (
                 DictValidator(field_validators={'foo': IntegerValidator()}),
                 Default({'foo': 0}),
             )

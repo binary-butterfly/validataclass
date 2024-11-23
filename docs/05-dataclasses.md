@@ -1046,7 +1046,7 @@ In conclusion, let's take a look at a final example. This one is a bit more exte
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
 
 from validataclass.dataclasses import validataclass, Default
 from validataclass.exceptions import ValidationError, DataclassPostValidationError
@@ -1068,7 +1068,7 @@ class OrderItem:
 @validataclass
 class Order:
     id: int = IntegerValidator()
-    items: List[OrderItem] = ListValidator(DataclassValidator(OrderItem))
+    items: list[OrderItem] = ListValidator(DataclassValidator(OrderItem))
     total_price: Decimal = DecimalValidator()
     ordered_at: datetime = DateTimeValidator()
 

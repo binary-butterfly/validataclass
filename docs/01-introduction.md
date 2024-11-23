@@ -146,7 +146,6 @@ If you feel overwhelmed by this example: Don't worry! We will cover validation o
 ```python
 from datetime import datetime
 from enum import Enum
-from typing import List
 
 from validataclass.dataclasses import validataclass
 from validataclass.validators import DataclassValidator, DateTimeValidator, EnumValidator, IntegerValidator, \
@@ -169,7 +168,7 @@ class Fruit:
 @validataclass
 class Order:
     id: int = IntegerValidator()
-    items: List[Fruit] = ListValidator(DataclassValidator(Fruit))
+    items: list[Fruit] = ListValidator(DataclassValidator(Fruit))
     ordered_at: datetime = DateTimeValidator()
 
 

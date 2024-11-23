@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import decimal
 import math
 from decimal import Decimal
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 from validataclass.exceptions import NonFiniteNumberError
 from .decimal_validator import DecimalValidator
@@ -65,7 +65,7 @@ class FloatToDecimalValidator(DecimalValidator):
     allow_strings: bool = False
 
     # List of allowed input types
-    allowed_types: List[type]
+    allowed_types: list[type]
 
     def __init__(
         self,

@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import pytest
 
@@ -166,7 +166,7 @@ class UnitTestPreValidateStaticMethodDataclass:
     example_int: int = IntegerValidator()
 
     @staticmethod
-    def __pre_validate__(input_data: Dict[Any, Any]) -> Dict[Any, Any]:
+    def __pre_validate__(input_data: dict[Any, Any]) -> dict[Any, Any]:
         mapping = {
             'exampleStr': 'example_str',
             'exampleInt': 'example_int',
@@ -193,7 +193,7 @@ class UnitTestPreValidateClassMethodDataclass:
     example_int: int = IntegerValidator()
 
     @classmethod
-    def __pre_validate__(cls, input_data: Dict[Any, Any]) -> Dict[Any, Any]:
+    def __pre_validate__(cls, input_data: dict[Any, Any]) -> dict[Any, Any]:
         for from_key, to_key in cls.__key_mapping.items():
             if from_key in input_data:
                 input_data[to_key] = input_data.pop(from_key)
@@ -212,7 +212,7 @@ class UnitTestPreValidateContextSensitiveDataclass:
     target_field: int = IntegerValidator()
 
     @classmethod
-    def __pre_validate__(cls, input_data: Dict[Any, Any], *, source_field_name: str) -> Dict[Any, Any]:
+    def __pre_validate__(cls, input_data: dict[Any, Any], *, source_field_name: str) -> dict[Any, Any]:
         if source_field_name in input_data:
             return {'target_field': input_data[source_field_name]}
         else:
@@ -236,7 +236,7 @@ class UnitTestPreValidateContextSensitiveVarKwargsDataclass:
     example_int: int = IntegerValidator()
 
     @classmethod
-    def __pre_validate__(cls, input_data: Dict[Any, Any], **kwargs: Any) -> Dict[Any, Any]:
+    def __pre_validate__(cls, input_data: dict[Any, Any], **kwargs: Any) -> dict[Any, Any]:
         # Fill input_data with default values based on kwargs
         for key, default_value in kwargs.items():
             if key not in input_data:
@@ -252,7 +252,7 @@ class UnitTestInvalidPreValidateDataclass1:
     """ Dataclass with invalid __pre_validate__ class method: Not enough arguments. """
 
     @classmethod
-    def __pre_validate__(cls) -> Dict[Any, Any]:
+    def __pre_validate__(cls) -> dict[Any, Any]:
         return {}
 
 
@@ -261,7 +261,7 @@ class UnitTestInvalidPreValidateDataclass2:
     """ Dataclass with invalid __pre_validate__ static method: Not enough arguments. """
 
     @staticmethod
-    def __pre_validate__() -> Dict[Any, Any]:
+    def __pre_validate__() -> dict[Any, Any]:
         return {}
 
 
@@ -270,7 +270,7 @@ class UnitTestInvalidPreValidateDataclass3:
     """ Dataclass with invalid __pre_validate__ class method: Too many positional arguments. """
 
     @classmethod
-    def __pre_validate__(cls, input_data: Dict[Any, Any], _extra_pos_argument: Any) -> Dict[Any, Any]:
+    def __pre_validate__(cls, input_data: dict[Any, Any], _extra_pos_argument: Any) -> dict[Any, Any]:
         return input_data
 
 
@@ -279,7 +279,7 @@ class UnitTestInvalidPreValidateDataclass4:
     """ Dataclass with invalid __pre_validate__ static method: Too many positional arguments. """
 
     @staticmethod
-    def __pre_validate__(input_data: Dict[Any, Any], _extra_pos_argument: Any) -> Dict[Any, Any]:
+    def __pre_validate__(input_data: dict[Any, Any], _extra_pos_argument: Any) -> dict[Any, Any]:
         return input_data
 
 
@@ -288,7 +288,7 @@ class UnitTestInvalidPreValidateDataclass5:
     """ Dataclass with invalid __pre_validate__ class method: Too many (variable) positional arguments. """
 
     @classmethod
-    def __pre_validate__(cls, input_data: Dict[Any, Any], *_args: Any) -> Dict[Any, Any]:
+    def __pre_validate__(cls, input_data: dict[Any, Any], *_args: Any) -> dict[Any, Any]:
         return input_data
 
 
@@ -297,7 +297,7 @@ class UnitTestInvalidPreValidateDataclass6:
     """ Dataclass with invalid __pre_validate__ static method: Too many (variable) positional arguments. """
 
     @staticmethod
-    def __pre_validate__(input_data: Dict[Any, Any], *_args: Any) -> Dict[Any, Any]:
+    def __pre_validate__(input_data: dict[Any, Any], *_args: Any) -> dict[Any, Any]:
         return input_data
 
 
@@ -399,7 +399,7 @@ class DataclassValidatorTest:
         @validataclass
         class DataclassWithDefaults:
             default_str: str = StringValidator(), Default('example default')
-            default_list: List[int] = ListValidator(IntegerValidator()), Default([])
+            default_list: list[int] = ListValidator(IntegerValidator()), Default([])
             default_counter: int = IntegerValidator(), DefaultFactory(counter)
             default_unset: OptionalUnset[str] = StringValidator(), DefaultUnset
 

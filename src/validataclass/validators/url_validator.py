@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from validataclass.exceptions import InvalidUrlError
 from validataclass.internal import internet_helpers
@@ -69,7 +69,7 @@ class UrlValidator(StringValidator):
     """
 
     # List of schemes allowed in URLs (empty list means any scheme is allowed)
-    allowed_schemes: List[str]
+    allowed_schemes: list[str]
 
     # Whether domain names must have a top-level domain (e.g. "myhost" or "localhost" would not be allowed)
     require_tld: bool
@@ -99,7 +99,7 @@ class UrlValidator(StringValidator):
     def __init__(
         self,
         *,
-        allowed_schemes: Optional[List[str]] = None,
+        allowed_schemes: Optional[list[str]] = None,
         require_tld: bool = True,
         allow_ip: bool = True,
         allow_userinfo: bool = False,

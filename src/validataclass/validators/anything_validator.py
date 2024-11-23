@@ -4,7 +4,8 @@ Copyright (c) 2022, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, List, Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 from validataclass.exceptions import InvalidValidatorOptionException
 from .validator import Validator
@@ -64,7 +65,7 @@ class AnythingValidator(Validator):
     allow_none: bool
 
     # Which input types to allow (None for anything)
-    allowed_types: Optional[List[type]]
+    allowed_types: Optional[list[type]]
 
     def __init__(
         self,
@@ -110,7 +111,7 @@ class AnythingValidator(Validator):
         *,
         allowed_types: Union[Iterable[Union[type, None]], type, None],
         allow_none: Optional[bool],
-    ) -> List[type]:
+    ) -> list[type]:
         """
         Helper method to normalize the `allowed_types` parameter to a unique list that contains only types.
         """
