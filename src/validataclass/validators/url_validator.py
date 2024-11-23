@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, List, Optional, Pattern
+from typing import Any, List, Optional
 
 from validataclass.exceptions import InvalidUrlError
 from validataclass.internal import internet_helpers
@@ -84,7 +84,7 @@ class UrlValidator(StringValidator):
     allow_empty: bool
 
     # Precompiled regular expression
-    url_regex: Pattern[str] = re.compile(
+    url_regex: re.Pattern[str] = re.compile(
         r'''
             (?P<scheme> [a-z][a-z0-9.+-]* )
             ://

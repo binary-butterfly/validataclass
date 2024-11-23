@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, Optional, Pattern, Type, Union
+from typing import Any, Optional, Type, Union
 
 from validataclass.exceptions import RegexMatchError, ValidationError
 from .string_validator import StringValidator
@@ -85,7 +85,7 @@ class RegexValidator(StringValidator):
     """
 
     # Precompiled regex pattern
-    regex_pattern: Pattern[str]
+    regex_pattern: re.Pattern[str]
 
     # Output template
     output_template: Optional[str]
@@ -101,7 +101,7 @@ class RegexValidator(StringValidator):
 
     def __init__(
         self,
-        pattern: Union[Pattern[str], str],
+        pattern: Union[re.Pattern[str], str],
         output_template: Optional[str] = None,
         *,
         custom_error_class: Type[ValidationError] = RegexMatchError,
