@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import inspect
 import warnings
-from typing import Any, Dict, Generic, Optional, Type, TypeVar, TYPE_CHECKING
+from typing import Any, Dict, Generic, Optional, Type, TypeVar
 
 from typing_extensions import TypeGuard
 
@@ -29,15 +29,6 @@ __all__ = [
 
 # Type variable for an instance of a dataclass
 T_Dataclass = TypeVar('T_Dataclass', bound=object)
-
-# Define type alias for dataclasses.Field
-# NOTE: In Python >= 3.9, dataclasses.Field is a Generic, so mypy will complain if no type parameter is given.
-# However, Field[Any] will raise a runtime error in Python 3.8 because there the type is not parametrized yet.
-# TODO: Replace type alias with dataclasses.Field[Any] when removing Python 3.9 support. (#15)
-if TYPE_CHECKING:
-    T_DataclassField = dataclasses.Field[Any]
-else:
-    T_DataclassField = dataclasses.Field
 
 
 class DataclassValidator(Generic[T_Dataclass], DictValidator):
@@ -167,7 +158,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         super().__init__(field_validators=field_validators, required_fields=required_fields)
 
     @staticmethod
-    def _get_field_validator(field: T_DataclassField) -> Validator:
+    def _get_field_validator(field: dataclasses.Field[Any]) -> Validator:
         # Parse field metadata to get Validator
         validator = field.metadata.get('validator')
 
@@ -182,7 +173,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         return validator
 
     @staticmethod
-    def _get_field_default(field: T_DataclassField) -> Default:
+    def _get_field_default(field: dataclasses.Field[Any]) -> Default:
         # Parse field metadata to get Default object
         default = field.metadata.get('validator_default', NoDefault)
 

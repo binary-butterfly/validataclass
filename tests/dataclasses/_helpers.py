@@ -6,23 +6,17 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import sys
-from typing import Any, Dict, Type, TYPE_CHECKING
+from typing import Any, Dict, Type
 
 import pytest
 
 from validataclass.dataclasses import Default
 from validataclass.validators import T_Dataclass
 
-# TODO: Replace type alias with dataclasses.Field[Any] when removing Python 3.9 support. (#15)
-if TYPE_CHECKING:
-    T_DataclassField = dataclasses.Field[Any]
-else:
-    T_DataclassField = dataclasses.Field
-
 
 # Test helpers for dataclass tests
 
-def assert_field_default(field: T_DataclassField, default_value: Any) -> None:
+def assert_field_default(field: dataclasses.Field[Any], default_value: Any) -> None:
     """
     Asserts that a given (vali-)dataclass field has a specified default value.
     """
@@ -42,7 +36,7 @@ def assert_field_default(field: T_DataclassField, default_value: Any) -> None:
     assert metadata_default.get_value() == default_value
 
 
-def assert_field_no_default(field: T_DataclassField) -> None:
+def assert_field_no_default(field: dataclasses.Field[Any]) -> None:
     """
     Asserts that a given (vali-)dataclass field has no default value.
     """
@@ -61,7 +55,7 @@ def assert_field_no_default(field: T_DataclassField) -> None:
         assert field.default_factory is dataclasses.MISSING
 
 
-def get_dataclass_fields(cls: Type[T_Dataclass]) -> Dict[str, T_DataclassField]:
+def get_dataclass_fields(cls: Type[T_Dataclass]) -> Dict[str, dataclasses.Field[Any]]:
     """
     Returns a dictionary containing all fields of a given dataclass.
     """
