@@ -113,9 +113,7 @@ class DateTimeValidator(StringValidator):
     you need to specify `local_timezone` as well.
 
     See [`datetime.timezone`](https://docs.python.org/3/library/datetime.html#timezone-objects) and
-    [`zoneinfo`](https://docs.python.org/3/library/zoneinfo.html) (only supported as of Python 3.9) for information on
-    defining timezones. For older Python versions, libraries like [`pytz`](https://pythonhosted.org/pytz/) or
-    [`dateutil`](https://dateutil.readthedocs.io/en/stable/tz.html) can be used instead.
+    [`zoneinfo`](https://docs.python.org/3/library/zoneinfo.html) for information on defining timezones.
 
     Additionally, the parameter `datetime_range` can be used to specify a range of datetime values that are allowed
     (e.g. a minimum and a maximum datetime, which can be dynamically defined using callables). See the classes
