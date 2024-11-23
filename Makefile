@@ -56,6 +56,7 @@ open-coverage:
 
 # Run complete tox test suite in a multi-python Docker container
 .PHONY: docker-tox
+docker-tox: TOX_ARGS='-e clean,py312,py311,py310,py39,report,flake8,py312-mypy'
 docker-tox:
 	docker run --rm --tty \
 		--user $(DOCKER_USER) \
