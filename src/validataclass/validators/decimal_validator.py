@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import decimal
 import re
 from decimal import Decimal, InvalidOperation
-from typing import Any, Optional, Union
+from typing import Any
 
 from validataclass.exceptions import (
     DecimalPlacesError,
@@ -74,18 +74,18 @@ class DecimalValidator(StringValidator):
     """
 
     # Value constraints
-    min_value: Optional[Decimal] = None
-    max_value: Optional[Decimal] = None
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
 
     # Minimum/maximum number of decimal places
-    min_places: Optional[int] = None
-    max_places: Optional[int] = None
+    min_places: int | None = None
+    max_places: int | None = None
 
     # Quantum used in `.quantize()` to set a fixed number of decimal places (from constructor argument output_places)
-    output_quantum: Optional[Decimal] = None
+    output_quantum: Decimal | None = None
 
     # Rounding mode (constant from decimal module)
-    rounding: Optional[str] = None
+    rounding: str | None = None
 
     # Precompiled regular expression for decimal values
     decimal_regex: re.Pattern[str] = re.compile(r'[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)')
@@ -93,12 +93,12 @@ class DecimalValidator(StringValidator):
     def __init__(
         self,
         *,
-        min_value: Optional[Union[Decimal, int, str]] = None,
-        max_value: Optional[Union[Decimal, int, str]] = None,
-        min_places: Optional[int] = None,
-        max_places: Optional[int] = None,
-        output_places: Optional[int] = None,
-        rounding: Optional[str] = decimal.ROUND_HALF_UP,
+        min_value: Decimal | int | str | None = None,
+        max_value: Decimal | int | str | None = None,
+        min_places: int | None = None,
+        max_places: int | None = None,
+        output_places: int | None = None,
+        rounding: str | None = decimal.ROUND_HALF_UP,
     ):
         """
         Creates a `DecimalValidator` with optional value range, optional minimum/maximum number of decimal places and

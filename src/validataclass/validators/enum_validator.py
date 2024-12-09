@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from collections.abc import Iterable
 from enum import Enum
-from typing import Any, Generic, Optional, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 from validataclass.exceptions import InvalidValidatorOptionException, ValueNotAllowedError
 from .any_of_validator import AnyOfValidator
@@ -78,10 +78,10 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
         self,
         enum_cls: type[T_Enum],
         *,
-        allowed_values: Optional[Iterable[Any]] = None,
-        allowed_types: Optional[Union[type, Iterable[type]]] = None,
-        case_sensitive: Optional[bool] = None,
-        case_insensitive: Optional[bool] = None,
+        allowed_values: Iterable[Any] | None = None,
+        allowed_types: Iterable[type] | type | None = None,
+        case_sensitive: bool | None = None,
+        case_insensitive: bool | None = None,
     ):
         """
         Creates a `EnumValidator` for a specified Enum class, optionally with a restricted list of allowed values.

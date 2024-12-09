@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.exceptions import InvalidIntegerError, InvalidValidatorOptionException, NumberRangeError
 from .validator import Validator
@@ -60,8 +60,8 @@ class IntegerValidator(Validator):
     DEFAULT_MAX_VALUE = 2147483647  # 2^31 - 1
 
     # Value constraints
-    min_value: Optional[int] = None
-    max_value: Optional[int] = None
+    min_value: int | None = None
+    max_value: int | None = None
 
     # Whether to allow integers as strings
     allow_strings: bool = False
@@ -69,8 +69,8 @@ class IntegerValidator(Validator):
     def __init__(
         self,
         *,
-        min_value: Optional[int] = DEFAULT_MIN_VALUE,
-        max_value: Optional[int] = DEFAULT_MAX_VALUE,
+        min_value: int | None = DEFAULT_MIN_VALUE,
+        max_value: int | None = DEFAULT_MAX_VALUE,
         allow_strings: bool = False,
     ):
         """

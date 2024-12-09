@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.validators import Validator
 from .defaults import Default, NoDefault
@@ -19,7 +19,7 @@ def validataclass_field(
     validator: Validator,
     default: Any = NoDefault,
     *,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> Any:
     """

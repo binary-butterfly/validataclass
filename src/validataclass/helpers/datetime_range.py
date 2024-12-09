@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone, tzinfo
-from typing import Optional, TypeAlias
+from typing import TypeAlias
 
 __all__ = [
     'BaseDateTimeRange',
@@ -26,14 +26,14 @@ class BaseDateTimeRange(ABC):
     """
 
     @abstractmethod
-    def contains_datetime(self, dt: datetime, local_timezone: Optional[tzinfo] = None) -> bool:
+    def contains_datetime(self, dt: datetime, local_timezone: tzinfo | None = None) -> bool:
         """
         Abstract method to be implemented by subclasses. Should return `True` if a datetime is contained in the range.
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+    def to_dict(self, local_timezone: tzinfo | None = None) -> dict[str, str]:
         """
         Abstract method to be implemented by subclasses. Should return a dictionary with string representations of the
         range boundaries, suitable for the `DateTimeRangeError` exception to generate JSON error responses.
@@ -45,7 +45,7 @@ class BaseDateTimeRange(ABC):
     @staticmethod
     def _resolve_datetime_boundary(
         boundary: _DateTimeBoundary,
-        local_timezone: Optional[tzinfo] = None,
+        local_timezone: tzinfo | None = None,
     ) -> datetime:
         """
         Helper method to resolve callables to datetime objects and to apply `local_timezone` if necessary.
@@ -74,13 +74,13 @@ class DateTimeRange(BaseDateTimeRange):
     """
 
     # Boundaries (static datetimes or callables)
-    lower_boundary: Optional[_DateTimeBoundary] = None
-    upper_boundary: Optional[_DateTimeBoundary] = None
+    lower_boundary: _DateTimeBoundary | None = None
+    upper_boundary: _DateTimeBoundary | None = None
 
     def __init__(
         self,
-        lower_boundary: Optional[_DateTimeBoundary] = None,
-        upper_boundary: Optional[_DateTimeBoundary] = None,
+        lower_boundary: _DateTimeBoundary | None = None,
+        upper_boundary: _DateTimeBoundary | None = None,
     ):
         """
         Creates a `DateTimeRange` with a lower and an upper boundary (both are optional and can be either static
@@ -104,7 +104,7 @@ class DateTimeRange(BaseDateTimeRange):
     def __repr__(self) -> str:
         return f'{type(self).__name__}(lower_boundary={self.lower_boundary!r}, upper_boundary={self.upper_boundary!r})'
 
-    def contains_datetime(self, dt: datetime, local_timezone: Optional[tzinfo] = None) -> bool:
+    def contains_datetime(self, dt: datetime, local_timezone: tzinfo | None = None) -> bool:
         """
         Returns `True` if the datetime is contained in the datetime range.
 
@@ -117,7 +117,7 @@ class DateTimeRange(BaseDateTimeRange):
         # Note: These comparisons will raise TypeErrors when mixing datetimes with and without timezones
         return (lower_datetime is None or dt >= lower_datetime) and (upper_datetime is None or dt <= upper_datetime)
 
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+    def to_dict(self, local_timezone: tzinfo | None = None) -> dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries, suitable for the `DateTimeRangeError`
         exception to generate JSON error responses.
@@ -130,7 +130,7 @@ class DateTimeRange(BaseDateTimeRange):
             **({'upper_boundary': upper_datetime.isoformat()} if upper_datetime is not None else {}),
         }
 
-    def _get_lower_datetime(self, local_timezone: Optional[tzinfo] = None) -> Optional[datetime]:
+    def _get_lower_datetime(self, local_timezone: tzinfo | None = None) -> datetime | None:
         """
         Helper method to get the lower boundary as a `datetime` (or `None`), resolving callables and applying
         `local_timezone` if necessary.
@@ -140,7 +140,7 @@ class DateTimeRange(BaseDateTimeRange):
         else:
             return self._resolve_datetime_boundary(self.lower_boundary, local_timezone)
 
-    def _get_upper_datetime(self, local_timezone: Optional[tzinfo] = None) -> Optional[datetime]:
+    def _get_upper_datetime(self, local_timezone: tzinfo | None = None) -> datetime | None:
         """
         Helper method to get the upper boundary as a `datetime` (or `None`), resolving callables and applying
         `local_timezone` if necessary.
@@ -170,17 +170,17 @@ class DateTimeOffsetRange(BaseDateTimeRange):
     """
 
     # Pivot datetime (static or callable)
-    pivot: Optional[_DateTimeBoundary] = None
+    pivot: _DateTimeBoundary | None = None
 
     # Offset timedeltas
-    offset_minus: Optional[timedelta] = None
-    offset_plus: Optional[timedelta] = None
+    offset_minus: timedelta | None = None
+    offset_plus: timedelta | None = None
 
     def __init__(
         self,
-        pivot: Optional[_DateTimeBoundary] = None,
-        offset_minus: Optional[timedelta] = None,
-        offset_plus: Optional[timedelta] = None,
+        pivot: _DateTimeBoundary | None = None,
+        offset_minus: timedelta | None = None,
+        offset_plus: timedelta | None = None,
     ):
         """
         Creates a `DateTimeOffsetRange` with a pivot datetime (static `datetime` or callable that returns `datetime`
@@ -210,7 +210,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
             f'offset_plus={self.offset_plus!r})'
         )
 
-    def contains_datetime(self, dt: datetime, local_timezone: Optional[tzinfo] = None) -> bool:
+    def contains_datetime(self, dt: datetime, local_timezone: tzinfo | None = None) -> bool:
         """
         Returns `True` if the datetime is contained in the datetime range.
 
@@ -223,7 +223,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         # Note: These comparisons will raise TypeErrors when mixing datetimes with and without timezones
         return lower_datetime <= dt <= upper_datetime
 
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
+    def to_dict(self, local_timezone: tzinfo | None = None) -> dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries (calculating `lower_datetime` and
         `upper_datetime` from the pivot minus/plus the offsets), suitable for the `DateTimeRangeError` exception to
@@ -239,7 +239,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
 
     # Helper methods to resolve callables to datetimes and apply local_timezone
 
-    def _get_pivot_datetime(self, local_timezone: Optional[tzinfo] = None) -> datetime:
+    def _get_pivot_datetime(self, local_timezone: tzinfo | None = None) -> datetime:
         """
         Helper method to get the pivot as a datetime, resolving callables and applying `local_timezone` if necessary,
         and defaulting to the current time in UTC.
@@ -249,7 +249,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         else:
             return self._resolve_datetime_boundary(self.pivot, local_timezone)
 
-    def _get_boundaries(self, local_timezone: Optional[tzinfo] = None) -> tuple[datetime, datetime]:
+    def _get_boundaries(self, local_timezone: tzinfo | None = None) -> tuple[datetime, datetime]:
         """
         Helper method to get the lower and upper boundaries as datetimes, resolving callables and applying
         `local_timezone` if necessary.

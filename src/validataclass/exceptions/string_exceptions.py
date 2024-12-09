@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from .base_exceptions import ValidationError
 
@@ -26,7 +26,7 @@ class StringInvalidLengthError(ValidationError):
     # Placeholder, will be overridden by the subclasses
     code = 'string_invalid_length'
 
-    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None, **kwargs: Any):
+    def __init__(self, *, min_length: int | None = None, max_length: int | None = None, **kwargs: Any):
         if min_length is not None:
             kwargs.update(min_length=min_length)
         if max_length is not None:
@@ -43,7 +43,7 @@ class StringTooShortError(StringInvalidLengthError):
     """
     code = 'string_too_short'
 
-    def __init__(self, *, min_length: int, max_length: Optional[int] = None, **kwargs: Any):
+    def __init__(self, *, min_length: int, max_length: int | None = None, **kwargs: Any):
         super().__init__(min_length=min_length, max_length=max_length, **kwargs)
 
 
@@ -56,7 +56,7 @@ class StringTooLongError(StringInvalidLengthError):
     """
     code = 'string_too_long'
 
-    def __init__(self, *, min_length: Optional[int] = None, max_length: int, **kwargs: Any):
+    def __init__(self, *, min_length: int | None = None, max_length: int, **kwargs: Any):
         super().__init__(min_length=min_length, max_length=max_length, **kwargs)
 
 

@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import inspect
 import warnings
-from typing import Any, Generic, Optional, TypeGuard, TypeVar
+from typing import Any, Generic, TypeGuard, TypeVar
 
 from validataclass.dataclasses import Default, NoDefault
 from validataclass.exceptions import (
@@ -112,7 +112,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
     # Field default values
     field_defaults: dict[str, Default]
 
-    def __init__(self, dataclass_cls: Optional[type[T_Dataclass]] = None) -> None:
+    def __init__(self, dataclass_cls: type[T_Dataclass] | None = None) -> None:
         # For easier subclassing: If 'self.dataclass_cls' is already set (e.g. as class member in a subclass), use that
         # class as the default.
         if dataclass_cls is None:

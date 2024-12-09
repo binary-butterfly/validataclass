@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from .base_exceptions import ValidationError
 
@@ -58,7 +58,7 @@ class ListLengthError(ValidationError):
     """
     code = 'list_invalid_length'
 
-    def __init__(self, *, min_length: Optional[int] = None, max_length: Optional[int] = None, **kwargs: Any):
+    def __init__(self, *, min_length: int | None = None, max_length: int | None = None, **kwargs: Any):
         if min_length is not None:
             kwargs.update(min_length=min_length)
         if max_length is not None:

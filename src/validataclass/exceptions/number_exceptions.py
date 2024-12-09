@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from .base_exceptions import ValidationError
 
@@ -27,7 +27,7 @@ class NumberRangeError(ValidationError):
     """
     code = 'number_range_error'
 
-    def __init__(self, *, min_value: Optional[Any] = None, max_value: Optional[Any] = None, **kwargs: Any):
+    def __init__(self, *, min_value: Any | None = None, max_value: Any | None = None, **kwargs: Any):
         if min_value is not None:
             kwargs.update(min_value=min_value)
         if max_value is not None:
@@ -44,7 +44,7 @@ class DecimalPlacesError(ValidationError):
     """
     code = 'decimal_places'
 
-    def __init__(self, *, min_places: Optional[Any] = None, max_places: Optional[Any] = None, **kwargs: Any):
+    def __init__(self, *, min_places: Any | None = None, max_places: Any | None = None, **kwargs: Any):
         if min_places is not None:
             kwargs.update(min_places=min_places)
         if max_places is not None:

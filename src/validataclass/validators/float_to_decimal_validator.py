@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import decimal
 import math
 from decimal import Decimal
-from typing import Any, Optional, Union
+from typing import Any
 
 from validataclass.exceptions import NonFiniteNumberError
 from .decimal_validator import DecimalValidator
@@ -70,10 +70,10 @@ class FloatToDecimalValidator(DecimalValidator):
     def __init__(
         self,
         *,
-        min_value: Optional[Union[Decimal, str, float, int]] = None,
-        max_value: Optional[Union[Decimal, str, float, int]] = None,
-        output_places: Optional[int] = None,
-        rounding: Optional[str] = decimal.ROUND_HALF_UP,
+        min_value: Decimal | str | float | int | None = None,
+        max_value: Decimal | str | float | int | None = None,
+        output_places: int | None = None,
+        rounding: str | None = decimal.ROUND_HALF_UP,
         allow_integers: bool = False,
         allow_strings: bool = False,
     ):

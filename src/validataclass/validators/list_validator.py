@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from validataclass.exceptions import (
     InvalidValidatorOptionException,
@@ -71,8 +71,8 @@ class ListValidator(Generic[T_ListItem], Validator):
     item_validator: Validator
 
     # List length constraints
-    min_length: Optional[int] = None
-    max_length: Optional[int] = None
+    min_length: int | None = None
+    max_length: int | None = None
 
     # Discard invalid items instead of raising error
     discard_invalid: bool = False
@@ -81,8 +81,8 @@ class ListValidator(Generic[T_ListItem], Validator):
         self,
         item_validator: Validator,
         *,
-        min_length: Optional[int] = None,
-        max_length: Optional[int] = None,
+        min_length: int | None = None,
+        max_length: int | None = None,
         discard_invalid: bool = False
     ):
         """

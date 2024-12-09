@@ -53,7 +53,7 @@ UnsetValueType.__new__ = lambda cls: UnsetValue  # type: ignore
 # Type alias OptionalUnset[T] for fields with DefaultUnset: Allows either the type T or UnsetValue
 OptionalUnset: TypeAlias = T | UnsetValueType
 
-# Type alias OptionalUnsetNone[T] for fields that can be None OR UnsetValue (equivalent to OptionalUnset[Optional[T]])
+# Type alias OptionalUnsetNone[T] for fields that can be None OR UnsetValue (equivalent to OptionalUnset[T | None])
 OptionalUnsetNone: TypeAlias = T | UnsetValueType | None
 
 

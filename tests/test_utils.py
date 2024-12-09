@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
-from typing import Any, Union
+from typing import Any
 
 from validataclass.validators import Validator
 
@@ -87,7 +87,7 @@ def unpack_params(*args: Any) -> list[tuple[Any, ...]]:
 UNSET_PARAMETER = object()
 
 
-def assert_decimal(actual: Decimal, expected: Union[Decimal, str]) -> None:
+def assert_decimal(actual: Decimal, expected: Decimal | str) -> None:
     """
     Assert that `actual` is of type `Decimal` and has the same decimal value (string comparison) as `expected`.
     """

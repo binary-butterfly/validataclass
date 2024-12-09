@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import inspect
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
 from validataclass.exceptions import InvalidTypeError, RequiredValueError
 
@@ -62,7 +62,7 @@ class Validator(ABC):
         validator accepts keyword arguments (e.g. because you don't know the class of the validator).
         """
         if inspect.getfullargspec(self.validate).varkw is not None:
-            return self.validate(input_data, **kwargs)  # noqa (unexpected argument)
+            return self.validate(input_data, **kwargs)
         else:
             return self.validate(input_data)
 
@@ -75,7 +75,7 @@ class Validator(ABC):
         if input_data is None:
             raise RequiredValueError()
 
-    def _ensure_type(self, input_data: Any, expected_types: Union[type, list[type]]) -> None:
+    def _ensure_type(self, input_data: Any, expected_types: list[type] | type) -> None:
         """
         Checks if input data is not `None` and has the expected type (or one of multiple expected types).
 

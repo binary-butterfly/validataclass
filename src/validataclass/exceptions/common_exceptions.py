@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Union
+from typing import Any
 
 from .base_exceptions import ValidationError
 
@@ -47,7 +47,7 @@ class InvalidTypeError(ValidationError):
     code = 'invalid_type'
     expected_types: list[str]
 
-    def __init__(self, *, expected_types: Union[type, str, list[Union[type, str]]], **kwargs: Any):
+    def __init__(self, *, expected_types: list[type | str] | type | str, **kwargs: Any):
         super().__init__(**kwargs)
 
         if not isinstance(expected_types, list):
@@ -55,13 +55,13 @@ class InvalidTypeError(ValidationError):
         self.expected_types = [self._type_to_string(t) for t in expected_types]
 
     @staticmethod
-    def _type_to_string(_type: Union[type, str]) -> str:
+    def _type_to_string(_type: type | str) -> str:
         type_str = _type if isinstance(_type, str) else _type.__name__
         if type_str == 'NoneType':
             return 'none'
         return type_str
 
-    def add_expected_type(self, new_type: Union[type, str]) -> None:
+    def add_expected_type(self, new_type: type | str) -> None:
         """
         Adds a type to `expected_types` in an existing `InvalidTypeError` exception, automatically removing duplicates.
         """

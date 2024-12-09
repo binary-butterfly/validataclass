@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 from collections import namedtuple
 from collections.abc import Callable
-from typing import Any, Optional, TypeVar, Union, overload
+from typing import Any, TypeVar, overload
 
 from typing_extensions import dataclass_transform
 
@@ -40,10 +40,10 @@ def validataclass(cls: None = None, /, **kwargs: Any) -> Callable[[type[_T]], ty
     field_specifiers=(dataclasses.field, dataclasses.Field, validataclass_field),
 )
 def validataclass(
-    cls: Optional[type[_T]] = None,
+    cls: type[_T] | None = None,
     /,
     **kwargs: Any,
-) -> Union[type[_T], Callable[[type[_T]], type[_T]]]:
+) -> type[_T] | Callable[[type[_T]], type[_T]]:
     """
     Decorator that turns a normal class into a `DataclassValidator`-compatible dataclass.
 
@@ -193,7 +193,7 @@ def _get_existing_validator_fields(cls: type[_T]) -> dict[str, _ValidatorField]:
     return validator_fields
 
 
-def _parse_validator_tuple(args: Union[tuple[Any, ...], Validator, Default, None]) -> _ValidatorField:
+def _parse_validator_tuple(args: tuple[Any, ...] | Validator | Default | None) -> _ValidatorField:
     """
     Parses field arguments (the value of a field in a dataclass that has not been parsed by `@dataclass` yet) to a
     tuple of a Validator and a Default object.

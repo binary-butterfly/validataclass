@@ -6,7 +6,6 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import decimal
 from decimal import Decimal
-from typing import Optional, Union
 
 from .float_to_decimal_validator import FloatToDecimalValidator
 
@@ -60,10 +59,10 @@ class NumericValidator(FloatToDecimalValidator):
     def __init__(
         self,
         *,
-        min_value: Optional[Union[Decimal, str, float, int]] = None,
-        max_value: Optional[Union[Decimal, str, float, int]] = None,
-        output_places: Optional[int] = None,
-        rounding: Optional[str] = decimal.ROUND_HALF_UP,
+        min_value: Decimal | str | float | int | None = None,
+        max_value: Decimal | str | float | int | None = None,
+        output_places: int | None = None,
+        rounding: str | None = decimal.ROUND_HALF_UP,
     ):
         """
         Creates a `NumericValidator` with optional value range and optional number of decimal places in output value.

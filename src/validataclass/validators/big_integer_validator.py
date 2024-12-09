@@ -4,8 +4,6 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Optional
-
 from .integer_validator import IntegerValidator
 
 __all__ = [
@@ -52,8 +50,8 @@ class BigIntegerValidator(IntegerValidator):
     def __init__(
         self,
         *,
-        min_value: Optional[int] = None,
-        max_value: Optional[int] = None,
+        min_value: int | None = None,
+        max_value: int | None = None,
         allow_strings: bool = False,
     ):
         """

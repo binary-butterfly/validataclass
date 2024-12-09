@@ -439,9 +439,10 @@ in your code to distinguish it from other values like `None`.
 
 For this you can use the `DefaultUnset` object, which is a shortcut for `Default(UnsetValue)`.
 
-Remember to adjust the type hints in your dataclass though. There is a type alias `OptionalUnset[T]` which you can use for this, for
-example: `some_var: OptionalUnset[int]`, which is equivalent to `Union[int, UnsetValueType]`. For fields that can be both `None` and
-`UnsetValue`, there is also the type alias `OptionalUnsetNone[T]` as a shortcut for `OptionalUnset[Optional[T]]`.
+Remember to adjust the type hints in your dataclass though. There is a type alias `OptionalUnset[T]` which you can use
+for this, for example: `some_var: OptionalUnset[int]`, which is equivalent to `int | UnsetValueType`. For fields that
+can be both `None` and `UnsetValue`, there is also the type alias `OptionalUnsetNone[T]` as a shortcut for
+`OptionalUnset[Optional[T]]` or `T | UnsetValueType | None`.
 
 
 #### NoDefault
@@ -493,16 +494,17 @@ When a field is optional, this means that the field is allowed to be **omitted c
 does **not** automatically mean that the input value is allowed to have the value `None`. A field with a default value would still raise
 a `RequiredValueError` if the input value is `None`. This is, unless a field validator that explicitly allows `None` as value is used.
 
-For example, imagine a dataclass with only one field: `some_var: Optional[int] = IntegerValidator(), Default(None)`. An empty input
-dictionary  `{}` would result in an object with the default value `some_var = None`, but the input dictionary `{"some_var": None}` itself
-would **not** be valid at all.
+For example, imagine a dataclass with only one field: `some_var: int | None = IntegerValidator(), Default(None)`. An
+empty input dictionary  `{}` would result in an object with the default value `some_var = None`, but the input
+dictionary `{"some_var": None}` itself would **not** be valid at all.
 
-Instead, to explicitly allow `None` as value, you can use the `Noneable` wrapper (introduced [earlier](03-basic-validators.md)),
-e.g. `some_var: Optional[int] = Noneable(IntegerValidator())`. This however does **not** make the field optional, so an input dictionary
-with the value `None` would be allowed, but omitting the field in an input dictionary would be invalid.
+Instead, to explicitly allow `None` as value, you can use the `Noneable` wrapper (introduced
+[earlier](03-basic-validators.md)), e.g. `some_var: int | None = Noneable(IntegerValidator())`. This however does
+**not** make the field optional, so an input dictionary with the value `None` would be allowed, but omitting the field
+in an input dictionary would be invalid.
 
 To make a field both optional **and** allow `None` as value, you can simply combine `Noneable()` and a `Default` value. \
-For example: `some_var: Optional[int] = Noneable(IntegerValidator()), Default(None)`.
+For example: `some_var: int | None = Noneable(IntegerValidator()), Default(None)`.
 
 You can also configure the `Noneable` wrapper to use a different default value than `None`. For example, to always use `0` as the
 default value, regardless of whether the field is missing in the input dictionary or whether the field has the input value `None`: \
@@ -552,7 +554,6 @@ the "modify" dataclass from the "create" dataclass and change all field defaults
 
 ```python
 from decimal import Decimal
-from typing import Optional
 
 from validataclass.dataclasses import validataclass, Default, DefaultUnset
 from validataclass.helpers import OptionalUnset, OptionalUnsetNone
@@ -562,7 +563,7 @@ from validataclass.validators import IntegerValidator, StringValidator, DecimalV
 class CreateStuffRequest:
     name: str = StringValidator()
     some_value: int = IntegerValidator()
-    some_decimal: Optional[Decimal] = DecimalValidator(), Default(None)
+    some_decimal: Decimal | None = DecimalValidator(), Default(None)
 
 @validataclass
 class ModifyStuffRequest(CreateStuffRequest):
@@ -843,8 +844,6 @@ dictionary:
 Here is another code example for a dataclass with conditionally required fields:
 
 ```python
-from typing import Optional
-
 from validataclass.dataclasses import validataclass, Default
 from validataclass.exceptions import RequiredValueError, DataclassPostValidationError
 from validataclass.validators import DataclassValidator, BooleanValidator, IntegerValidator
@@ -855,7 +854,7 @@ class ExampleClass:
     enable_something: bool = BooleanValidator()
 
     # This field is required only if enable_something is True. Otherwise it will be ignored.
-    some_value: Optional[int] = IntegerValidator(), Default(None)
+    some_value: int | None = IntegerValidator(), Default(None)
 
     def __post_validate__(self):
         # If enable_something is True, ensure that some_value is set!
@@ -915,8 +914,6 @@ The `DataclassValidator` will make sure to only pass the arguments that the meth
 Example:
 
 ```python
-from typing import Optional
-
 from validataclass.dataclasses import validataclass, Default
 from validataclass.exceptions import RequiredValueError, DataclassPostValidationError
 from validataclass.validators import DataclassValidator, IntegerValidator
@@ -924,7 +921,7 @@ from validataclass.validators import DataclassValidator, IntegerValidator
 @validataclass
 class ContextSensitiveExampleClass:
     # This field is optional, unless the context says otherwise.
-    some_value: Optional[int] = IntegerValidator(), Default(None)
+    some_value: int | None = IntegerValidator(), Default(None)
 
     # Note: You can also specify **kwargs here to get all context arguments.
     def __post_validate__(self, *, require_some_value: bool = False):
@@ -1044,7 +1041,6 @@ In conclusion, let's take a look at a final example. This one is a bit more exte
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from validataclass.dataclasses import validataclass, Default
 from validataclass.exceptions import ValidationError, DataclassPostValidationError
@@ -1061,7 +1057,7 @@ class Color(Enum):
 class OrderItem:
     name: str = StringValidator()
     price: Decimal = DecimalValidator()
-    color: Optional[Color] = EnumValidator(Color), Default(None)
+    color: Color | None = EnumValidator(Color), Default(None)
 
 @validataclass
 class Order:
