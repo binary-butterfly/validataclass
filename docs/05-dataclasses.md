@@ -330,9 +330,7 @@ still use the defaults stored in the field metadata, but you can now also create
 default values in the same way as with a regular dataclass.
 
 This is accomplished by creating dataclasses with the option `kw_only=True` (which modifies the auto-generated class
-constructor to only accept keyword arguments, so that the order of arguments doesn't matter anymore). This option was
-only introduced in Python 3.10, though, so for older versions of Python a slightly hacky workaround was implemented
-(take a look at the code of `validataclass_field()` if you're curious).
+constructor to only accept keyword arguments, so that the order of arguments doesn't matter anymore).
 
 In general, all fields that do **not** have any default value are required fields (i.e. `DataclassValidator` will reject
 any input where one of these fields is missing). To define an optional field **without** a default value, you can use

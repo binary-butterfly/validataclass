@@ -5,10 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-import sys
 from typing import Any
-
-import pytest
 
 from validataclass.dataclasses import Default
 from validataclass.validators import T_Dataclass
@@ -42,17 +39,10 @@ def assert_field_no_default(field: dataclasses.Field[Any]) -> None:
     """
     # Check regular dataclass defaults
     assert field.default is dataclasses.MISSING
+    assert field.default_factory is dataclasses.MISSING
 
     # Check defaults in dataclass metadata
     assert 'validator_default' not in field.metadata
-
-    # For Python under 3.10, check that an exception raising default_factory is set
-    if sys.version_info < (3, 10):
-        assert field.default_factory is not dataclasses.MISSING
-        with pytest.raises(TypeError, match="required keyword-only argument"):
-            field.default_factory()
-    else:
-        assert field.default_factory is dataclasses.MISSING
 
 
 def get_dataclass_fields(cls: type[T_Dataclass]) -> dict[str, dataclasses.Field[Any]]:

@@ -5,8 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-import sys
-from typing import Any, NoReturn, Optional
+from typing import Any, Optional
 
 from validataclass.validators import Validator
 from .defaults import Default, NoDefault
@@ -21,7 +20,6 @@ def validataclass_field(
     default: Any = NoDefault,
     *,
     metadata: Optional[dict[str, Any]] = None,
-    _name: Optional[str] = None,  # noqa (undocumented parameter, only used internally)
     **kwargs: Any,
 ) -> Any:
     """
@@ -74,22 +72,5 @@ def validataclass_field(
         else:
             kwargs['default'] = default.get_value()
 
-    # Compatibility for Python 3.9 and older: Use a workaround to allow required and optional fields to be defined in
-    # any order. (In Python 3.10 the kw_only=True option for dataclasses is introduced, which can be used instead.)
-    if default is NoDefault and sys.version_info < (3, 10):  # pragma: ignore-py-gte-310
-        # Use a default_factory that raises an exception for required fields.
-        kwargs['default_factory'] = lambda: _raise_field_required(_name)
-
     # Create a dataclass field with our metadata
     return dataclasses.field(metadata=metadata, **kwargs)
-
-
-def _raise_field_required(name: Optional[str]) -> NoReturn:  # pragma: ignore-py-gte-310
-    """
-    Raises a TypeError exception. Used for required fields (only in Python 3.9 or lower where the kw_only option is not
-    supported yet).
-    """
-    raise TypeError(
-        f"Missing required keyword-only argument: '{name}'"
-        if name else 'Missing required keyword-only argument'
-    )

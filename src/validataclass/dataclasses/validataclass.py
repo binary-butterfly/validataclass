@@ -5,7 +5,6 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-import sys
 from collections import namedtuple
 from collections.abc import Callable
 from typing import Any, Optional, TypeVar, Union, overload
@@ -85,19 +84,17 @@ def validataclass(
     variables. The only difference to real InitVars is that this field will still exist after initialization.
 
     Optional parameters to the decorator will be passed directly to the `@dataclass` decorator. In most cases no
-    parameters are necessary. In Python 3.10 and upwards, the argument `kw_only=True` will be used by default.
+    parameters are necessary. By default, the argument `kw_only=True` will be used for validataclasses.
     """
 
     def decorator(_cls: type[_T]) -> type[_T]:
-        # In Python 3.10 and higher, we use kw_only=True to allow both required and optional fields in any order.
-        # In older Python versions, we use a workaround by setting default_factory to a function that raises an
-        # exception for required fields.
-        if sys.version_info >= (3, 10):  # pragma: ignore-py-lt-310
-            kwargs.setdefault('kw_only', True)
-        else:  # pragma: ignore-py-gte-310
-            pass
+        # Set kw_only=True as the default to allow required and optional fields in any order
+        kwargs.setdefault('kw_only', True)
 
+        # Prepare class to become a validataclass
         _prepare_dataclass_metadata(_cls)
+
+        # Use @dataclass decorator to turn class into a dataclass
         return dataclasses.dataclass(**kwargs)(_cls)
 
     # Wrap actual decorator if called with parentheses
@@ -164,9 +161,8 @@ def _prepare_dataclass_metadata(cls: type[_T]) -> None:
         if not isinstance(field_default, Default):
             field_default = NoDefault
 
-        # Create dataclass field (_name is only needed for generating the default_factory for required fields for
-        # compatibility with Python < 3.10)
-        setattr(cls, name, validataclass_field(validator=field_validator, default=field_default, _name=name))
+        # Create dataclass field
+        setattr(cls, name, validataclass_field(validator=field_validator, default=field_default))
 
 
 def _get_existing_validator_fields(cls: type[_T]) -> dict[str, _ValidatorField]:
