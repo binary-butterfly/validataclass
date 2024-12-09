@@ -56,7 +56,7 @@ open-coverage:
 
 # Run complete tox test suite in a multi-python Docker container
 .PHONY: docker-tox
-docker-tox: TOX_ARGS='-e clean,py312,py311,py310,py39,report,flake8,py312-mypy'
+docker-tox: TOX_ARGS='-e clean,py312,py311,py310,report,flake8,py312-mypy'
 docker-tox:
 	docker run --rm --tty \
 		--user $(DOCKER_USER) \
@@ -67,27 +67,24 @@ docker-tox:
 		tox run --workdir .tox_docker $(TOX_ARGS)
 
 # Run partial tox test suites in Docker
-.PHONY: docker-tox-py312 docker-tox-py311 docker-tox-py310 docker-tox-py39
+.PHONY: docker-tox-py312 docker-tox-py311 docker-tox-py310
 docker-test-py312: TOX_ARGS="-e clean,py312,py312-report"
 docker-test-py312: docker-tox
 docker-test-py311: TOX_ARGS="-e clean,py311,py311-report"
 docker-test-py311: docker-tox
 docker-test-py310: TOX_ARGS="-e clean,py310,py310-report"
 docker-test-py310: docker-tox
-docker-test-py39: TOX_ARGS="-e clean,py39,py39-report"
-docker-test-py39: docker-tox
 
 # Run all tox test suites, but separately to check code coverage individually
 .PHONY: docker-test-all
 docker-test-all:
-	make docker-test-py39
 	make docker-test-py310
 	make docker-test-py311
 	make docker-test-py312
 
 # Run mypy using all different (or specific) Python versions in Docker
-.PHONY: docker-mypy-all docker-mypy-py312 docker-mypy-py311 docker-mypy-py310 docker-mypy-py39
-docker-mypy-all: TOX_ARGS="-e py312-mypy,py311-mypy,py310-mypy,py39-mypy"
+.PHONY: docker-mypy-all docker-mypy-py312 docker-mypy-py311 docker-mypy-py310
+docker-mypy-all: TOX_ARGS="-e py312-mypy,py311-mypy,py310-mypy"
 docker-mypy-all: docker-tox
 docker-mypy-py312: TOX_ARGS="-e py312-mypy"
 docker-mypy-py312: docker-tox
@@ -95,8 +92,6 @@ docker-mypy-py311: TOX_ARGS="-e py311-mypy"
 docker-mypy-py311: docker-tox
 docker-mypy-py310: TOX_ARGS="-e py310-mypy"
 docker-mypy-py310: docker-tox
-docker-mypy-py39: TOX_ARGS="-e py39-mypy"
-docker-mypy-py39: docker-tox
 
 # Pull the latest image of the multi-python Docker image
 .PHONY: docker-pull
