@@ -7,9 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import inspect
 import warnings
-from typing import Any, Generic, Optional, TypeVar
-
-from typing_extensions import TypeGuard
+from typing import Any, Generic, Optional, TypeGuard, TypeVar
 
 from validataclass.dataclasses import Default, NoDefault
 from validataclass.exceptions import (
