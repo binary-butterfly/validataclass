@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone, tzinfo
-from typing import Optional, Union
+from typing import Optional, TypeAlias
 
 __all__ = [
     'BaseDateTimeRange',
@@ -16,8 +16,8 @@ __all__ = [
 ]
 
 # Type aliases used for type hinting
-_DateTimeCallable = Callable[[], datetime]
-_DateTimeBoundary = Union[datetime, _DateTimeCallable]
+_DateTimeCallable: TypeAlias = Callable[[], datetime]
+_DateTimeBoundary: TypeAlias = datetime | _DateTimeCallable
 
 
 class BaseDateTimeRange(ABC):
