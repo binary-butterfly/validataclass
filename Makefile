@@ -54,10 +54,9 @@ mypy:
 open-coverage:
 	$(or $(BROWSER),firefox) ./reports/coverage_html/index.html
 
-# Run complete tox test suite in a multi-python Docker container
-.PHONY: docker-tox
-docker-tox: TOX_ARGS='-e clean,py312,py311,py310,report,flake8,py312-mypy'
-docker-tox:
+# Base target for running tox in a multi-python Docker container (don't use directly)
+.PHONY: _docker-tox
+_docker-tox:
 	docker run --rm --tty \
 		--user $(DOCKER_USER) \
 		--mount "type=bind,src=$(shell pwd),target=/code" \
@@ -66,14 +65,21 @@ docker-tox:
 		$(DOCKER_MULTI_PYTHON_IMAGE) \
 		tox run --workdir .tox_docker $(TOX_ARGS)
 
+# Run complete tox test suite in a multi-python Docker container
+.PHONY: docker-tox
+docker-tox: TOX_ARGS='-e clean,py313,py312,py311,py310,report,flake8,py313-mypy'
+docker-tox: _docker-tox
+
 # Run partial tox test suites in Docker
-.PHONY: docker-tox-py312 docker-tox-py311 docker-tox-py310
+.PHONY: docker-tox-py313 docker-tox-py312 docker-tox-py311 docker-tox-py310
+docker-test-py313: TOX_ARGS="-e clean,py313,py313-report"
+docker-test-py313: _docker-tox
 docker-test-py312: TOX_ARGS="-e clean,py312,py312-report"
-docker-test-py312: docker-tox
+docker-test-py312: _docker-tox
 docker-test-py311: TOX_ARGS="-e clean,py311,py311-report"
-docker-test-py311: docker-tox
+docker-test-py311: _docker-tox
 docker-test-py310: TOX_ARGS="-e clean,py310,py310-report"
-docker-test-py310: docker-tox
+docker-test-py310: _docker-tox
 
 # Run all tox test suites, but separately to check code coverage individually
 .PHONY: docker-test-all
@@ -81,17 +87,20 @@ docker-test-all:
 	make docker-test-py310
 	make docker-test-py311
 	make docker-test-py312
+	make docker-test-py313
 
 # Run mypy using all different (or specific) Python versions in Docker
-.PHONY: docker-mypy-all docker-mypy-py312 docker-mypy-py311 docker-mypy-py310
-docker-mypy-all: TOX_ARGS="-e py312-mypy,py311-mypy,py310-mypy"
-docker-mypy-all: docker-tox
+.PHONY: docker-mypy-all docker-mypy-py313 docker-mypy-py312 docker-mypy-py311 docker-mypy-py310
+docker-mypy-all: TOX_ARGS="-e py313-mypy,py312-mypy,py311-mypy,py310-mypy"
+docker-mypy-all: _docker-tox
+docker-mypy-py313: TOX_ARGS="-e py313-mypy"
+docker-mypy-py313: _docker-tox
 docker-mypy-py312: TOX_ARGS="-e py312-mypy"
-docker-mypy-py312: docker-tox
+docker-mypy-py312: _docker-tox
 docker-mypy-py311: TOX_ARGS="-e py311-mypy"
-docker-mypy-py311: docker-tox
+docker-mypy-py311: _docker-tox
 docker-mypy-py310: TOX_ARGS="-e py310-mypy"
-docker-mypy-py310: docker-tox
+docker-mypy-py310: _docker-tox
 
 # Pull the latest image of the multi-python Docker image
 .PHONY: docker-pull
