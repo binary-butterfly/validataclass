@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .base_exceptions import ValidationError
 
@@ -25,21 +25,21 @@ class ListItemsValidationError(ValidationError):
     The implementation of `to_dict()` recursively converts the item validation errors to dictionaries.
     """
     code = 'list_item_errors'
-    item_errors: Dict[int, ValidationError]
+    item_errors: dict[int, ValidationError]
 
-    def __init__(self, *, item_errors: Dict[int, ValidationError], **kwargs: Any):
+    def __init__(self, *, item_errors: dict[int, ValidationError], **kwargs: Any):
         super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in item_errors.values())
         self.item_errors = item_errors
 
-    def _get_repr_dict(self) -> Dict[str, str]:
+    def _get_repr_dict(self) -> dict[str, str]:
         base_dict = super()._get_repr_dict()
         return {
             **base_dict,
             'item_errors': repr(self.item_errors),
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         return {
             **base_dict,

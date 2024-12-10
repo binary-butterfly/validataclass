@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from datetime import datetime, tzinfo
 from enum import Enum
-from typing import Any, Optional, Pattern
+from typing import Any, Optional
 
 from validataclass.exceptions import DateTimeRangeError, InvalidDateTimeError, InvalidValidatorOptionException
 from validataclass.helpers import BaseDateTimeRange
@@ -113,9 +113,7 @@ class DateTimeValidator(StringValidator):
     you need to specify `local_timezone` as well.
 
     See [`datetime.timezone`](https://docs.python.org/3/library/datetime.html#timezone-objects) and
-    [`zoneinfo`](https://docs.python.org/3/library/zoneinfo.html) (only supported as of Python 3.9) for information on
-    defining timezones. For older Python versions, libraries like [`pytz`](https://pythonhosted.org/pytz/) or
-    [`dateutil`](https://dateutil.readthedocs.io/en/stable/tz.html) can be used instead.
+    [`zoneinfo`](https://docs.python.org/3/library/zoneinfo.html) for information on defining timezones.
 
     Additionally, the parameter `datetime_range` can be used to specify a range of datetime values that are allowed
     (e.g. a minimum and a maximum datetime, which can be dynamically defined using callables). See the classes
@@ -282,7 +280,7 @@ class DateTimeValidator(StringValidator):
     datetime_format: DateTimeFormat
 
     # Precompiled regular expression for the specified datetime string format
-    datetime_format_regex: Pattern[str]
+    datetime_format_regex: re.Pattern[str]
 
     # Whether to discard milli- and microseconds in the output datetime
     discard_milliseconds: bool = False

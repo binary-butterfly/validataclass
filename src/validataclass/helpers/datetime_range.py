@@ -5,8 +5,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone, tzinfo
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Optional, Union
 
 __all__ = [
     'BaseDateTimeRange',
@@ -32,7 +33,7 @@ class BaseDateTimeRange(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> Dict[str, str]:
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
         """
         Abstract method to be implemented by subclasses. Should return a dictionary with string representations of the
         range boundaries, suitable for the `DateTimeRangeError` exception to generate JSON error responses.
@@ -116,7 +117,7 @@ class DateTimeRange(BaseDateTimeRange):
         # Note: These comparisons will raise TypeErrors when mixing datetimes with and without timezones
         return (lower_datetime is None or dt >= lower_datetime) and (upper_datetime is None or dt <= upper_datetime)
 
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> Dict[str, str]:
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries, suitable for the `DateTimeRangeError`
         exception to generate JSON error responses.
@@ -222,7 +223,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         # Note: These comparisons will raise TypeErrors when mixing datetimes with and without timezones
         return lower_datetime <= dt <= upper_datetime
 
-    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> Dict[str, str]:
+    def to_dict(self, local_timezone: Optional[tzinfo] = None) -> dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries (calculating `lower_datetime` and
         `upper_datetime` from the pivot minus/plus the offsets), suitable for the `DateTimeRangeError` exception to
@@ -248,7 +249,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         else:
             return self._resolve_datetime_boundary(self.pivot, local_timezone)
 
-    def _get_boundaries(self, local_timezone: Optional[tzinfo] = None) -> Tuple[datetime, datetime]:
+    def _get_boundaries(self, local_timezone: Optional[tzinfo] = None) -> tuple[datetime, datetime]:
         """
         Helper method to get the lower and upper boundaries as datetimes, resolving callables and applying
         `local_timezone` if necessary.

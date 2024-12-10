@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .base_exceptions import ValidationError
 
@@ -53,13 +53,13 @@ class DataclassPostValidationError(ValidationError):
     """
     code = 'post_validation_errors'
     wrapped_error: Optional[ValidationError] = None
-    field_errors: Optional[Dict[str, ValidationError]] = None
+    field_errors: Optional[dict[str, ValidationError]] = None
 
     def __init__(
         self,
         *,
         error: Optional[ValidationError] = None,
-        field_errors: Optional[Dict[str, ValidationError]] = None,
+        field_errors: Optional[dict[str, ValidationError]] = None,
         **kwargs: Any,
     ):
         super().__init__(**kwargs)
@@ -74,7 +74,7 @@ class DataclassPostValidationError(ValidationError):
             assert all(isinstance(error, ValidationError) for error in field_errors.values())
             self.field_errors = field_errors
 
-    def _get_repr_dict(self) -> Dict[str, str]:
+    def _get_repr_dict(self) -> dict[str, str]:
         base_dict = super()._get_repr_dict()
 
         if self.wrapped_error is not None:
@@ -84,7 +84,7 @@ class DataclassPostValidationError(ValidationError):
 
         return base_dict
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
 
         # Convert inner errors to dicts recursively

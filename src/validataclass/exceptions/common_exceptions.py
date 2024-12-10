@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 from .base_exceptions import ValidationError
 
@@ -45,9 +45,9 @@ class InvalidTypeError(ValidationError):
     value, a different `ValidationError` will be raised.
     """
     code = 'invalid_type'
-    expected_types: List[str]
+    expected_types: list[str]
 
-    def __init__(self, *, expected_types: Union[type, str, List[Union[type, str]]], **kwargs: Any):
+    def __init__(self, *, expected_types: Union[type, str, list[Union[type, str]]], **kwargs: Any):
         super().__init__(**kwargs)
 
         if not isinstance(expected_types, list):
@@ -69,7 +69,7 @@ class InvalidTypeError(ValidationError):
         if new_type not in self.expected_types:
             self.expected_types.append(new_type)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         self.expected_types.sort()
         if len(self.expected_types) == 1:

@@ -5,9 +5,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
-from dateutil import tz
 
 from tests.test_utils import unpack_params
 from validataclass.helpers import DateTimeRange, DateTimeOffsetRange
@@ -35,7 +35,7 @@ class DateTimeRangeTest:
         [
             datetime(1900, 1, 1, 0, 0, 0),
             datetime(2021, 9, 7, 12, 34, 56),
-            datetime(2999, 12, 31, 12, 34, 56, tzinfo=tz.gettz('Europe/Berlin')),
+            datetime(2999, 12, 31, 12, 34, 56, tzinfo=ZoneInfo('Europe/Berlin')),
         ],
     )
     def test_range_without_boundaries(input_datetime):
@@ -237,21 +237,21 @@ class DateTimeRangeTest:
         [
             # Boundaries have explicit timezone, same as local_timezone
             (
-                datetime(2010, 2, 1, 13, 0, 0, tzinfo=tz.gettz('Europe/Berlin')),  # No DST (+01:00), UTC: 12:00:00
-                datetime(2010, 7, 1, 14, 0, 0, tzinfo=tz.gettz('Europe/Berlin')),  # DST (+02:00), UTC: 12:00:00
-                tz.gettz('Europe/Berlin'),
+                datetime(2010, 2, 1, 13, 0, 0, tzinfo=ZoneInfo('Europe/Berlin')),  # No DST (+01:00), UTC: 12:00:00
+                datetime(2010, 7, 1, 14, 0, 0, tzinfo=ZoneInfo('Europe/Berlin')),  # DST (+02:00), UTC: 12:00:00
+                ZoneInfo('Europe/Berlin'),
             ),
             # Boundaries have explicit timezone, but different from local_timezone
             (
                 datetime(2010, 2, 1, 9, 0, 0, tzinfo=timezone(timedelta(hours=-3))),  # Fixed offset, UTC: 12:00:00
                 datetime(2010, 7, 1, 7, 0, 0, tzinfo=timezone(timedelta(hours=-5))),  # Fixed offset, UTC: 12:00:00
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
             ),
             # Boundaries have no explicit timezone, local_timezone has DST
             (
                 datetime(2010, 2, 1, 13, 0, 0),  # Should be interpreted as: No DST (+01:00), UTC: 12:00:00
                 datetime(2010, 7, 1, 14, 0, 0),  # Should be interpreted as: DST (+02:00), UTC: 12:00:00
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
             ),
             # Boundaries have no explicit timezone, local_timezone is UTC
             (
@@ -271,9 +271,9 @@ class DateTimeRangeTest:
             # UTC: 12:00:00
             (datetime(2010, 2, 1, 12, 0, 0, tzinfo=timezone.utc), True),
             # No DST, UTC: 11:59:59
-            (datetime(2010, 2, 1, 12, 59, 59, tzinfo=tz.gettz('Europe/Berlin')), False),
+            (datetime(2010, 2, 1, 12, 59, 59, tzinfo=ZoneInfo('Europe/Berlin')), False),
             # No DST, UTC: 12:00:00
-            (datetime(2010, 2, 1, 13, 0, 0, tzinfo=tz.gettz('Europe/Berlin')), True),
+            (datetime(2010, 2, 1, 13, 0, 0, tzinfo=ZoneInfo('Europe/Berlin')), True),
             # Fixed offset, UTC: 11:59:59
             (datetime(2010, 2, 1, 12, 59, 59, tzinfo=timezone(timedelta(hours=1))), False),
             # Fixed offset, UTC: 12:00:00
@@ -290,9 +290,9 @@ class DateTimeRangeTest:
             # UTC: 12:00:01
             (datetime(2010, 7, 1, 12, 0, 1, tzinfo=timezone.utc), False),
             # DST, UTC: 12:00:00
-            (datetime(2010, 7, 1, 14, 0, 0, tzinfo=tz.gettz('Europe/Berlin')), True),
+            (datetime(2010, 7, 1, 14, 0, 0, tzinfo=ZoneInfo('Europe/Berlin')), True),
             # DST, UTC: 12:00:01
-            (datetime(2010, 7, 1, 14, 0, 1, tzinfo=tz.gettz('Europe/Berlin')), False),
+            (datetime(2010, 7, 1, 14, 0, 1, tzinfo=ZoneInfo('Europe/Berlin')), False),
             # Fixed offset, UTC: 12:00:00
             (datetime(2010, 7, 1, 14, 0, 0, tzinfo=timezone(timedelta(hours=2))), True),
             # Fixed offset, UTC: 12:00:01
@@ -583,13 +583,13 @@ class DateTimeOffsetRangeTest:
             # Pivot with explicit timezone (but different from local_timezone)
             (
                 datetime(2021, 7, 1, 12, 0, 0, tzinfo=timezone.utc),
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
             ),
 
             # Pivot without timezone, local_timezone is affected by DST (UTC+2)
             (
                 datetime(2021, 7, 1, 14, 0, 0),
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
             ),
 
             # Pivot without timezone, local_timezone is UTC
@@ -609,10 +609,10 @@ class DateTimeOffsetRangeTest:
             (datetime(2021, 7, 1, 13, 0, 1, tzinfo=timezone.utc), False),  # UTC: 13:00:01
 
             # Input in timezone Europe/Berlin with DST (UTC+2)
-            (datetime(2021, 7, 1, 13, 59, 59, tzinfo=tz.gettz('Europe/Berlin')), False),  # UTC: 11:59:59
-            (datetime(2021, 7, 1, 14, 0, 0, tzinfo=tz.gettz('Europe/Berlin')), True),  # UTC: 12:00:00
-            (datetime(2021, 7, 1, 15, 0, 0, tzinfo=tz.gettz('Europe/Berlin')), True),  # UTC: 13:00:00
-            (datetime(2021, 7, 1, 15, 0, 1, tzinfo=tz.gettz('Europe/Berlin')), False),  # UTC: 13:00:01
+            (datetime(2021, 7, 1, 13, 59, 59, tzinfo=ZoneInfo('Europe/Berlin')), False),  # UTC: 11:59:59
+            (datetime(2021, 7, 1, 14, 0, 0, tzinfo=ZoneInfo('Europe/Berlin')), True),  # UTC: 12:00:00
+            (datetime(2021, 7, 1, 15, 0, 0, tzinfo=ZoneInfo('Europe/Berlin')), True),  # UTC: 13:00:00
+            (datetime(2021, 7, 1, 15, 0, 1, tzinfo=ZoneInfo('Europe/Berlin')), False),  # UTC: 13:00:01
 
             # Input with fixed offset as timezone
             (datetime(2021, 7, 1, 8, 59, 59, tzinfo=timezone(timedelta(hours=-3))), False),  # UTC: 11:59:59

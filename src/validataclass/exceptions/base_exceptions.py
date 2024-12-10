@@ -4,7 +4,7 @@ Copyright (c) 2024, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 __all__ = [
     'ValidationError',
@@ -29,7 +29,7 @@ class ValidationError(Exception):
     """
     code: str = 'unknown_error'
     reason: Optional[str] = None
-    extra_data: Optional[Dict[str, Any]] = None
+    extra_data: Optional[dict[str, Any]] = None
 
     def __init__(self, *, code: Optional[str] = None, reason: Optional[str] = None, **kwargs: Any):
         if code is not None:
@@ -45,7 +45,7 @@ class ValidationError(Exception):
     def __str__(self) -> str:
         return self.__repr__()
 
-    def _get_repr_dict(self) -> Dict[str, str]:
+    def _get_repr_dict(self) -> dict[str, str]:
         """
         Returns a dictionary representing the error fields as strings (e.g. by applying `repr()` on the values).
 
@@ -58,7 +58,7 @@ class ValidationError(Exception):
             key: repr(value) for key, value in self.to_dict().items() if value is not None
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Generates a dictionary containing error information, suitable as response to the user.
         May be overridden by subclasses to extend the dictionary.

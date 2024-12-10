@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from validataclass.exceptions import (
     DictFieldsValidationError,
@@ -66,21 +66,21 @@ class DictValidator(Validator):
     """
 
     # Dictionary to specify which validators are applied to which fields of the input dictionary
-    field_validators: Dict[str, Validator]
+    field_validators: dict[str, Validator]
 
     # Validator that is applied to all fields not specified in field_validators
     default_validator: Optional[Validator]
 
     # Set of required fields
-    required_fields: Set[str]
+    required_fields: set[str]
 
     def __init__(
         self,
         *,
-        field_validators: Optional[Dict[str, Validator]] = None,
+        field_validators: Optional[dict[str, Validator]] = None,
         default_validator: Optional[Validator] = None,
-        required_fields: Optional[List[str]] = None,
-        optional_fields: Optional[List[str]] = None
+        required_fields: Optional[list[str]] = None,
+        optional_fields: Optional[list[str]] = None
     ):
         """
         Creates a `DictValidator`.
@@ -132,7 +132,7 @@ class DictValidator(Validator):
         if optional_fields is not None:
             self.required_fields = self.required_fields - set(optional_fields)
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Dict[str, Any]:
+    def validate(self, input_data: Any, **kwargs: Any) -> dict[str, Any]:
         """
         Validates input data. Returns a validated dict.
         """
@@ -143,8 +143,8 @@ class DictValidator(Validator):
             if type(key) is not str:
                 raise DictInvalidKeyTypeError()
 
-        field_errors: Dict[str, ValidationError] = {}
-        validated_dict: Dict[str, Any] = {}
+        field_errors: dict[str, ValidationError] = {}
+        validated_dict: dict[str, Any] = {}
 
         # Check that required fields exist in input data
         for field_name in self.required_fields:

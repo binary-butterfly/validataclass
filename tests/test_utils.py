@@ -5,12 +5,12 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
-from typing import Any, List, Tuple, Union
+from typing import Any, Union
 
 from validataclass.validators import Validator
 
 
-def unpack_params(*args: Any) -> List[Tuple[Any, ...]]:
+def unpack_params(*args: Any) -> list[tuple[Any, ...]]:
     """
     Returns a list containing tuples build from the arguments.
 
@@ -64,7 +64,7 @@ def unpack_params(*args: Any) -> List[Tuple[Any, ...]]:
     ]
     ```
     """
-    unpacked: List[Tuple[Any, ...]] = [tuple()]
+    unpacked: list[tuple[Any, ...]] = [tuple()]
 
     for arg in args:
         if type(arg) is list:

@@ -5,9 +5,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
-from dateutil import tz
 
 from validataclass.exceptions import (
     DateTimeRangeError,
@@ -478,22 +478,22 @@ class DateTimeValidatorTest:
             # Test with a timezone that has Daylight Saving Time
             (
                 '2021-02-01T01:02:03',
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
                 datetime(2021, 2, 1, 1, 2, 3, tzinfo=timezone(timedelta(hours=1))),
             ),
             (
                 '2021-02-01T01:02:03Z',
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
                 datetime(2021, 2, 1, 1, 2, 3, tzinfo=timezone.utc),
             ),
             (
                 '2021-07-01T01:02:03',
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
                 datetime(2021, 7, 1, 1, 2, 3, tzinfo=timezone(timedelta(hours=2))),
             ),
             (
                 '2021-07-01T01:02:03Z',
-                tz.gettz('Europe/Berlin'),
+                ZoneInfo('Europe/Berlin'),
                 datetime(2021, 7, 1, 1, 2, 3, tzinfo=timezone.utc),
             ),
         ],
@@ -536,25 +536,25 @@ class DateTimeValidatorTest:
             # Convert local datetimes (Europe/Berlin) with and without DST to a different timezone that has DST
             (
                 '2021-02-01T12:34:56',
-                tz.gettz('Europe/Helsinki'),
-                datetime(2021, 2, 1, 13, 34, 56, tzinfo=tz.gettz('Europe/Helsinki')),
+                ZoneInfo('Europe/Helsinki'),
+                datetime(2021, 2, 1, 13, 34, 56, tzinfo=ZoneInfo('Europe/Helsinki')),
             ),
             (
                 '2021-07-01T12:34:56',
-                tz.gettz('Europe/Helsinki'),
-                datetime(2021, 7, 1, 13, 34, 56, tzinfo=tz.gettz('Europe/Helsinki')),
+                ZoneInfo('Europe/Helsinki'),
+                datetime(2021, 7, 1, 13, 34, 56, tzinfo=ZoneInfo('Europe/Helsinki')),
             ),
 
             # Convert UTC datetimes to a timezone with DST
             (
                 '2021-02-01T12:34:56Z',
-                tz.gettz('Europe/Helsinki'),
-                datetime(2021, 2, 1, 14, 34, 56, tzinfo=tz.gettz('Europe/Helsinki')),
+                ZoneInfo('Europe/Helsinki'),
+                datetime(2021, 2, 1, 14, 34, 56, tzinfo=ZoneInfo('Europe/Helsinki')),
             ),
             (
                 '2021-07-01T12:34:56Z',
-                tz.gettz('Europe/Helsinki'),
-                datetime(2021, 7, 1, 15, 34, 56, tzinfo=tz.gettz('Europe/Helsinki')),
+                ZoneInfo('Europe/Helsinki'),
+                datetime(2021, 7, 1, 15, 34, 56, tzinfo=ZoneInfo('Europe/Helsinki')),
             ),
 
             # Convert datetimes with timezone info to UTC
@@ -572,20 +572,20 @@ class DateTimeValidatorTest:
             # Convert datetimes with timezone info to a timezone with DST
             (
                 '2021-02-01T00:34:56-12:00',
-                tz.gettz('Europe/Berlin'),
-                datetime(2021, 2, 1, 13, 34, 56, tzinfo=tz.gettz('Europe/Berlin')),
+                ZoneInfo('Europe/Berlin'),
+                datetime(2021, 2, 1, 13, 34, 56, tzinfo=ZoneInfo('Europe/Berlin')),
             ),
             (
                 '2021-07-01T00:34:56-12:00',
-                tz.gettz('Europe/Berlin'),
-                datetime(2021, 7, 1, 14, 34, 56, tzinfo=tz.gettz('Europe/Berlin')),
+                ZoneInfo('Europe/Berlin'),
+                datetime(2021, 7, 1, 14, 34, 56, tzinfo=ZoneInfo('Europe/Berlin')),
             ),
         ],
     )
     def test_with_target_timezone_valid(input_string, target_timezone, expected_datetime):
         """ Test DateTimeValidator with target_timezone parameter with valid input. """
         validator = DateTimeValidator(
-            local_timezone=tz.gettz('Europe/Berlin'),
+            local_timezone=ZoneInfo('Europe/Berlin'),
             target_timezone=target_timezone,
         )
 
@@ -709,7 +709,7 @@ class DateTimeValidatorTest:
             lower_boundary=datetime(2021, 9, 8, 14, 0, 0),
             upper_boundary=datetime(2021, 9, 8, 15, 0, 0),
         )
-        validator = DateTimeValidator(local_timezone=tz.gettz('Europe/Berlin'), datetime_range=dt_range)
+        validator = DateTimeValidator(local_timezone=ZoneInfo('Europe/Berlin'), datetime_range=dt_range)
 
         assert validator.validate(input_string) == expected_datetime
 
@@ -734,7 +734,7 @@ class DateTimeValidatorTest:
             lower_boundary=datetime(2021, 9, 8, 14, 0, 0),
             upper_boundary=datetime(2021, 9, 8, 15, 0, 0),
         )
-        validator = DateTimeValidator(local_timezone=tz.gettz('Europe/Berlin'), datetime_range=dt_range)
+        validator = DateTimeValidator(local_timezone=ZoneInfo('Europe/Berlin'), datetime_range=dt_range)
 
         with pytest.raises(DateTimeRangeError) as exception_info:
             validator.validate(input_string)

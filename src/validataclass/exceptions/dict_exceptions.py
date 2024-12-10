@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from .base_exceptions import ValidationError
 
@@ -26,21 +26,21 @@ class DictFieldsValidationError(ValidationError):
     The implementation of `to_dict()` recursively converts the field validation errors to dictionaries.
     """
     code = 'field_errors'
-    field_errors: Dict[str, ValidationError]
+    field_errors: dict[str, ValidationError]
 
-    def __init__(self, *, field_errors: Dict[str, ValidationError], **kwargs: Any):
+    def __init__(self, *, field_errors: dict[str, ValidationError], **kwargs: Any):
         super().__init__(**kwargs)
         assert all(isinstance(error, ValidationError) for error in field_errors.values())
         self.field_errors = field_errors
 
-    def _get_repr_dict(self) -> Dict[str, str]:
+    def _get_repr_dict(self) -> dict[str, str]:
         base_dict = super()._get_repr_dict()
         return {
             **base_dict,
             'field_errors': repr(self.field_errors),
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         return {
             **base_dict,

@@ -4,7 +4,7 @@ Copyright (c) 2022, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, List
+from typing import Any
 
 import pytest
 
@@ -17,7 +17,7 @@ class DiscardValidatorTest:
     Unit tests for the DiscardValidator.
     """
 
-    example_input_data: List[Any] = [
+    example_input_data: list[Any] = [
         None,
         True,
         False,

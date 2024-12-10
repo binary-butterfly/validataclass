@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import dataclasses
 import sys
-from typing import Any, Dict, NoReturn, Optional
+from typing import Any, NoReturn, Optional
 
 from validataclass.validators import Validator
 from .defaults import Default, NoDefault
@@ -20,7 +20,7 @@ def validataclass_field(
     validator: Validator,
     default: Any = NoDefault,
     *,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     _name: Optional[str] = None,  # noqa (undocumented parameter, only used internally)
     **kwargs: Any,
 ) -> Any:

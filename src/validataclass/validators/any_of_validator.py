@@ -5,7 +5,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import warnings
-from typing import Any, Iterable, List, Optional, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 from validataclass.exceptions import ValueNotAllowedError, InvalidValidatorOptionException
 from .validator import Validator
@@ -58,10 +59,10 @@ class AnyOfValidator(Validator):
     max_allowed_values_in_validation_error: int = 20
 
     # Values allowed as input
-    allowed_values: List[Any]
+    allowed_values: list[Any]
 
     # Types allowed for input data (set by parameter or autodetermined from allowed_values)
-    allowed_types: List[type]
+    allowed_types: list[type]
 
     # If set, strings will be matched case-sensitively
     case_sensitive: bool = False

@@ -4,8 +4,9 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+from collections.abc import Callable
 from copy import copy, deepcopy
-from typing import Any, Callable, NoReturn
+from typing import Any, NoReturn
 
 from typing_extensions import Self
 

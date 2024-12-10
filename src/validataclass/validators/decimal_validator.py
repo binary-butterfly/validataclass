@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import decimal
 import re
 from decimal import Decimal, InvalidOperation
-from typing import Any, Optional, Pattern, Union
+from typing import Any, Optional, Union
 
 from validataclass.exceptions import (
     DecimalPlacesError,
@@ -88,7 +88,7 @@ class DecimalValidator(StringValidator):
     rounding: Optional[str] = None
 
     # Precompiled regular expression for decimal values
-    decimal_regex: Pattern[str] = re.compile(r'[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)')
+    decimal_regex: re.Pattern[str] = re.compile(r'[+-]?([0-9]+\.[0-9]*|\.?[0-9]+)')
 
     def __init__(
         self,

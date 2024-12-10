@@ -4,7 +4,7 @@ Copyright (c) 2022, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
 from validataclass.exceptions import ValidationError, FieldNotAllowedError
 from .validator import Validator
@@ -62,7 +62,7 @@ class RejectValidator(Validator):
     allow_none: bool
 
     # Validation error to raise when rejecting input
-    error_class: Type[ValidationError]
+    error_class: type[ValidationError]
     error_code: Optional[str]
     error_reason: Optional[str]
 
@@ -70,7 +70,7 @@ class RejectValidator(Validator):
         self,
         *,
         allow_none: bool = False,
-        error_class: Type[ValidationError] = FieldNotAllowedError,
+        error_class: type[ValidationError] = FieldNotAllowedError,
         error_code: Optional[str] = None,
         error_reason: Optional[str] = None,
     ):

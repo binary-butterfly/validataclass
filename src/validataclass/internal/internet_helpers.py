@@ -7,8 +7,6 @@ Use of this source code is governed by an MIT-style license that can be found in
 import ipaddress
 import re
 
-from typing import Pattern
-
 __all__ = [
     'validate_hostname',
     'validate_ip_address',
@@ -19,15 +17,15 @@ __all__ = [
 _REGEX_DOMAIN_LABEL = r'([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)'
 
 # Precompiled regular expressions
-_ip_charset_regex: Pattern[str] = re.compile(
+_ip_charset_regex: re.Pattern[str] = re.compile(
     r'(\d+\.){3}\d+|\[[0-9a-f:]+]',
     re.ASCII | re.IGNORECASE,
 )
-_domain_optional_tld_regex: Pattern[str] = re.compile(
+_domain_optional_tld_regex: re.Pattern[str] = re.compile(
     f'({_REGEX_DOMAIN_LABEL}\\.)*{_REGEX_DOMAIN_LABEL}',
     re.IGNORECASE,
 )
-_domain_required_tld_regex: Pattern[str] = re.compile(
+_domain_required_tld_regex: re.Pattern[str] = re.compile(
     f'({_REGEX_DOMAIN_LABEL}\\.)+{_REGEX_DOMAIN_LABEL}',
     re.IGNORECASE,
 )

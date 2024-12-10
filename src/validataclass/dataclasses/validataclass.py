@@ -7,7 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import sys
 from collections import namedtuple
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union, overload
+from collections.abc import Callable
+from typing import Any, Optional, TypeVar, Union, overload
 
 from typing_extensions import dataclass_transform
 
@@ -26,12 +27,12 @@ _T = TypeVar('_T')
 
 
 @overload
-def validataclass(cls: Type[_T]) -> Type[_T]:
+def validataclass(cls: type[_T]) -> type[_T]:
     ...
 
 
 @overload
-def validataclass(cls: None = None, /, **kwargs: Any) -> Callable[[Type[_T]], Type[_T]]:
+def validataclass(cls: None = None, /, **kwargs: Any) -> Callable[[type[_T]], type[_T]]:
     ...
 
 
@@ -40,10 +41,10 @@ def validataclass(cls: None = None, /, **kwargs: Any) -> Callable[[Type[_T]], Ty
     field_specifiers=(dataclasses.field, dataclasses.Field, validataclass_field),
 )
 def validataclass(
-    cls: Optional[Type[_T]] = None,
+    cls: Optional[type[_T]] = None,
     /,
     **kwargs: Any,
-) -> Union[Type[_T], Callable[[Type[_T]], Type[_T]]]:
+) -> Union[type[_T], Callable[[type[_T]], type[_T]]]:
     """
     Decorator that turns a normal class into a `DataclassValidator`-compatible dataclass.
 
@@ -87,7 +88,7 @@ def validataclass(
     parameters are necessary. In Python 3.10 and upwards, the argument `kw_only=True` will be used by default.
     """
 
-    def decorator(_cls: Type[_T]) -> Type[_T]:
+    def decorator(_cls: type[_T]) -> type[_T]:
         # In Python 3.10 and higher, we use kw_only=True to allow both required and optional fields in any order.
         # In older Python versions, we use a workaround by setting default_factory to a function that raises an
         # exception for required fields.
@@ -103,7 +104,7 @@ def validataclass(
     return decorator if cls is None else decorator(cls)
 
 
-def _prepare_dataclass_metadata(cls: Type[_T]) -> None:
+def _prepare_dataclass_metadata(cls: type[_T]) -> None:
     """
     Prepares a soon-to-be dataclass (before it is decorated with `@dataclass`) to be usable with `DataclassValidator`
     by checking it for `Validator` objects and setting dataclass metadata.
@@ -168,7 +169,7 @@ def _prepare_dataclass_metadata(cls: Type[_T]) -> None:
         setattr(cls, name, validataclass_field(validator=field_validator, default=field_default, _name=name))
 
 
-def _get_existing_validator_fields(cls: Type[_T]) -> Dict[str, _ValidatorField]:
+def _get_existing_validator_fields(cls: type[_T]) -> dict[str, _ValidatorField]:
     """
     Returns a dictionary containing all fields (as `_ValidatorField` objects) of an existing validataclass that have a
     validator set in their metadata, or an empty dictionary if the class is not a dataclass (yet).
@@ -196,7 +197,7 @@ def _get_existing_validator_fields(cls: Type[_T]) -> Dict[str, _ValidatorField]:
     return validator_fields
 
 
-def _parse_validator_tuple(args: Union[Tuple[Any, ...], Validator, Default, None]) -> _ValidatorField:
+def _parse_validator_tuple(args: Union[tuple[Any, ...], Validator, Default, None]) -> _ValidatorField:
     """
     Parses field arguments (the value of a field in a dataclass that has not been parsed by `@dataclass` yet) to a
     tuple of a Validator and a Default object.
