@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from validataclass.exceptions import InvalidValidatorOptionException
 from .validator import Validator
@@ -65,13 +65,13 @@ class AnythingValidator(Validator):
     allow_none: bool
 
     # Which input types to allow (None for anything)
-    allowed_types: Optional[list[type]]
+    allowed_types: list[type] | None
 
     def __init__(
         self,
         *,
-        allow_none: Optional[bool] = None,
-        allowed_types: Union[Iterable[Union[type, None]], type, None] = None,
+        allow_none: bool | None = None,
+        allowed_types: Iterable[type | None] | type | None = None,
     ):
         """
         Creates an `AnythingValidator` that accepts any input.
@@ -109,8 +109,8 @@ class AnythingValidator(Validator):
     @staticmethod
     def _normalize_allowed_types(
         *,
-        allowed_types: Union[Iterable[Union[type, None]], type, None],
-        allow_none: Optional[bool],
+        allowed_types: Iterable[type | None] | type | None,
+        allow_none: bool | None,
     ) -> list[type]:
         """
         Helper method to normalize the `allowed_types` parameter to a unique list that contains only types.

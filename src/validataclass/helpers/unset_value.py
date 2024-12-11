@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Optional, TypeVar, Union
+from typing import TypeAlias, TypeVar
 
 from typing_extensions import Self
 
@@ -51,14 +51,14 @@ UnsetValue = UnsetValueType()
 UnsetValueType.__new__ = lambda cls: UnsetValue  # type: ignore
 
 # Type alias OptionalUnset[T] for fields with DefaultUnset: Allows either the type T or UnsetValue
-OptionalUnset = Union[T, UnsetValueType]
+OptionalUnset: TypeAlias = T | UnsetValueType
 
-# Type alias OptionalUnsetNone[T] for fields that can be None OR UnsetValue (equivalent to OptionalUnset[Optional[T]])
-OptionalUnsetNone = OptionalUnset[Optional[T]]
+# Type alias OptionalUnsetNone[T] for fields that can be None OR UnsetValue (equivalent to OptionalUnset[T | None])
+OptionalUnsetNone: TypeAlias = T | UnsetValueType | None
 
 
 # Small helper function for easier conversion of UnsetValue to None
-def unset_to_none(value: OptionalUnset[T]) -> Optional[T]:
+def unset_to_none(value: OptionalUnset[T]) -> T | None:
     """
     Converts `UnsetValue` to `None`.
 

@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.exceptions import (
     DictFieldsValidationError,
@@ -69,7 +69,7 @@ class DictValidator(Validator):
     field_validators: dict[str, Validator]
 
     # Validator that is applied to all fields not specified in field_validators
-    default_validator: Optional[Validator]
+    default_validator: Validator | None
 
     # Set of required fields
     required_fields: set[str]
@@ -77,10 +77,10 @@ class DictValidator(Validator):
     def __init__(
         self,
         *,
-        field_validators: Optional[dict[str, Validator]] = None,
-        default_validator: Optional[Validator] = None,
-        required_fields: Optional[list[str]] = None,
-        optional_fields: Optional[list[str]] = None
+        field_validators: dict[str, Validator] | None = None,
+        default_validator: Validator | None = None,
+        required_fields: list[str] | None = None,
+        optional_fields: list[str] | None = None
     ):
         """
         Creates a `DictValidator`.

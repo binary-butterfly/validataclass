@@ -4,7 +4,7 @@ Copyright (c) 2024, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 __all__ = [
     'ValidationError',
@@ -28,10 +28,10 @@ class ValidationError(Exception):
     Use `exception.to_dict()` to get a dictionary suitable for generating JSON responses.
     """
     code: str = 'unknown_error'
-    reason: Optional[str] = None
-    extra_data: Optional[dict[str, Any]] = None
+    reason: str | None = None
+    extra_data: dict[str, Any] | None = None
 
-    def __init__(self, *, code: Optional[str] = None, reason: Optional[str] = None, **kwargs: Any):
+    def __init__(self, *, code: str | None = None, reason: str | None = None, **kwargs: Any):
         if code is not None:
             self.code = code
         if reason is not None:

@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import math
-from typing import Any, Optional, Union
+from typing import Any
 
 from validataclass.exceptions import InvalidValidatorOptionException, NumberRangeError, NonFiniteNumberError
 from .validator import Validator
@@ -50,8 +50,8 @@ class FloatValidator(Validator):
     """
 
     # Value constraints
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
+    min_value: float | None = None
+    max_value: float | None = None
 
     # Whether to accept integers and convert them to floats
     allow_integers: bool = False
@@ -59,8 +59,8 @@ class FloatValidator(Validator):
     def __init__(
         self,
         *,
-        min_value: Optional[Union[float, int]] = None,
-        max_value: Optional[Union[float, int]] = None,
+        min_value: float | int | None = None,
+        max_value: float | int | None = None,
         allow_integers: bool = False,
     ):
         """

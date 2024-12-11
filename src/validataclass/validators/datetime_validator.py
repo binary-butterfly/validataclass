@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from datetime import datetime, tzinfo
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.exceptions import DateTimeRangeError, InvalidDateTimeError, InvalidValidatorOptionException
 from validataclass.helpers import BaseDateTimeRange
@@ -286,22 +286,22 @@ class DateTimeValidator(StringValidator):
     discard_milliseconds: bool = False
 
     # Timezone to use for datetime strings without a specified timezone (None: no default timezone info in datetime)
-    local_timezone: Optional[tzinfo] = None
+    local_timezone: tzinfo | None = None
 
     # Target timezone that all datetimes will be converted to (None: no timezone conversion)
-    target_timezone: Optional[tzinfo] = None
+    target_timezone: tzinfo | None = None
 
     # Datetime range that defines which values are allowed
-    datetime_range: Optional[BaseDateTimeRange] = None
+    datetime_range: BaseDateTimeRange | None = None
 
     def __init__(
         self,
         datetime_format: DateTimeFormat = DateTimeFormat.ALLOW_TIMEZONE,
         *,
         discard_milliseconds: bool = False,
-        local_timezone: Optional[tzinfo] = None,
-        target_timezone: Optional[tzinfo] = None,
-        datetime_range: Optional[BaseDateTimeRange] = None,
+        local_timezone: tzinfo | None = None,
+        target_timezone: tzinfo | None = None,
+        datetime_range: BaseDateTimeRange | None = None,
     ):
         """
         Creates a `DateTimeValidator` with a specified datetime string format, optionally a local timezone, a target

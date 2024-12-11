@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from .base_exceptions import ValidationError
 
@@ -52,14 +52,14 @@ class DataclassPostValidationError(ValidationError):
     ```
     """
     code = 'post_validation_errors'
-    wrapped_error: Optional[ValidationError] = None
-    field_errors: Optional[dict[str, ValidationError]] = None
+    wrapped_error: ValidationError | None = None
+    field_errors: dict[str, ValidationError] | None = None
 
     def __init__(
         self,
         *,
-        error: Optional[ValidationError] = None,
-        field_errors: Optional[dict[str, ValidationError]] = None,
+        error: ValidationError | None = None,
+        field_errors: dict[str, ValidationError] | None = None,
         **kwargs: Any,
     ):
         super().__init__(**kwargs)

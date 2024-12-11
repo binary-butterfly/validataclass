@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.exceptions import (
     StringTooShortError,
@@ -67,8 +67,8 @@ class StringValidator(Validator):
     """
 
     # Length constraints
-    min_length: Optional[int] = None
-    max_length: Optional[int] = None
+    min_length: int | None = None
+    max_length: int | None = None
 
     # Whether or not to allow multiline strings (i.e. strings containing newlines)
     allow_multiline: bool = False
@@ -79,8 +79,8 @@ class StringValidator(Validator):
     def __init__(
         self,
         *,
-        min_length: Optional[int] = None,
-        max_length: Optional[int] = None,
+        min_length: int | None = None,
+        max_length: int | None = None,
         multiline: bool = False,
         unsafe: bool = False,
     ):

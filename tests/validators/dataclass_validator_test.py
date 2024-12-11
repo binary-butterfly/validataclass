@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 
@@ -54,7 +54,7 @@ class UnitTestNestedDataclass:
     """
     name: str = StringValidator()
     test_fruit: UnitTestDataclass = DataclassValidator(UnitTestDataclass)
-    test_vegetable: Optional[UnitTestDataclass] = \
+    test_vegetable: UnitTestDataclass | None = \
         validataclass_field(DataclassValidator(UnitTestDataclass), default=None)
 
 
@@ -108,7 +108,7 @@ class UnitTestContextSensitiveDataclass:
     when the context argument "value_required" is set.
     """
     name: str = UnitTestContextValidator()
-    value: Optional[int] = IntegerValidator(), Default(None)
+    value: int | None = IntegerValidator(), Default(None)
 
     def __post_validate__(self, *, value_required: bool = False) -> None:
         if value_required and self.value is None:

@@ -5,7 +5,6 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-import sys
 from typing import Any
 
 import pytest
@@ -44,13 +43,7 @@ class ValidataclassFieldTest:
 
         # Check field default
         assert field.default is dataclasses.MISSING
-
-        # For Python under 3.10, check that an exception raising default_factory is set
-        if sys.version_info < (3, 10):
-            with pytest.raises(TypeError, match="required keyword-only argument"):
-                field.default_factory()
-        else:
-            assert field.default_factory is dataclasses.MISSING
+        assert field.default_factory is dataclasses.MISSING
 
     @staticmethod
     @pytest.mark.parametrize(

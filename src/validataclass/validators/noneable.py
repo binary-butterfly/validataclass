@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from copy import deepcopy
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.exceptions import InvalidTypeError
 from .validator import Validator
@@ -62,7 +62,7 @@ class Noneable(Validator):
         self.wrapped_validator = validator
         self.default_value = default
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Optional[Any]:
+    def validate(self, input_data: Any, **kwargs: Any) -> Any | None:
         """
         Validates input data.
 

@@ -4,7 +4,7 @@ Copyright (c) 2022, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.exceptions import ValidationError, FieldNotAllowedError
 from .validator import Validator
@@ -63,16 +63,16 @@ class RejectValidator(Validator):
 
     # Validation error to raise when rejecting input
     error_class: type[ValidationError]
-    error_code: Optional[str]
-    error_reason: Optional[str]
+    error_code: str | None
+    error_reason: str | None
 
     def __init__(
         self,
         *,
         allow_none: bool = False,
         error_class: type[ValidationError] = FieldNotAllowedError,
-        error_code: Optional[str] = None,
-        error_reason: Optional[str] = None,
+        error_code: str | None = None,
+        error_reason: str | None = None,
     ):
         """
         Creates a `RejectValidator` that rejects any input.

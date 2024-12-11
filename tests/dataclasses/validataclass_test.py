@@ -3,11 +3,8 @@ validataclass
 Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
-# (Ignore comparison-overlap errors, which happen in comparisons like `assert fields['baz'].type is Optional[str]`)
-# mypy: no-strict-equality
 
 import dataclasses
-from typing import Optional, Union
 
 import pytest
 
@@ -52,7 +49,7 @@ class ValidatorDataclassTest:
         class UnitTestValidatorDataclass:
             foo: int = IntegerValidator()
             bar: int = validataclass_field(IntegerValidator(), default=Default(0))
-            baz: Optional[str] = validataclass_field(Noneable(StringValidator()), default=None)
+            baz: str | None = validataclass_field(Noneable(StringValidator()), default=None)
 
         # Check that @validataclass actually created a dataclass (i.e. used @dataclass on the class)
         assert dataclasses.is_dataclass(UnitTestValidatorDataclass)
@@ -62,9 +59,9 @@ class ValidatorDataclassTest:
 
         # Check names and types of all fields
         assert list(fields.keys()) == ['foo', 'bar', 'baz']
-        assert fields['foo'].type is int
-        assert fields['bar'].type is int
-        assert fields['baz'].type is Optional[str]
+        assert fields['foo'].type == int
+        assert fields['bar'].type == int
+        assert fields['baz'].type == str | None
 
         # Check field defaults
         assert_field_no_default(fields['foo'])
@@ -108,16 +105,16 @@ class ValidatorDataclassTest:
         class UnitTestValidatorDataclass:
             foo: int = IntegerValidator(), NoDefault
             bar: int = IntegerValidator(), Default(42)
-            baz: Optional[int] = IntegerValidator(), Default(None)
+            baz: int | None = IntegerValidator(), Default(None)
 
         # Get fields from dataclass
         fields = get_dataclass_fields(UnitTestValidatorDataclass)
 
         # Check names and types of all fields
         assert list(fields.keys()) == ['foo', 'bar', 'baz']
-        assert fields['foo'].type is int
-        assert fields['bar'].type is int
-        assert fields['baz'].type is Optional[int]
+        assert fields['foo'].type == int
+        assert fields['bar'].type == int
+        assert fields['baz'].type == int | None
 
         # Check field defaults
         assert_field_no_default(fields['foo'])
@@ -144,8 +141,8 @@ class ValidatorDataclassTest:
 
         # Check names and types of all fields
         assert list(fields.keys()) == ['validated', 'non_init']
-        assert fields['validated'].type is int
-        assert fields['non_init'].type is int
+        assert fields['validated'].type == int
+        assert fields['non_init'].type == int
 
         # Check 'init' value
         assert fields['validated'].init is True
@@ -248,8 +245,8 @@ class ValidatorDataclassTest:
             required4: int = IntegerValidator()
 
             # Optional fields
-            optional1: Optional[int] = IntegerValidator(), Default(None)
-            optional2: Optional[int] = IntegerValidator(), Default(None)
+            optional1: int | None = IntegerValidator(), Default(None)
+            optional2: int | None = IntegerValidator(), Default(None)
             optional3: int = IntegerValidator(), Default(3)
             optional4: OptionalUnset[int] = IntegerValidator(), DefaultUnset
 
@@ -261,7 +258,7 @@ class ValidatorDataclassTest:
 
             # Required fields that are optional now
             required2: int = Default(42)
-            required3: Optional[int] = Default(None)
+            required3: int | None = Default(None)
             required4: OptionalUnset[int] = DefaultUnset
 
             # Optional fields that are required now or have new defaults
@@ -279,9 +276,9 @@ class ValidatorDataclassTest:
         ]
 
         # Check type annotations
-        assert all(fields[field].type is int for field in ['required1', 'required2', 'optional2', 'optional4'])
-        assert all(fields[field].type is Optional[int] for field in ['required3', 'optional1'])
-        assert all(fields[field].type is Union[int, UnsetValueType] for field in ['required4', 'optional3'])
+        assert all(fields[field].type == int for field in ['required1', 'required2', 'optional2', 'optional4'])
+        assert all(fields[field].type == int | None for field in ['required3', 'optional1'])
+        assert all(fields[field].type == int | UnsetValueType for field in ['required4', 'optional3'])
 
         # Check validators
         assert all(type(field.metadata.get('validator')) is IntegerValidator for field in fields.values())
@@ -316,15 +313,15 @@ class ValidatorDataclassTest:
         class SubClass(BaseClass):
             # Required fields
             required1: str = StringValidator()
-            required2: Optional[str] = StringValidator(), Default(None)
+            required2: str | None = StringValidator(), Default(None)
 
             # Optional fields
             optional1: str = StringValidator()  # No default override, so the default should still be Default(3)
-            optional2: Optional[str] = StringValidator(), Default(None)
+            optional2: str | None = StringValidator(), Default(None)
 
             # New fields
             new1: str = StringValidator()
-            new2: Optional[str] = StringValidator(), Default(None)
+            new2: str | None = StringValidator(), Default(None)
 
         # Get fields from dataclass
         fields = get_dataclass_fields(SubClass)
@@ -333,8 +330,8 @@ class ValidatorDataclassTest:
         assert list(fields.keys()) == ['required1', 'required2', 'optional1', 'optional2', 'new1', 'new2']
 
         # Check type annotations
-        assert all(fields[field].type is str for field in ['required1', 'optional1', 'new1'])
-        assert all(fields[field].type is Optional[str] for field in ['required2', 'optional2', 'new2'])
+        assert all(fields[field].type == str for field in ['required1', 'optional1', 'new1'])
+        assert all(fields[field].type == str | None for field in ['required2', 'optional2', 'new2'])
 
         # Check validators
         assert all(type(field.metadata.get('validator')) is StringValidator for field in fields.values())
@@ -371,7 +368,7 @@ class ValidatorDataclassTest:
 
         # Check names and types of all fields
         assert list(fields.keys()) == ['validated', 'non_init']
-        assert all(f.type is int for f in fields.values())
+        assert all(f.type == int for f in fields.values())
 
         # Check non-init field
         assert fields['non_init'].init is False
@@ -397,7 +394,7 @@ class ValidatorDataclassTest:
             # Override the defaults to test that the decorator recognizes all fields of both base classes.
             # If it does not, a "no validator for field X" error would be raised.
             field_a: int = Default(42)
-            field_b: Optional[str] = Default(None)
+            field_b: str | None = Default(None)
 
         # Get fields from dataclass
         fields = get_dataclass_fields(SubClass)

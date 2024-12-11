@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import warnings
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from validataclass.exceptions import ValueNotAllowedError, InvalidValidatorOptionException
 from .validator import Validator
@@ -71,9 +71,9 @@ class AnyOfValidator(Validator):
         self,
         allowed_values: Iterable[Any],
         *,
-        allowed_types: Optional[Union[type, Iterable[type]]] = None,
-        case_sensitive: Optional[bool] = None,
-        case_insensitive: Optional[bool] = None,
+        allowed_types: Iterable[type] | type | None = None,
+        case_sensitive: bool | None = None,
+        case_insensitive: bool | None = None,
     ):
         """
         Creates an `AnyOfValidator` with a specified list of allowed values.

@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import re
-from typing import Any, Optional
+from typing import Any
 
 from validataclass.exceptions import InvalidUrlError
 from validataclass.internal import internet_helpers
@@ -99,7 +99,7 @@ class UrlValidator(StringValidator):
     def __init__(
         self,
         *,
-        allowed_schemes: Optional[list[str]] = None,
+        allowed_schemes: list[str] | None = None,
         require_tld: bool = True,
         allow_ip: bool = True,
         allow_userinfo: bool = False,
