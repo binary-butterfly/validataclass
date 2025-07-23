@@ -13,7 +13,7 @@ on:
 jobs:
   test:
     name: Run unit tests (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -24,10 +24,10 @@ jobs:
           - '3.12'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -39,7 +39,7 @@ jobs:
         run: tox run -e clean,py,report,flake8,mypy -- --junit-xml=reports/pytest_${{ matrix.python-version }}.xml
 
       - name: Upload test result artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
           # This will add every pytest_VERSION.xml to the same artifact file
@@ -48,7 +48,7 @@ jobs:
 
   report:
     name: Publish unit test reports
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # Job depends on test results
     needs: test
@@ -57,16 +57,16 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download test result artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: pytest-results
           path: reports/
 
       - name: Publish unit test reports
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2.1.1
         if: success() || failure()
         with:
           name: Pytest Report

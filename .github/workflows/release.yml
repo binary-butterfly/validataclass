@@ -10,14 +10,14 @@ on:
 jobs:
   build:
     name: Build package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # We use Python 3.10 here because it's the minimum Python version supported by this library.
       - name: Setup Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.10
 
@@ -28,7 +28,7 @@ jobs:
         run: python -m build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist_packages
           path: dist/
@@ -37,18 +37,18 @@ jobs:
     # This job tests the built package by installing it via pip and running unit tests (without tox).
     name: Test package
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.10
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dist_packages
           path: dist/
@@ -62,23 +62,23 @@ jobs:
   publish:
     name: Publish package
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dist_packages
           path: dist/
 
       - name: Upload package to GitHub release assets
-        uses: AButler/upload-release-assets@v2.0
+        uses: AButler/upload-release-assets@v3.0
         with:
           files: dist/*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.6
+        uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
