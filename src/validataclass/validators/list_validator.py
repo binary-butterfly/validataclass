@@ -19,11 +19,11 @@ __all__ = [
     'T_ListItem',
 ]
 
-# Type variable for type hints in DataclassValidator
+# Type parameter for the list items in the output of a ListValidator
 T_ListItem = TypeVar('T_ListItem')
 
 
-class ListValidator(Validator, Generic[T_ListItem]):
+class ListValidator(Validator[list[T_ListItem]], Generic[T_ListItem]):
     """
     Validator for lists that validates list items with a specified item validator.
 
@@ -68,7 +68,7 @@ class ListValidator(Validator, Generic[T_ListItem]):
     """
 
     # Validator used to validate the list items
-    item_validator: Validator
+    item_validator: Validator[T_ListItem]
 
     # List length constraints
     min_length: int | None = None
@@ -79,7 +79,7 @@ class ListValidator(Validator, Generic[T_ListItem]):
 
     def __init__(
         self,
-        item_validator: Validator,
+        item_validator: Validator[T_ListItem],
         *,
         min_length: int | None = None,
         max_length: int | None = None,

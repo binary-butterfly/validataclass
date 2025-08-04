@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 
-class StringValidator(Validator):
+class StringValidator(Validator[str]):
     """
     Validator for arbitrary strings, optionally with minimal/maximal length requirements.
 
