@@ -96,7 +96,7 @@ def assert_decimal(actual: Decimal, expected: Decimal | str) -> None:
 
 
 # Test validator that parses context arguments
-class UnitTestContextValidator(Validator):
+class UnitTestContextValidator(Validator[str]):
     """
     Context-sensitive string validator, only for unit testing.
 

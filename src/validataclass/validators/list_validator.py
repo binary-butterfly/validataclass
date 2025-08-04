@@ -23,7 +23,7 @@ __all__ = [
 T_ListItem = TypeVar('T_ListItem')
 
 
-class ListValidator(Generic[T_ListItem], Validator):
+class ListValidator(Validator, Generic[T_ListItem]):
     """
     Validator for lists that validates list items with a specified item validator.
 

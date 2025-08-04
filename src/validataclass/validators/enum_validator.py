@@ -20,7 +20,7 @@ __all__ = [
 T_Enum = TypeVar('T_Enum', bound=Enum)
 
 
-class EnumValidator(Generic[T_Enum], AnyOfValidator):
+class EnumValidator(AnyOfValidator, Generic[T_Enum]):
     """
     Validator that uses an Enum class to parse input values to members of that enumeration.
 

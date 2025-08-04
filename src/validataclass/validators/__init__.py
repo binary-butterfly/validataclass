@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 # Abstract base class (needs to be imported first to avoid import loops)
-from .validator import Validator  # isort:skip
+from .validator import T_Validated, Validator  # isort:skip
 
 # Validators
 from .allow_empty_string import AllowEmptyString
@@ -62,6 +62,7 @@ __all__ = [
     'T_Dataclass',
     'T_Enum',
     'T_ListItem',
+    'T_Validated',
     'TimeFormat',
     'TimeValidator',
     'UrlValidator',

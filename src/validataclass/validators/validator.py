@@ -9,14 +9,20 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import Any
 
+from typing_extensions import Generic, TypeVar
+
 from validataclass.exceptions import InvalidTypeError, RequiredValueError
 
 __all__ = [
     'Validator',
+    'T_Validated',
 ]
 
+# Type parameter for the validated output of a validator
+T_Validated = TypeVar('T_Validated', covariant=True)
 
-class Validator(ABC):
+
+class Validator(Generic[T_Validated], ABC):
     """
     Base class for building extendable validator classes that validate, sanitize and transform input.
     """
@@ -33,7 +39,7 @@ class Validator(ABC):
         super().__init_subclass__(**kwargs)
 
     @abstractmethod
-    def validate(self, input_data: Any, **kwargs: Any) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_Validated:
         """
         Validates input data. Returns sanitized data or raises a `ValidationError` (or any subclass).
 
@@ -46,7 +52,7 @@ class Validator(ABC):
         """
         raise NotImplementedError()
 
-    def validate_with_context(self, input_data: Any, **kwargs: Any) -> Any:
+    def validate_with_context(self, input_data: Any, **kwargs: Any) -> T_Validated:
         """
         This method is a wrapper for `validate()` that always accepts arbitrary keyword arguments (which can be used
         for context-sensitive validation).
