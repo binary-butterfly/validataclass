@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from tests.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
+from tests.unit.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from tests.test_utils import UNSET_PARAMETER
 from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, NoDefault, validataclass_field
 from validataclass.helpers import UnsetValue
