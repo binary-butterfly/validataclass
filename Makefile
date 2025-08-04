@@ -39,6 +39,11 @@ venv-tox:
 test:
 	tox run -e clean,py,report
 
+# Only run pytest, but limited to the type checker tests in `tests/mypy`.
+.PHONY: test
+test-typing:
+	tox run -e pytest-mypy
+
 # Only run flake8 linter
 .PHONY: flake8
 flake8:

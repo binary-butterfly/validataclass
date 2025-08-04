@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+- case: integer_validator_typing
+  main: |
+    from validataclass.validators import IntegerValidator
+    reveal_type(IntegerValidator())
+    reveal_type(IntegerValidator().validate(42))
+  out: |
+    main:2: note: Revealed type is "validataclass.validators.integer_validator.IntegerValidator"
+    main:3: note: Revealed type is "builtins.int"
+
+- case: integer_validator_typing2
+  main: |
+    from validataclass.validators import IntegerValidator
+    reveal_type(IntegerValidator())               # N: Revealed type is "validataclass.validators.integer_validator.IntegerValidator"
+    reveal_type(IntegerValidator().validate(42))  # N: Revealed type is "builtins.int"
+
+# - case: integer_validator_typing_failing
+#   main: |
+#     from validataclass.validators import IntegerValidator
+#     reveal_type(IntegerValidator())
+#     reveal_type(IntegerValidator().validate(42))
+#   out: |
+#     main:2: note: Revealed type is "foo"
+#     main:3: note: Revealed type is "bar"
