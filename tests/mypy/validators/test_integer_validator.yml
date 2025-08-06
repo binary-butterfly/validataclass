@@ -1,25 +1,15 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
 
-- case: integer_validator_typing
+# Check that validator has correct type parameter for Validator[T]
+- case: integer_validator_type_params
   main: |
-    from validataclass.validators import IntegerValidator
-    reveal_type(IntegerValidator())
-    reveal_type(IntegerValidator().validate(42))
+    from validataclass.validators import IntegerValidator, Validator
+    validator = IntegerValidator()
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Validator[int] = validator  # correct
+    var2: Validator[str] = validator  # error
   out: |
-    main:2: note: Revealed type is "validataclass.validators.integer_validator.IntegerValidator"
-    main:3: note: Revealed type is "builtins.int"
-
-- case: integer_validator_typing2
-  main: |
-    from validataclass.validators import IntegerValidator
-    reveal_type(IntegerValidator())               # N: Revealed type is "validataclass.validators.integer_validator.IntegerValidator"
-    reveal_type(IntegerValidator().validate(42))  # N: Revealed type is "builtins.int"
-
-# - case: integer_validator_typing_failing
-#   main: |
-#     from validataclass.validators import IntegerValidator
-#     reveal_type(IntegerValidator())
-#     reveal_type(IntegerValidator().validate(42))
-#   out: |
-#     main:2: note: Revealed type is "foo"
-#     main:3: note: Revealed type is "bar"
+    main:3: note: Revealed type is "validataclass.validators.integer_validator.IntegerValidator"
+    main:4: note: Revealed type is "builtins.int"
+    main:6: error: Incompatible types in assignment (expression has type "IntegerValidator", variable has type "Validator[str]")  [assignment]
