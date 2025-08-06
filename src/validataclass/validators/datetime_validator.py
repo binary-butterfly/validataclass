@@ -12,6 +12,7 @@ from typing import Any
 from validataclass.exceptions import DateTimeRangeError, InvalidDateTimeError, InvalidValidatorOptionException
 from validataclass.helpers import BaseDateTimeRange
 from .string_validator import StringValidator
+from .validator import Validator
 
 __all__ = [
     'DateTimeFormat',
@@ -66,7 +67,7 @@ class DateTimeFormat(Enum):
     LOCAL_OR_UTC = ('<DATE>T<TIME>[Z]', f'{_REGEX_DATE_AND_TIME}{_REGEX_UTC_ONLY}?')
 
 
-class DateTimeValidator(StringValidator):
+class DateTimeValidator(Validator[datetime]):
     """
     Validator that parses datetime strings in the ISO 8601 compatible format `YYYY-MM-DDTHH:MM:SS[.fff][+HH:MM]` to
     `datetime.datetime` objects, where `T` stands for the literal character as a separator between date and time (e.g.
@@ -276,6 +277,9 @@ class DateTimeValidator(StringValidator):
     Output: `datetime.datetime`
     """
 
+    # Base validator to parse input as a string first
+    string_validator: StringValidator
+
     # Datetime string format (enum)
     datetime_format: DateTimeFormat
 
@@ -322,7 +326,7 @@ class DateTimeValidator(StringValidator):
             `datetime_range`: `BaseDateTimeRange` (subclasses), specifies the range of allowed values (default: `None`)
         """
         # Initialize StringValidator without any parameters
-        super().__init__()
+        self.string_validator = StringValidator()
 
         # Check parameter validity
         if target_timezone is not None and datetime_format.allows_local() and local_timezone is None:
@@ -341,12 +345,12 @@ class DateTimeValidator(StringValidator):
         # Precompile regular expression for datetime format
         self.datetime_format_regex = re.compile(self.datetime_format.regex_str)
 
-    def validate(self, input_data: Any, **kwargs: Any) -> datetime:  # type: ignore[override]
+    def validate(self, input_data: Any, **kwargs: Any) -> datetime:
         """
         Validates input as a valid datetime string and convert it to a `datetime.datetime` object.
         """
         # First, validate input data as string
-        datetime_string = super().validate(input_data, **kwargs)
+        datetime_string = self.string_validator.validate(input_data, **kwargs)
 
         # Validate string format with a regular expression
         valid_input_match = self.datetime_format_regex.fullmatch(datetime_string)
