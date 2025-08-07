@@ -8,7 +8,7 @@ import dataclasses
 
 import pytest
 
-from tests.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
+from tests.unit.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from validataclass.dataclasses import (
     Default,
     DefaultFactory,
