@@ -124,10 +124,6 @@ class AnyOfValidator(Validator):
         """
         Validate that input is in the list of allowed values. Returns the value (as defined in the list).
         """
-        # Special case to allow None as value if None is in the allowed_values list (bypasses _ensure_type())
-        if None in self.allowed_values and input_data is None:
-            return None
-
         # Ensure type is one of the allowed types (set by parameter or autodetermined from allowed_values)
         self._ensure_type(input_data, self.allowed_types)
 

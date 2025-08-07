@@ -83,16 +83,20 @@ class Validator(Generic[T_Validated], ABC):
 
     def _ensure_type(self, input_data: Any, expected_types: list[type] | type) -> None:
         """
-        Checks if input data is not `None` and has the expected type (or one of multiple expected types).
+        Checks the type of `input_data` against one or multiple expected types.
 
-        Raises `RequiredValueError` and `InvalidTypeError`.
+        If `type(None)` is not in the expected types, `_ensure_not_none(input_data)` will be called to ensure that the
+        input data is not `None`.
+
+        Raises `RequiredValueError` (only if input data is none) or `InvalidTypeError`.
         """
-        # Ensure input is not None
-        self._ensure_not_none(input_data)
-
         # Normalize expected_types to a list
         if not isinstance(expected_types, list):
             expected_types = [expected_types]
+
+        # Ensure input is not None (unless it's explicitly allowed)
+        if type(None) not in expected_types:
+            self._ensure_not_none(input_data)
 
         # Ensure input has correct type
         if type(input_data) not in expected_types:
