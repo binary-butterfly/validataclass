@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check inferred type parameters for AnyOfValidator with an empty list of allowed values.
+#
+# NOTE: There are no error cases here, i.e. no incompatible type parameters for Validator, because Never is the bottom
+# type and therefore a subset of every other (union of) type(s): int == int | Never, so Never is a subset of int, which
+# also means that a `Validator[Never]` is a valid `Validator[int]`. (In other words: a validator that never returns is
+# also a validator that only returns int/str/anything else.)
+- case: any_of_validator_with_empty_allowed_values
+  main: |
+    from typing import Never
+    from validataclass.validators import AnyOfValidator, Validator
+    reveal_type(AnyOfValidator(allowed_values=[]))
+    reveal_type(AnyOfValidator(allowed_values=[]).validate(42))
+    var1: AnyOfValidator[Never] = AnyOfValidator(allowed_values=[])  # correct
+    var2: AnyOfValidator[str] = AnyOfValidator(allowed_values=[])    # actually also correct
+    var3: Validator[Never] = AnyOfValidator(allowed_values=[])       # correct
+    var4: Validator[str] = AnyOfValidator(allowed_values=[])         # actually also correct
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[Never]"
+    main:4: note: Revealed type is "Never"
+
+# Check inferred type parameters for AnyOfValidator with a list of allowed values of a single type.
+- case: any_of_validator_with_int_allowed_values
+  main: |
+    from validataclass.validators import AnyOfValidator, Validator
+    validator = AnyOfValidator(allowed_values=[1, 2, 3])
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: AnyOfValidator[int] = validator  # correct
+    var2: AnyOfValidator[str] = validator  # error (6)
+    var3: Validator[int] = validator       # correct
+    var4: Validator[str] = validator       # error (8)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[builtins.int]"
+    main:4: note: Revealed type is "builtins.int"
+    main:6: error: Incompatible types in assignment (expression has type "AnyOfValidator[int]", variable has type "AnyOfValidator[str]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "AnyOfValidator[int]", variable has type "Validator[str]")  [assignment]
+
+# Check inferred type parameters for AnyOfValidator with a list of allowed values of mixed types, where the type of the
+# list is inferred from the list elements.
+#
+# NOTE: As of mypy 1.17, this allowed_values list will be inferred as "list[object]" rather than "list[int | str]".
+# That means you need to type the list explicitly if you want the AnyOfValidator type to be correctly inferred (see the
+# test "any_of_validator_with_mixed_allowed_values_explicit" below).
+# If that ever changes, this test case will fail, in which case this test and the other one should be adjusted.
+- case: any_of_validator_with_mixed_allowed_values_inferred
+  main: |
+    from validataclass.validators import AnyOfValidator, Validator
+    validator = AnyOfValidator(allowed_values=[1, 'foo'])
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: AnyOfValidator[object] = validator     # correct
+    var2: AnyOfValidator[int | str] = validator  # error (6)
+    var3: Validator[object] = validator          # correct
+    var4: Validator[int | str] = validator       # error (8)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[builtins.object]"
+    main:4: note: Revealed type is "builtins.object"
+    main:6: error: Incompatible types in assignment (expression has type "AnyOfValidator[object]", variable has type "AnyOfValidator[int | str]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "AnyOfValidator[object]", variable has type "Validator[int | str]")  [assignment]
+
+# Check inferred type parameters for AnyOfValidator with a list of allowed values of mixed types, where the type of the
+# list is explictly specified with a union of all list element types. (See note of the test above.)
+- case: any_of_validator_with_mixed_allowed_values_explicit
+  main: |
+    from validataclass.validators import AnyOfValidator, Validator
+    allowed_values: list[int | str] = [1, 'foo']
+    validator = AnyOfValidator(allowed_values=allowed_values)
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: AnyOfValidator[int | str] = validator  # correct
+    var2: AnyOfValidator[str] = validator        # error (7)
+    var3: Validator[int | str] = validator       # correct
+    var4: Validator[str] = validator             # error (9)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[builtins.int | builtins.str]"
+    main:5: note: Revealed type is "builtins.int | builtins.str"
+    main:7: error: Incompatible types in assignment (expression has type "AnyOfValidator[int | str]", variable has type "AnyOfValidator[str]")  [assignment]
+    main:9: error: Incompatible types in assignment (expression has type "AnyOfValidator[int | str]", variable has type "Validator[str]")  [assignment]

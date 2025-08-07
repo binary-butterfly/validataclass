@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import warnings
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, TypeVar
 
 from validataclass.exceptions import ValueNotAllowedError, InvalidValidatorOptionException
 from .validator import Validator
@@ -15,8 +15,11 @@ __all__ = [
     'AnyOfValidator',
 ]
 
+# Type parameter for the allowed values of an AnyOfValidator
+T_AnyOfValues = TypeVar('T_AnyOfValues')
 
-class AnyOfValidator(Validator):
+
+class AnyOfValidator(Validator[T_AnyOfValues]):
     """
     Validator that checks an input value against a specified list of allowed values. If the value is contained in the
     list, the value is returned.
@@ -59,7 +62,7 @@ class AnyOfValidator(Validator):
     max_allowed_values_in_validation_error: int = 20
 
     # Values allowed as input
-    allowed_values: list[Any]
+    allowed_values: list[T_AnyOfValues]
 
     # Types allowed for input data (set by parameter or autodetermined from allowed_values)
     allowed_types: list[type]
@@ -67,9 +70,11 @@ class AnyOfValidator(Validator):
     # If set, strings will be matched case-sensitively
     case_sensitive: bool = False
 
+    # TODO: Improve typing: If allowed_types is set, T_AnyOfValues could be narrowed down. This is difficult without an
+    #   intersection type though, but maybe it can be done in the validataclass mypy plugin.
     def __init__(
         self,
-        allowed_values: Iterable[Any],
+        allowed_values: Iterable[T_AnyOfValues],
         *,
         allowed_types: Iterable[type] | type | None = None,
         case_sensitive: bool | None = None,
@@ -120,7 +125,7 @@ class AnyOfValidator(Validator):
         # Set case_sensitive parameter, defaulting to False.
         self.case_sensitive = case_sensitive if case_sensitive is not None else False
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_AnyOfValues:
         """
         Validate that input is in the list of allowed values. Returns the value (as defined in the list).
         """
