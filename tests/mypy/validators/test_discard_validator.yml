@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check inferred type parameter for DiscardValidator without explicit output value (meaning output value is None).
+- case: discard_validator_without_explicit_output_value
+  main: |
+    from typing import Never
+    from validataclass.validators import DiscardValidator, Validator
+    validator = DiscardValidator()
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: DiscardValidator[None] = validator   # correct
+    var2: DiscardValidator[int] = validator    # error (7)
+    var3: DiscardValidator[Never] = validator  # error (8)
+    var4: Validator[None] = validator          # correct
+    var5: Validator[int] = validator           # error (10)
+    var6: Validator[Never] = validator         # error (11)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.discard_validator.DiscardValidator[None]"
+    main:5: note: Revealed type is "None"
+    main:7: error: Incompatible types in assignment (expression has type "DiscardValidator[None]", variable has type "DiscardValidator[int]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "DiscardValidator[None]", variable has type "DiscardValidator[Never]")  [assignment]
+    main:10: error: Incompatible types in assignment (expression has type "DiscardValidator[None]", variable has type "Validator[int]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "DiscardValidator[None]", variable has type "Validator[Never]")  [assignment]
+
+# Check inferred type parameter for DiscardValidator with specified output value.
+- case: discard_validator_without_explicit_output_value
+  main: |
+    from typing import Never
+    from validataclass.validators import DiscardValidator, Validator
+    validator = DiscardValidator(output_value=42)
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: DiscardValidator[int] = validator    # correct
+    var2: DiscardValidator[None] = validator   # error (7)
+    var3: DiscardValidator[Never] = validator  # error (8)
+    var4: Validator[int] = validator           # correct
+    var5: Validator[None] = validator          # error (10)
+    var6: Validator[Never] = validator         # error (11)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.discard_validator.DiscardValidator[builtins.int]"
+    main:5: note: Revealed type is "builtins.int"
+    main:7: error: Incompatible types in assignment (expression has type "DiscardValidator[int]", variable has type "DiscardValidator[None]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "DiscardValidator[int]", variable has type "DiscardValidator[Never]")  [assignment]
+    main:10: error: Incompatible types in assignment (expression has type "DiscardValidator[int]", variable has type "Validator[None]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "DiscardValidator[int]", variable has type "Validator[Never]")  [assignment]
