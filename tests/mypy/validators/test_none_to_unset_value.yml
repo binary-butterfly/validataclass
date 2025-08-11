@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check inferred type parameters for NoneToUnsetValue.
+- case: none_to_unset_value_with_default_none
+  main: |
+    from validataclass.helpers import UnsetValueType
+    from validataclass.validators import IntegerValidator, NoneToUnsetValue, Noneable, Validator
+    validator = NoneToUnsetValue(IntegerValidator())
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: NoneToUnsetValue[int] = validator            # correct
+    var2: Noneable[int, UnsetValueType] = validator    # correct
+    var3: Noneable[int, None] = validator              # error (8)
+    var4: Validator[int | UnsetValueType] = validator  # correct
+    var5: Validator[int | None] = validator            # error (10)
+    var6: Validator[int] = validator                   # error (11)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.none_to_unset_value.NoneToUnsetValue[builtins.int]"
+    main:5: note: Revealed type is "builtins.int | validataclass.helpers.unset_value.UnsetValueType"
+    main:8: error: Incompatible types in assignment (expression has type "NoneToUnsetValue[int]", variable has type "Noneable[int, None]")  [assignment]
+    main:10: error: Incompatible types in assignment (expression has type "NoneToUnsetValue[int]", variable has type "Validator[int | None]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "NoneToUnsetValue[int]", variable has type "Validator[int]")  [assignment]

@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check inferred type parameters for AllowEmptyString (with implicit and explicit default='').
+- case: allow_empty_string_with_default_empty_string
+  main: |
+    from validataclass.validators import AllowEmptyString, IntegerValidator, Validator
+    validator = AllowEmptyString(IntegerValidator())
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    # Explicit default='' should result in the same type
+    reveal_type(AllowEmptyString(IntegerValidator(), default=''))
+    var1: AllowEmptyString[int, str] = validator  # correct
+    var2: AllowEmptyString[int, int] = validator  # error (8)
+    var3: Validator[int | str] = validator        # correct
+    var4: Validator[int] = validator              # error (10)
+    var5: Validator[str] = validator              # error (11)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.allow_empty_string.AllowEmptyString[builtins.int, builtins.str]"
+    main:4: note: Revealed type is "builtins.int | builtins.str"
+    main:6: note: Revealed type is "validataclass.validators.allow_empty_string.AllowEmptyString[builtins.int, builtins.str]"
+    main:8: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, str]", variable has type "AllowEmptyString[int, int]")  [assignment]
+    main:10: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, str]", variable has type "Validator[int]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, str]", variable has type "Validator[str]")  [assignment]
+
+# Check inferred type parameters for AllowEmptyString with a default value of the same type as the validator (e.g.
+# AllowEmptyString wrapping an IntegerValidator and converting the empty string to to 0).
+- case: allow_empty_string_with_default_of_same_type_as_validated
+  main: |
+    from validataclass.validators import AllowEmptyString, IntegerValidator, Validator
+    validator = AllowEmptyString(IntegerValidator(), default=0)
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: AllowEmptyString[int, int] = validator  # correct
+    var2: AllowEmptyString[int, str] = validator  # error (6)
+    var3: Validator[int] = validator              # correct
+    var4: Validator[str] = validator              # error (8)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.allow_empty_string.AllowEmptyString[builtins.int, builtins.int]"
+    main:4: note: Revealed type is "builtins.int"
+    main:6: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, int]", variable has type "AllowEmptyString[int, str]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, int]", variable has type "Validator[str]")  [assignment]
+
+# Check inferred type parameters for AllowEmptyString with a default value of a different type than the validator (e.g.
+# AllowEmptyString wrapping an IntegerValidator and converting the empty string to None).
+- case: allow_empty_string_with_default_of_different_type_as_validated
+  main: |
+    from validataclass.validators import AllowEmptyString, IntegerValidator, Validator
+    validator = AllowEmptyString(IntegerValidator(), default=None)
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: AllowEmptyString[int, None] = validator  # correct
+    var2: AllowEmptyString[int, str] = validator   # error (6)
+    var3: Validator[int | None] = validator        # correct
+    var4: Validator[int | str] = validator         # error (8)
+    var5: Validator[int] = validator               # error (9)
+    var6: Validator[None] = validator              # error (10)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.allow_empty_string.AllowEmptyString[builtins.int, None]"
+    main:4: note: Revealed type is "builtins.int | None"
+    main:6: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, None]", variable has type "AllowEmptyString[int, str]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, None]", variable has type "Validator[int | str]")  [assignment]
+    main:9: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, None]", variable has type "Validator[int]")  [assignment]
+    main:10: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, None]", variable has type "Validator[None]")  [assignment]

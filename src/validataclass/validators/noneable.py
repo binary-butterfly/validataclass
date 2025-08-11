@@ -5,7 +5,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, overload
+
+from typing_extensions import Generic, TypeVar
 
 from validataclass.exceptions import InvalidTypeError
 from .validator import Validator
@@ -14,8 +16,15 @@ __all__ = [
     'Noneable',
 ]
 
+# Type parameters for the validation result of the wrapped validator and for the default value (None by default)
+T_WrappedValidated = TypeVar('T_WrappedValidated')
+T_NoneableDefault = TypeVar('T_NoneableDefault', default=None)
 
-class Noneable(Validator):
+
+class Noneable(
+    Validator[T_WrappedValidated | T_NoneableDefault],
+    Generic[T_WrappedValidated, T_NoneableDefault],
+):
     """
     Special validator that wraps another validator, but allows `None` as input value.
 
@@ -42,12 +51,20 @@ class Noneable(Validator):
     """
 
     # Default value returned in case the input is None
-    default_value: Any
+    default_value: T_NoneableDefault
 
     # Validator used in case the input is not None
-    wrapped_validator: Validator
+    wrapped_validator: Validator[T_WrappedValidated]
 
-    def __init__(self, validator: Validator, *, default: Any = None):
+    @overload
+    def __init__(self, validator: Validator[T_WrappedValidated], *, default: None = None):
+        ...
+
+    @overload
+    def __init__(self, validator: Validator[T_WrappedValidated], *, default: T_NoneableDefault):
+        ...
+
+    def __init__(self, validator: Validator[T_WrappedValidated], *, default: Any = None):
         """
         Creates a `Noneable` wrapper validator.
 
@@ -62,7 +79,7 @@ class Noneable(Validator):
         self.wrapped_validator = validator
         self.default_value = default
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Any | None:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_WrappedValidated | T_NoneableDefault:
         """
         Validates input data.
 
