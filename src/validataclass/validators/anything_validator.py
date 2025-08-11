@@ -5,7 +5,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast, overload
+
+from typing_extensions import TypeVar
 
 from validataclass.exceptions import InvalidValidatorOptionException
 from .validator import Validator
@@ -14,8 +16,15 @@ __all__ = [
     'AnythingValidator',
 ]
 
+# Type parameter for the allowed values of an AnyOfValidator
+T_AllowedTypes = TypeVar('T_AllowedTypes', default=object)
 
-class AnythingValidator(Validator):
+
+# TODO: This validator allows a lot of redundant/unnecessary configurations that overcomplicate typing, like setting
+#   `allowed_types` and `allow_none` with the latter influencing the first. Typing-wise, these cases will be ignored,
+#   resulting in a less specific type. In the long term, some of these configurations should be deprecated to simplify
+#   the validator.
+class AnythingValidator(Validator[T_AllowedTypes]):
     """
     Special validator that accepts any input without validation.
 
@@ -65,13 +74,29 @@ class AnythingValidator(Validator):
     allow_none: bool
 
     # Which input types to allow (None for anything)
-    allowed_types: list[type] | None
+    allowed_types: list[type[T_AllowedTypes]] | None
+
+    @overload
+    def __init__(self, *, allow_none: bool | None = None, allowed_types: None = None):
+        ...
+
+    @overload
+    def __init__(self, *, allow_none: bool | None = None, allowed_types: type[T_AllowedTypes]):
+        ...
+
+    @overload
+    def __init__(self, *, allow_none: bool | None = None, allowed_types: Iterable[type[T_AllowedTypes]]):
+        ...
+
+    @overload
+    def __init__(self, *, allow_none: bool | None = None, allowed_types: Iterable[type[T_AllowedTypes] | None]):
+        ...
 
     def __init__(
         self,
         *,
         allow_none: bool | None = None,
-        allowed_types: Iterable[type | None] | type | None = None,
+        allowed_types: Iterable[type[T_AllowedTypes] | None] | type[T_AllowedTypes] | None = None,
     ):
         """
         Creates an `AnythingValidator` that accepts any input.
@@ -140,13 +165,13 @@ class AnythingValidator(Validator):
 
         return list(allowed_types_set)
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_AllowedTypes:
         """
         Validates input data. Accepts anything (or only specific types) and returns data unmodified.
         """
         # Accept None (if allowed explicitly with allow_none=True or implicitly with NoneType in allowed_types)
         if self.allow_none and input_data is None:
-            return None
+            return None  # type: ignore[return-value]
 
         # If allowed_types is set, do a type check (this also raises a RequiredValueError if the input is None)
         if self.allowed_types is not None:
@@ -156,4 +181,4 @@ class AnythingValidator(Validator):
             self._ensure_not_none(input_data)
 
         # Return input unmodified
-        return input_data
+        return cast(T_AllowedTypes, input_data)
