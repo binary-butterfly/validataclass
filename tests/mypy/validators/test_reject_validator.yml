@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that inferred type parameter for RejectValidator is Never.
+#
+# NOTE: There are no error cases here, i.e. no incompatible type parameters for Validator, because Never is the bottom
+# type and therefore a subset of every other (union of) type(s): int == int | Never, so Never is a subset of int, which
+# also means that a `Validator[Never]` is a valid `Validator[int]`. (In other words: a validator that never returns is
+# also a validator that only returns int/str/anything else.)
+- case: reject_validator_rejects_anything
+  main: |
+    from typing import Never
+    from validataclass.validators import RejectValidator, Validator
+    validator = RejectValidator()
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Validator[Never] = validator  # correct
+    var2: Validator[None] = validator   # actually also correct
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.reject_validator.RejectValidator"
+    main:5: note: Revealed type is "Never"
+
+# Check that inferred type parameter for a Noneable(RejectValidator) is None and not Never.
+- case: reject_validator_wrapped_in_noneable
+  main: |
+    from typing import Never
+    from validataclass.validators import Noneable, RejectValidator, Validator
+    validator = Noneable(RejectValidator())
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Noneable[Never, None] = validator  # correct
+    var2: Validator[None] = validator        # correct
+    var3: Validator[Never] = validator       # error (8)
+    var4: Validator[int] = validator         # error (9)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.noneable.Noneable[Never, None]"
+    main:5: note: Revealed type is "None"
+    main:8: error: Incompatible types in assignment (expression has type "Noneable[Never, None]", variable has type "Validator[Never]")  [assignment]
+    main:9: error: Incompatible types in assignment (expression has type "Noneable[Never, None]", variable has type "Validator[int]")  [assignment]

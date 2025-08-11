@@ -4,7 +4,7 @@ Copyright (c) 2022, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any
+from typing import Any, Never
 
 from validataclass.exceptions import ValidationError, FieldNotAllowedError
 from .validator import Validator
@@ -14,7 +14,9 @@ __all__ = [
 ]
 
 
-class RejectValidator(Validator):
+# TODO: Deprecate the usage of `allow_none` because it complicates typing. If you need a validator that only accepts
+#   None and nothing else, you can use `Noneable(RejectValidator())`.
+class RejectValidator(Validator[Never]):
     """
     Special validator that rejects any input data with a validation error.
 
@@ -93,13 +95,14 @@ class RejectValidator(Validator):
         self.error_code = error_code
         self.error_reason = error_reason
 
-    def validate(self, input_data: Any, **kwargs: Any) -> None:
+    def validate(self, input_data: Any, **kwargs: Any) -> Never:
         """
         Validates input data. In this case, reject any value (except for `None` if `allow_none` is set).
         """
         # Accept None (if allowed)
         if self.allow_none and input_data is None:
-            return None
+            # TODO: Usage of allow_none should be deprecated, see above.
+            return None  # type: ignore[misc]
 
         # Reject any input
         raise self.error_class(code=self.error_code, reason=self.error_reason)
