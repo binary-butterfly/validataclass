@@ -1,0 +1,94 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check inferred type parameters for DictValidator with field validators (no default validator).
+#
+# NOTE: The type of field_validators needs to be specified explicitly, but the type of DictValidator can be inferred.
+- case: dict_validator_type_params_with_field_validators
+  main: |
+    from typing import Any
+    from validataclass.validators import DictValidator, IntegerValidator, ListValidator, StringValidator, Validator
+    field_validators: dict[str, Validator[int | list[str]]] = {
+        'foo': IntegerValidator(),
+        'bar': ListValidator(StringValidator()),
+    }
+    validator = DictValidator(field_validators=field_validators)
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: DictValidator[int | list[str]] = validator         # correct
+    var2: DictValidator[Any] = validator                     # correct
+    var3: DictValidator[int] = validator                     # error (12)
+    var4: Validator[dict[str, int | list[str]]] = validator  # correct
+    var5: Validator[dict[str, Any]] = validator              # correct
+    var6: Validator[dict[str, int]] = validator              # error (15)
+    var7: Validator[str] = validator                         # error (16)
+    validator_bad: DictValidator[int | list[str]] = DictValidator(field_validators={
+        'foo': IntegerValidator(),
+        'bar': StringValidator(),  # error (19)
+    })
+  out: |
+    main:8: note: Revealed type is "validataclass.validators.dict_validator.DictValidator[builtins.int | builtins.list[builtins.str]]"
+    main:9: note: Revealed type is "builtins.dict[builtins.str, builtins.int | builtins.list[builtins.str]]"
+    main:12: error: Incompatible types in assignment (expression has type "DictValidator[int | list[str]]", variable has type "DictValidator[int]")  [assignment]
+    main:15: error: Incompatible types in assignment (expression has type "DictValidator[int | list[str]]", variable has type "Validator[dict[str, int]]")  [assignment]
+    main:16: error: Incompatible types in assignment (expression has type "DictValidator[int | list[str]]", variable has type "Validator[str]")  [assignment]
+    main:19: error: Dict entry 1 has incompatible type "str": "StringValidator"; expected "str": "Validator[int | list[str]]"  [dict-item]
+
+# Check inferred type parameters for DictValidator with default validator (no field validators).
+- case: dict_validator_type_params_with_default_validator
+  main: |
+    from typing import Any
+    from validataclass.validators import DictValidator, IntegerValidator, ListValidator, Validator
+    validator = DictValidator(default_validator=ListValidator(IntegerValidator()))
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: DictValidator[list[int]] = validator         # correct
+    var2: DictValidator[Any] = validator               # correct
+    var3: DictValidator[int] = validator               # error (8)
+    var4: Validator[dict[str, list[int]]] = validator  # correct
+    var5: Validator[dict[str, Any]] = validator        # correct
+    var6: Validator[dict[str, int]] = validator        # error (11)
+    var7: Validator[str] = validator                   # error (12)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.dict_validator.DictValidator[builtins.list[builtins.int]]"
+    main:5: note: Revealed type is "builtins.dict[builtins.str, builtins.list[builtins.int]]"
+    main:8: error: Incompatible types in assignment (expression has type "DictValidator[list[int]]", variable has type "DictValidator[int]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "DictValidator[list[int]]", variable has type "Validator[dict[str, int]]")  [assignment]
+    main:12: error: Incompatible types in assignment (expression has type "DictValidator[list[int]]", variable has type "Validator[str]")  [assignment]
+
+# Check inferred type parameters for DictValidator with field validators AND default validator.
+#
+# NOTE: The type of DictValidator cannot be inferred and needs to be specified explicitly.
+- case: dict_validator_type_params_with_field_validators_and_default_validator
+  main: |
+    from typing import Any
+    from validataclass.validators import DictValidator, IntegerValidator, ListValidator, StringValidator, Validator
+    validator: DictValidator[int | str | list[str]] = DictValidator(
+        field_validators={
+            'foo': IntegerValidator(),
+            'bar': ListValidator(StringValidator()),
+        },
+        default_validator=StringValidator(),
+    )
+    reveal_type(validator.validate(42))
+    var1: DictValidator[Any] = validator                           # correct
+    var2: DictValidator[int | list[str]] = validator               # error (12)
+    var3: DictValidator[str] = validator                           # error (13)
+    var4: Validator[dict[str, int | str | list[str]]] = validator  # correct
+    var5: Validator[dict[str, Any]] = validator                    # correct
+    var6: Validator[dict[str, int]] = validator                    # error (16)
+    var7: Validator[str] = validator                               # error (17)
+    validator_bad: DictValidator[int] = DictValidator(
+        field_validators={
+            'foo': IntegerValidator(),
+            'bar': StringValidator(),  # error (21)
+        },
+        default_validator=StringValidator(),  # error (23)
+    )
+  out: |
+    main:10: note: Revealed type is "builtins.dict[builtins.str, builtins.int | builtins.str | builtins.list[builtins.str]]"
+    main:12: error: Incompatible types in assignment (expression has type "DictValidator[int | str | list[str]]", variable has type "DictValidator[int | list[str]]")  [assignment]
+    main:13: error: Incompatible types in assignment (expression has type "DictValidator[int | str | list[str]]", variable has type "DictValidator[str]")  [assignment]
+    main:16: error: Incompatible types in assignment (expression has type "DictValidator[int | str | list[str]]", variable has type "Validator[dict[str, int]]")  [assignment]
+    main:17: error: Incompatible types in assignment (expression has type "DictValidator[int | str | list[str]]", variable has type "Validator[str]")  [assignment]
+    main:21: error: Dict entry 1 has incompatible type "str": "StringValidator"; expected "str": "Validator[int]"  [dict-item]
+    main:23: error: Argument "default_validator" to "DictValidator" has incompatible type "StringValidator"; expected "Validator[int] | None"  [arg-type]
