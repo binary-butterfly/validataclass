@@ -15,7 +15,6 @@ from validataclass.exceptions import InvalidTypeError, RequiredValueError
 
 __all__ = [
     'Validator',
-    'T_Validated',
 ]
 
 # Type parameter for the validated output of a validator

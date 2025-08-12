@@ -14,7 +14,6 @@ from .validator import Validator
 
 __all__ = [
     'EnumValidator',
-    'T_Enum',
 ]
 
 # Type variable for type hints in EnumValidator

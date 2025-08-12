@@ -16,7 +16,6 @@ from .validator import Validator
 
 __all__ = [
     'ListValidator',
-    'T_ListItem',
 ]
 
 # Type parameter for the list items in the output of a ListValidator

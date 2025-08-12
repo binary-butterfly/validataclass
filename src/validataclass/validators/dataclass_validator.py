@@ -22,7 +22,6 @@ from .validator import Validator
 
 __all__ = [
     'DataclassValidator',
-    'T_Dataclass',
 ]
 
 # Type parameter for an instance of a dataclass
