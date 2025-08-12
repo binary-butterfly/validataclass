@@ -214,7 +214,8 @@ class ValidatorDataclassTest:
         class UnitTestDataclass:
             field_list: list[int] = ListValidator(IntegerValidator()), Default([])
             field_dict: dict[str, int] = (
-                DictValidator(field_validators={'foo': IntegerValidator()}),
+                # TODO: Proper typing requires mypy plugin
+                DictValidator(field_validators={'foo': IntegerValidator()}),  # type: ignore[arg-type]
                 Default({'foo': 0}),
             )
 
