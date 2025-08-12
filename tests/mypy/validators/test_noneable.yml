@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check inferred type parameters for Noneable (with implicit and explicit default=None).
+- case: noneable_with_default_none
+  main: |
+    from validataclass.validators import IntegerValidator, Noneable, Validator
+    validator = Noneable(IntegerValidator())
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    # Explicit default=None should result in the same type
+    reveal_type(Noneable(IntegerValidator(), default=None))
+    var1: Noneable[int, None] = validator    # correct
+    var2: Noneable[int, int] = validator     # error (8)
+    var3: Validator[int | None] = validator  # correct
+    var4: Validator[int] = validator         # error (10)
+    var5: Validator[None] = validator        # error (11)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, None]"
+    main:4: note: Revealed type is "builtins.int | None"
+    main:6: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, None]"
+    main:8: error: Incompatible types in assignment (expression has type "Noneable[int, None]", variable has type "Noneable[int, int]")  [assignment]
+    main:10: error: Incompatible types in assignment (expression has type "Noneable[int, None]", variable has type "Validator[int]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "Noneable[int, None]", variable has type "Validator[None]")  [assignment]
+
+# Check inferred type parameters for Noneable with a default value of the same type as the validator (e.g. Noneable
+# wrapping an IntegerValidator and converting None to 0).
+- case: noneable_with_default_of_same_type_as_validated
+  main: |
+    from validataclass.validators import IntegerValidator, Noneable, Validator
+    validator = Noneable(IntegerValidator(), default=0)
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Noneable[int, int] = validator   # correct
+    var2: Noneable[int, None] = validator  # error (6)
+    var3: Validator[int] = validator       # correct
+    var4: Validator[str] = validator       # error (8)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, builtins.int]"
+    main:4: note: Revealed type is "builtins.int"
+    main:6: error: Incompatible types in assignment (expression has type "Noneable[int, int]", variable has type "Noneable[int, None]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "Noneable[int, int]", variable has type "Validator[str]")  [assignment]
+
+# Check inferred type parameters for Noneable with a default value of a different type than the validator (e.g. Noneable
+# wrapping an IntegerValidator and converting None to an empty string).
+- case: noneable_with_default_of_different_type_as_validated
+  main: |
+    from validataclass.validators import IntegerValidator, Noneable, Validator
+    validator = Noneable(IntegerValidator(), default='missing value')
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Noneable[int, str] = validator     # correct
+    var2: Noneable[str, int] = validator     # error (6)
+    var3: Validator[int | str] = validator   # correct
+    var4: Validator[int | None] = validator  # error (8)
+    var5: Validator[int] = validator         # error (9)
+    var6: Validator[str] = validator         # error (10)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, builtins.str]"
+    main:4: note: Revealed type is "builtins.int | builtins.str"
+    main:6: error: Incompatible types in assignment (expression has type "Noneable[int, str]", variable has type "Noneable[str, int]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "Noneable[int, str]", variable has type "Validator[int | None]")  [assignment]
+    main:9: error: Incompatible types in assignment (expression has type "Noneable[int, str]", variable has type "Validator[int]")  [assignment]
+    main:10: error: Incompatible types in assignment (expression has type "Noneable[int, str]", variable has type "Validator[str]")  [assignment]

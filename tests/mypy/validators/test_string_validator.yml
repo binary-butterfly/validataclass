@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that validator has correct type parameter for Validator[T]
+- case: string_validator_type_params
+  main: |
+    from validataclass.validators import StringValidator, Validator
+    validator = StringValidator()
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Validator[str] = validator  # correct
+    var2: Validator[int] = validator  # error
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.string_validator.StringValidator"
+    main:4: note: Revealed type is "builtins.str"
+    main:6: error: Incompatible types in assignment (expression has type "StringValidator", variable has type "Validator[int]")  [assignment]

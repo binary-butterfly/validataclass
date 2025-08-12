@@ -290,7 +290,7 @@ class AnyOfValidatorTest:
     @staticmethod
     def test_empty_allowed_values_with_allowed_types():
         """ Test AnyOfValidator with an empty list of allowed values (requires explicit allowed_types). """
-        validator = AnyOfValidator([], allowed_types=[str])
+        validator: AnyOfValidator[str] = AnyOfValidator([], allowed_types=[str])
 
         # This validator does not allow any input
         with pytest.raises(ValueNotAllowedError) as exception_info:

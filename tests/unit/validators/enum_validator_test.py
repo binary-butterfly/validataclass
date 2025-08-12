@@ -499,7 +499,7 @@ class EnumValidatorTest:
         """
         # This case should never happen in real life, so we need to manipulate the validator parameters post-creation
         validator = EnumValidator(UnitTestStringEnum)
-        validator.allowed_values.append('bananana')
+        validator.any_of_validator.allowed_values.append('bananana')
 
         with pytest.raises(ValueNotAllowedError):
             validator.validate('bananana')

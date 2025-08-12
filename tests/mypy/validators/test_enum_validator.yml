@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that validator has correct type parameter for Validator[T]
+- case: enum_validator_type_params
+  main: |
+    from enum import Enum
+    from validataclass.validators import EnumValidator, Validator
+
+    class TestEnum(Enum):
+        FOO = 1
+        BAR = 2
+
+    class BadEnum(Enum):
+        FOO = 3
+
+    validator = EnumValidator(TestEnum)
+    reveal_type(validator)                     # (12)
+    reveal_type(validator.validate(42))        # (13)
+    var1: EnumValidator[TestEnum] = validator  # correct
+    var2: EnumValidator[BadEnum] = validator   # error (15)
+    var3: EnumValidator[int] = validator       # error (16)
+    var4: Validator[TestEnum] = validator      # correct
+    var5: Validator[int] = validator           # error (18)
+  out: |
+    main:12: note: Revealed type is "validataclass.validators.enum_validator.EnumValidator[main.TestEnum]"
+    main:13: note: Revealed type is "main.TestEnum"
+    main:15: error: Incompatible types in assignment (expression has type "EnumValidator[TestEnum]", variable has type "EnumValidator[BadEnum]")  [assignment]
+    main:16: error: Type argument "int" of "EnumValidator" must be a subtype of "Enum"  [type-var]
+    main:16: error: Incompatible types in assignment (expression has type "EnumValidator[TestEnum]", variable has type "EnumValidator[int]")  [assignment]
+    main:18: error: Incompatible types in assignment (expression has type "EnumValidator[TestEnum]", variable has type "Validator[int]")  [assignment]

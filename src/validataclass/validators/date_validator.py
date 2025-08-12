@@ -9,13 +9,14 @@ from typing import Any
 
 from validataclass.exceptions import InvalidDateError
 from .string_validator import StringValidator
+from .validator import Validator
 
 __all__ = [
     'DateValidator',
 ]
 
 
-class DateValidator(StringValidator):
+class DateValidator(Validator[date]):
     """
     Validator that parses date strings in `YYYY-MM-DD` format (e.g. `2021-01-31`) to `datetime.date` objects.
 
@@ -33,6 +34,9 @@ class DateValidator(StringValidator):
     Output: `datetime.date`
     """
 
+    # Base validator to parse input as a string first
+    string_validator: StringValidator
+
     def __init__(self) -> None:
         """
         Creates a `DateValidator`.
@@ -40,14 +44,14 @@ class DateValidator(StringValidator):
         No parameters.
         """
         # Initialize StringValidator without any parameters
-        super().__init__()
+        self.string_validator = StringValidator()
 
-    def validate(self, input_data: Any, **kwargs: Any) -> date:  # type: ignore[override]
+    def validate(self, input_data: Any, **kwargs: Any) -> date:
         """
         Validates input as a valid date string and convert it to a `datetime.date` object.
         """
         # First, validate input data as string
-        date_string = super().validate(input_data, **kwargs)
+        date_string = self.string_validator.validate(input_data, **kwargs)
 
         # Try to create date object from string (only accepts "YYYY-MM-DD")
         try:

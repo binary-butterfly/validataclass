@@ -23,7 +23,7 @@ class ValidatorTest:
         """
         # Ensure that Validator creation causes a DeprecationWarning
         with pytest.deprecated_call():
-            class ValidatorWithoutKwargs(Validator):
+            class ValidatorWithoutKwargs(Validator[Any]):
                 def validate(self, input_data: Any) -> Any:  # type: ignore[override]  # noqa
                     return input_data
 

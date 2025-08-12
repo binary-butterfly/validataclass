@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that validator has correct type parameters for Validator[T] and ListValidator[T]
+- case: list_validator_type_params
+  main: |
+    from validataclass.validators import IntegerValidator, ListValidator, Validator
+    validator = ListValidator(IntegerValidator())
+    reveal_type(validator)
+    reveal_type(validator.validate('foo'))
+    var1: ListValidator[int] = validator    # correct
+    var2: ListValidator[str] = validator    # error (6)
+    var3: Validator[list[int]] = validator  # correct
+    var4: Validator[list[str]] = validator  # error (8)
+    var5: Validator[int] = validator        # error (9)
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.list_validator.ListValidator[builtins.int]"
+    main:4: note: Revealed type is "builtins.list[builtins.int]"
+    main:6: error: Incompatible types in assignment (expression has type "ListValidator[int]", variable has type "ListValidator[str]")  [assignment]
+    main:8: error: Incompatible types in assignment (expression has type "ListValidator[int]", variable has type "Validator[list[str]]")  [assignment]
+    main:9: error: Incompatible types in assignment (expression has type "ListValidator[int]", variable has type "Validator[int]")  [assignment]

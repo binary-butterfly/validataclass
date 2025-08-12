@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class BooleanValidator(Validator):
+class BooleanValidator(Validator[bool]):
     """
     Validator for boolean values (`True` and `False`).
 

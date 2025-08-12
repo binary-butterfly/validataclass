@@ -4,7 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from validataclass.exceptions import (
     DictFieldsValidationError,
@@ -19,8 +19,11 @@ __all__ = [
     'DictValidator',
 ]
 
+# Type parameter for the values of the validated dictionary
+T_DictValues = TypeVar('T_DictValues')
 
-class DictValidator(Validator):
+
+class DictValidator(Validator[dict[str, T_DictValues]], Generic[T_DictValues]):
     """
     Validator for dictionaries with all kinds of data.
 
@@ -66,10 +69,10 @@ class DictValidator(Validator):
     """
 
     # Dictionary to specify which validators are applied to which fields of the input dictionary
-    field_validators: dict[str, Validator]
+    field_validators: dict[str, Validator[T_DictValues]]
 
     # Validator that is applied to all fields not specified in field_validators
-    default_validator: Validator | None
+    default_validator: Validator[T_DictValues] | None
 
     # Set of required fields
     required_fields: set[str]
@@ -77,8 +80,8 @@ class DictValidator(Validator):
     def __init__(
         self,
         *,
-        field_validators: dict[str, Validator] | None = None,
-        default_validator: Validator | None = None,
+        field_validators: dict[str, Validator[T_DictValues]] | None = None,
+        default_validator: Validator[T_DictValues] | None = None,
         required_fields: list[str] | None = None,
         optional_fields: list[str] | None = None
     ):
@@ -132,7 +135,7 @@ class DictValidator(Validator):
         if optional_fields is not None:
             self.required_fields = self.required_fields - set(optional_fields)
 
-    def validate(self, input_data: Any, **kwargs: Any) -> dict[str, Any]:
+    def validate(self, input_data: Any, **kwargs: Any) -> dict[str, T_DictValues]:
         """
         Validates input data. Returns a validated dict.
         """

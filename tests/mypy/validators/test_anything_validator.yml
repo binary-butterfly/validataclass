@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check inferred type parameter for AnythingValidator without specifying allowed types (i.e. any types are allowed).
+- case: anything_validator_without_parameters
+  main: |
+    from typing import Any
+    from validataclass.validators import AnythingValidator, Validator
+    validator = AnythingValidator()
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    # Setting allow_none=True/False should not affect the type (there is no "Any except None" type)
+    reveal_type(AnythingValidator(allow_none=False))
+    var1: AnythingValidator[object] = validator  # correct
+    var2: AnythingValidator[Any] = validator     # correct
+    var3: AnythingValidator[int] = validator     # error (10)
+    var4: Validator[object] = validator          # correct
+    var5: Validator[Any] = validator             # correct
+    var6: Validator[int] = validator             # error (13)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.object]"
+    main:5: note: Revealed type is "builtins.object"
+    main:7: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.object]"
+    main:10: error: Incompatible types in assignment (expression has type "AnythingValidator[object]", variable has type "AnythingValidator[int]")  [assignment]
+    main:13: error: Incompatible types in assignment (expression has type "AnythingValidator[object]", variable has type "Validator[int]")  [assignment]
+
+# Check inferred type parameter for AnythingValidator with only one allowed type.
+- case: anything_validator_with_one_allowed_type
+  main: |
+    from typing import Any
+    from validataclass.validators import AnythingValidator, Validator
+    validator = AnythingValidator(allowed_types=[str])
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    # Setting allowed_types to a type without a list should result in the same type (will be deprecated later though)
+    reveal_type(AnythingValidator(allowed_types=str))
+    var1: AnythingValidator[str] = validator  # correct
+    var2: AnythingValidator[int] = validator  # error (9)
+    var3: Validator[str] = validator          # correct
+    var4: Validator[int] = validator          # error (11)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.str]"
+    main:5: note: Revealed type is "builtins.str"
+    main:7: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.str]"
+    main:9: error: Incompatible types in assignment (expression has type "AnythingValidator[str]", variable has type "AnythingValidator[int]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "AnythingValidator[str]", variable has type "Validator[int]")  [assignment]
+
+# Check inferred type parameter for AnythingValidator with multiple allowed types (including None).
+- case: anything_validator_with_multiple_allowed_types
+  main: |
+    from typing import Any
+    from validataclass.validators import AnythingValidator, Validator
+    # The following will just infer "object" rather than a more precise type union
+    reveal_type(AnythingValidator(allowed_types=(str, int, None)))
+    validator: AnythingValidator[str | int | None] = AnythingValidator(allowed_types=(str, int, None))
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: AnythingValidator[str | int | None] = validator  # correct
+    var2: AnythingValidator[str | int] = validator         # error (9)
+    var3: Validator[str | int | None] = validator          # correct
+    var4: Validator[str | int] = validator                 # error (11)
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.object]"
+    main:6: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.str | builtins.int | None]"
+    main:7: note: Revealed type is "builtins.str | builtins.int | None"
+    main:9: error: Incompatible types in assignment (expression has type "AnythingValidator[str | int | None]", variable has type "AnythingValidator[str | int]")  [assignment]
+    main:11: error: Incompatible types in assignment (expression has type "AnythingValidator[str | int | None]", variable has type "Validator[str | int]")  [assignment]

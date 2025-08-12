@@ -5,7 +5,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, overload
+
+from typing_extensions import TypeVar
 
 from .validator import Validator
 
@@ -13,8 +15,11 @@ __all__ = [
     'DiscardValidator',
 ]
 
+# Type parameter for the output value of the DiscardValidator
+T_DiscardOutput = TypeVar('T_DiscardOutput', default=None)
 
-class DiscardValidator(Validator):
+
+class DiscardValidator(Validator[T_DiscardOutput]):
     """
     Special validator that discards any input and always returns a predefined value.
 
@@ -42,7 +47,15 @@ class DiscardValidator(Validator):
     """
 
     # Value that is returned by the validator
-    output_value: Any
+    output_value: T_DiscardOutput
+
+    @overload
+    def __init__(self, *, output_value: None = None):
+        ...
+
+    @overload
+    def __init__(self, *, output_value: T_DiscardOutput):
+        ...
 
     def __init__(self, *, output_value: Any = None):
         """
@@ -53,7 +66,7 @@ class DiscardValidator(Validator):
         """
         self.output_value = output_value
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_DiscardOutput:
         """
         Validates input data.
         Discards any input and always returns `None` (or the specified `output_value`).

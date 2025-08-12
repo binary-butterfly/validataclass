@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-class FloatValidator(Validator):
+class FloatValidator(Validator[float]):
     """
     Validator for float values (IEEE 754), optionally with value range requirements.
 

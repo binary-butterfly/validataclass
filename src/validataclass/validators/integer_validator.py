@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class IntegerValidator(Validator):
+class IntegerValidator(Validator[int]):
     """
     Validator for integer values, optionally with value range requirements.
 

@@ -12,14 +12,7 @@ of the data types that we cover here.
 
 ## Quick overview
 
-There are at least two ways to categorize the existing validator classes.
-
-One distinction would be "base types" vs. "extended types": Base types are all validators that do **not** extend an existing validator,
-i.e. they directly implement the `Validator` base class. Examples for base type validators would be `StringValidator`, `IntegerValidator`
-and `DictValidator`. Extended types are all validators that **do** extend existing validators, e.g. `DecimalValidator` is based on
-`StringValidator`.
-
-A much more useful distinction is to categorize the validators according to their function:
+The validators provided by the library can be roughly categorized based on their functionality and purpose:
 
 - Boolean types:
   - `BooleanValidator`: Validates boolean values (`True` / `False`, optionally allowing strings `"true"` / `"false"`)
@@ -59,7 +52,6 @@ A much more useful distinction is to categorize the validators according to thei
   - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
   - `DiscardValidator`: Discards any input and returns a predefined value
   - `AllowEmptyString`: Wraps another validator but allows the input to be empty string `('')`
-
 
 These are a lot of different validators (and there will be even more in future versions) and many of them have a lot of parameters, so we
 will not cover all of them here in detail.

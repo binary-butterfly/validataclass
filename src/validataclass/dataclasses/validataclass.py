@@ -193,7 +193,7 @@ def _get_existing_validator_fields(cls: type[_T]) -> dict[str, _ValidatorField]:
     return validator_fields
 
 
-def _parse_validator_tuple(args: tuple[Any, ...] | Validator | Default | None) -> _ValidatorField:
+def _parse_validator_tuple(args: tuple[Any, ...] | Validator[Any] | Default | None) -> _ValidatorField:
     """
     Parses field arguments (the value of a field in a dataclass that has not been parsed by `@dataclass` yet) to a
     tuple of a Validator and a Default object.

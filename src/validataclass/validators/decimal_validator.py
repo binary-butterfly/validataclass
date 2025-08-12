@@ -16,13 +16,14 @@ from validataclass.exceptions import (
     NumberRangeError,
 )
 from .string_validator import StringValidator
+from .validator import Validator
 
 __all__ = [
     'DecimalValidator',
 ]
 
 
-class DecimalValidator(StringValidator):
+class DecimalValidator(Validator[Decimal]):
     """
     Validator that parses decimal numbers from strings (e.g. `1.234`) to `decimal.Decimal` objects.
 
@@ -73,6 +74,9 @@ class DecimalValidator(StringValidator):
     Output: `decimal.Decimal`
     """
 
+    # Base validator to parse input as a string first
+    string_validator: StringValidator
+
     # Value constraints
     min_value: Decimal | None = None
     max_value: Decimal | None = None
@@ -112,8 +116,8 @@ class DecimalValidator(StringValidator):
             `output_places`: Integer, if set, values are rounded to this number of decimal places (default: `None`)
             `rounding`: Rounding mode for numbers that need to be rounded (default: `decimal.ROUND_HALF_UP`)
         """
-        # Restrict string length
-        super().__init__(max_length=40)
+        # Initialize StringValidator and restrict input string length
+        self.string_validator = StringValidator(max_length=40)
 
         # Convert min_value/max_value from strings or integers to Decimals if necessary
         if min_value is not None and not isinstance(min_value, Decimal):
@@ -145,12 +149,12 @@ class DecimalValidator(StringValidator):
                 raise InvalidValidatorOptionException('Parameter "output_places" cannot be negative.')
             self.output_quantum = Decimal('0.1') ** output_places
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Decimal:  # type: ignore[override]
+    def validate(self, input_data: Any, **kwargs: Any) -> Decimal:
         """
         Validates input data as a string, convert it to a `Decimal` object and check optional constraints.
         """
         # First, validate input data as string
-        decimal_string = super().validate(input_data, **kwargs)
+        decimal_string = self.string_validator.validate(input_data, **kwargs)
 
         # Validate string with a regular expression
         if not self.decimal_regex.fullmatch(decimal_string):

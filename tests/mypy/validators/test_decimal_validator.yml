@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that validator has correct type parameter for Validator[T]
+- case: decimal_validator_type_params
+  main: |
+    from decimal import Decimal
+    from validataclass.validators import DecimalValidator, Validator
+    validator = DecimalValidator()
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Validator[Decimal] = validator  # correct
+    var2: Validator[str] = validator      # error
+  out: |
+    main:4: note: Revealed type is "validataclass.validators.decimal_validator.DecimalValidator"
+    main:5: note: Revealed type is "decimal.Decimal"
+    main:7: error: Incompatible types in assignment (expression has type "DecimalValidator", variable has type "Validator[str]")  [assignment]

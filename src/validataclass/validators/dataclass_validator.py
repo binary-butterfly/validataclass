@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 import inspect
 import warnings
-from typing import Any, Generic, TypeGuard, TypeVar
+from typing import Any, Callable, TypeGuard, TypeVar
 
 from validataclass.dataclasses import Default, NoDefault
 from validataclass.exceptions import (
@@ -22,25 +22,25 @@ from .validator import Validator
 
 __all__ = [
     'DataclassValidator',
-    'T_Dataclass',
 ]
 
-# Type variable for an instance of a dataclass
+# Type parameter for an instance of a dataclass
 T_Dataclass = TypeVar('T_Dataclass', bound=object)
 
 
-class DataclassValidator(Generic[T_Dataclass], DictValidator):
+class DataclassValidator(Validator[T_Dataclass]):
     """
     Validator that converts dictionaries to instances of user-defined dataclasses with validated fields.
 
-    The DataclassValidator is basically a specialized variant of the DictValidator that takes a dataclass with special
-    metadata as parameter, which it uses to determine the dictionary fields, which validators to use for validating
-    them, which fields are required or optional, and what default values to use for optional fields. Input data is first
-    validated as a regular dictionary and then used to create an instance of the dataclass.
+    The DataclassValidator requires a dataclass with special metadata that defines which validators to use for which
+    fields, whether they are required or optional and what default values to use for optional fields.
 
     While you *can* define this metadata manually using the built-in Python dataclass function `dataclasses.field()`,
     it is highly recommended to use the helpers provided by this library, i.e. the decorator `@validataclass` and (if
     necessary) the function `validataclass_field()`.
+
+    NOTE: As of now, the DataclassValidator internally uses a DictValidator to do the initial validation of the raw
+    dictionary. Please note that this is an implementation detail that might/will change in the future.
 
     Example:
 
@@ -106,6 +106,9 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
     ```
     """
 
+    # Base validator to validate the input as a dictionary first
+    dict_validator: DictValidator[Any]
+
     # Dataclass type that the validated dictionary will be converted to
     dataclass_cls: type[T_Dataclass]
 
@@ -152,11 +155,11 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
             if field_default is NoDefault:
                 required_fields.append(field.name)
 
-        # Initialize the underlying DictValidator
-        super().__init__(field_validators=field_validators, required_fields=required_fields)
+        # Initialize the DictValidator
+        self.dict_validator = DictValidator(field_validators=field_validators, required_fields=required_fields)
 
     @staticmethod
-    def _get_field_validator(field: dataclasses.Field[Any]) -> Validator:
+    def _get_field_validator(field: dataclasses.Field[Any]) -> Validator[Any]:
         # Parse field metadata to get Validator
         validator = field.metadata.get('validator')
 
@@ -192,7 +195,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
         Pre-validation steps: Validates the input as a dictionary and fills in the default values.
         """
         # Custom pre-validation using the __pre_validate__() method (class or static) in the dataclass (if defined)
-        pre_validate_func = getattr(self.dataclass_cls, '__pre_validate__', None)
+        pre_validate_func: Callable[..., Any] | None = getattr(self.dataclass_cls, '__pre_validate__', None)
         if pre_validate_func is not None:
             # Ensure type before calling the DictValidator to make sure __pre_validate__ gets a dict
             self._ensure_type(input_data, dict)
@@ -223,8 +226,8 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
             # Filter input dictionary through __pre_validate__()
             input_data = pre_validate_func(input_data, **context_kwargs)
 
-        # Validate raw dictionary using underlying DictValidator
-        validated_dict = super().validate(input_data, **kwargs)
+        # Validate raw dictionary using DictValidator
+        validated_dict = self.dict_validator.validate(input_data, **kwargs)
 
         # Fill optional fields with default values
         for field_name, field_default in self.field_defaults.items():
@@ -233,7 +236,7 @@ class DataclassValidator(Generic[T_Dataclass], DictValidator):
 
         return validated_dict
 
-    def validate(self, input_data: Any, **kwargs: Any) -> T_Dataclass:  # type: ignore[override]
+    def validate(self, input_data: Any, **kwargs: Any) -> T_Dataclass:
         """
         Validate an input dictionary according to the specified dataclass. Returns an instance of the dataclass.
         """

@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that validator has correct type parameter for Validator[T]
+- case: dataclass_validator_type_params
+  main: |
+    from dataclasses import dataclass
+    from validataclass.validators import DataclassValidator, Validator
+
+    @dataclass
+    class TestDataclass:
+        pass
+
+    validator = DataclassValidator(TestDataclass)
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Validator[TestDataclass] = validator  # correct
+    var2: Validator[str] = validator            # error (12)
+  out: |
+    main:9: note: Revealed type is "validataclass.validators.dataclass_validator.DataclassValidator[main.TestDataclass]"
+    main:10: note: Revealed type is "main.TestDataclass"
+    main:12: error: Incompatible types in assignment (expression has type "DataclassValidator[TestDataclass]", variable has type "Validator[str]")  [assignment]
