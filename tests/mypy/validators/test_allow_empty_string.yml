@@ -23,7 +23,7 @@
     main:11: error: Incompatible types in assignment (expression has type "AllowEmptyString[int, str]", variable has type "Validator[str]")  [assignment]
 
 # Check inferred type parameters for AllowEmptyString with a default value of the same type as the validator (e.g.
-# AllowEmptyString wrapping an IntegerValidator and converting the empty string to to 0).
+# AllowEmptyString wrapping an IntegerValidator and converting the empty string to 0).
 - case: allow_empty_string_with_default_of_same_type_as_validated
   main: |
     from validataclass.validators import AllowEmptyString, IntegerValidator, Validator

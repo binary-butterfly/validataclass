@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
 
 # Check inferred type parameters for NoneToUnsetValue.
-- case: none_to_unset_value_with_default_none
+- case: none_to_unset_value_type_params
   main: |
     from validataclass.helpers import UnsetValueType
     from validataclass.validators import IntegerValidator, NoneToUnsetValue, Noneable, Validator

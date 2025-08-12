@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
 
-# Check that mypy complains about subclasses of Validator without type parameter
+# Check that mypy complains about subclasses of Validator without type parameter.
 - case: validator_subclass_requires_type_param
   main: |
     from typing import Any
@@ -10,3 +10,14 @@
             return str(input_data)
   out: |
     main:3: error: Missing type parameters for generic type "Validator"  [type-arg]
+
+# Check that mypy complains when return type of validate method doesn't match Validator type parameter.
+- case: validator_with_incompatible_validate_return_type
+  main: |
+    from typing import Any
+    from validataclass.validators import Validator
+    class TestValidator(Validator[int]):
+        def validate(self, input_data: Any, **kwargs: Any) -> str:
+            return str(input_data)
+  out: |
+    main:4: error: Return type "str" of "validate" incompatible with return type "int" in supertype "validataclass.validators.validator.Validator"  [override]
