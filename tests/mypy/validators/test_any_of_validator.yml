@@ -8,7 +8,7 @@
 # also a validator that only returns int/str/anything else.)
 - case: any_of_validator_with_empty_allowed_values
   main: |
-    from typing import Never
+    from typing_extensions import Never
     from validataclass.validators import AnyOfValidator, Validator
     reveal_type(AnyOfValidator(allowed_values=[]))
     reveal_type(AnyOfValidator(allowed_values=[]).validate(42))

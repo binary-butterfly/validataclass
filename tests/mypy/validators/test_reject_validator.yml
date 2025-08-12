@@ -8,7 +8,7 @@
 # also a validator that only returns int/str/anything else.)
 - case: reject_validator_rejects_anything
   main: |
-    from typing import Never
+    from typing_extensions import Never
     from validataclass.validators import RejectValidator, Validator
     validator = RejectValidator()
     reveal_type(validator)
@@ -22,7 +22,7 @@
 # Check that inferred type parameter for a Noneable(RejectValidator) is None and not Never.
 - case: reject_validator_wrapped_in_noneable
   main: |
-    from typing import Never
+    from typing_extensions import Never
     from validataclass.validators import Noneable, RejectValidator, Validator
     validator = Noneable(RejectValidator())
     reveal_type(validator)

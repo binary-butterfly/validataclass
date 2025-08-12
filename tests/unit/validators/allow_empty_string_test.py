@@ -5,12 +5,13 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from decimal import Decimal
-from typing import Never
 
 import pytest
+from typing_extensions import Never
+
+from tests.test_utils import UnitTestContextValidator
 from validataclass.exceptions import ValidationError
 from validataclass.validators import AllowEmptyString, DecimalValidator, IntegerValidator
-from tests.test_utils import UnitTestContextValidator
 
 
 class AllowEmptyStringTest:

@@ -76,7 +76,7 @@ docker-tox: TOX_ARGS='-e clean,py313,py312,py311,py310,report,flake8,py313-mypy'
 docker-tox: _docker-tox
 
 # Run partial tox test suites in Docker
-.PHONY: docker-tox-py313 docker-tox-py312 docker-tox-py311 docker-tox-py310
+.PHONY: docker-test-py313 docker-test-py312 docker-test-py311 docker-test-py310
 docker-test-py313: TOX_ARGS="-e clean,py313,py313-report"
 docker-test-py313: _docker-tox
 docker-test-py312: TOX_ARGS="-e clean,py312,py312-report"

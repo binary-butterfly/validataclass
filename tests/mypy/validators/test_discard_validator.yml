@@ -3,7 +3,7 @@
 # Check inferred type parameter for DiscardValidator without explicit output value (meaning output value is None).
 - case: discard_validator_without_explicit_output_value
   main: |
-    from typing import Never
+    from typing_extensions import Never
     from validataclass.validators import DiscardValidator, Validator
     validator = DiscardValidator()
     reveal_type(validator)
@@ -25,7 +25,7 @@
 # Check inferred type parameter for DiscardValidator with specified output value.
 - case: discard_validator_without_explicit_output_value
   main: |
-    from typing import Never
+    from typing_extensions import Never
     from validataclass.validators import DiscardValidator, Validator
     validator = DiscardValidator(output_value=42)
     reveal_type(validator)

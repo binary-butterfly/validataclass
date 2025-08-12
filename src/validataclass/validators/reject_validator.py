@@ -4,7 +4,9 @@ Copyright (c) 2022, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any, Never
+from typing import Any
+
+from typing_extensions import Never
 
 from validataclass.exceptions import ValidationError, FieldNotAllowedError
 from .validator import Validator
