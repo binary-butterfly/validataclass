@@ -167,12 +167,12 @@ _Let me tell you about the `DataclassValidator`._
 
 ## The DataclassValidator
 
-The `DataclassValidator` basically is just a very specialized `DictValidator`. It validates dictionaries using **field validators**,
-and then converts the validated dictionaries to objects of a specified **dataclass**.
+The `DataclassValidator` validates dictionaries using **field validators** similar to the `DictValidator` and then
+converts the validated dictionaries to objects of a specified **dataclass**.
 
-But instead of specifying the field validators in the validator, you can now define the validators directly inside the dataclass.
-The `DataclassValidator` will read these field validators from the dataclass and pass them to the underlying `DictValidator`. In the
-same way it also determines which fields are required and which are optional.
+But instead of specifying the field validators in the validator, you can now define the validators directly inside the
+dataclass. The `DataclassValidator` will read these field validators from the dataclass and use them to validate the
+input dictionary. In the same way it also determines which fields are required and which are optional.
 
 The usage of the `DataclassValidator` then is pretty trivial, assuming we have already defined the dataclass:
 

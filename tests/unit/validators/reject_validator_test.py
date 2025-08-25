@@ -80,7 +80,7 @@ class RejectValidatorTest:
     def test_allow_none():
         """ Test that RejectValidator allows None if allow_none is True. """
         validator = RejectValidator(allow_none=True)
-        assert validator.validate(None) is None  # type: ignore[func-returns-value]
+        assert validator.validate(None) is None
 
     # Tests with custom errors
 

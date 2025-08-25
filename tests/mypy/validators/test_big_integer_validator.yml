@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that validator has correct type parameter for Validator[T]
+- case: big_integer_validator_type_params
+  main: |
+    from validataclass.validators import BigIntegerValidator, IntegerValidator, Validator
+    validator = BigIntegerValidator()
+    reveal_type(validator)
+    reveal_type(validator.validate(42))
+    var1: Validator[int] = validator    # correct
+    var2: Validator[str] = validator    # error
+    var3: IntegerValidator = validator  # correct
+  out: |
+    main:3: note: Revealed type is "validataclass.validators.big_integer_validator.BigIntegerValidator"
+    main:4: note: Revealed type is "builtins.int"
+    main:6: error: Incompatible types in assignment (expression has type "BigIntegerValidator", variable has type "Validator[str]")  [assignment]

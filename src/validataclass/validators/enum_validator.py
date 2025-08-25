@@ -6,26 +6,26 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from collections.abc import Iterable
 from enum import Enum
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from validataclass.exceptions import InvalidValidatorOptionException, ValueNotAllowedError
 from .any_of_validator import AnyOfValidator
+from .validator import Validator
 
 __all__ = [
     'EnumValidator',
-    'T_Enum',
 ]
 
 # Type variable for type hints in EnumValidator
 T_Enum = TypeVar('T_Enum', bound=Enum)
 
 
-class EnumValidator(Generic[T_Enum], AnyOfValidator):
+class EnumValidator(Validator[T_Enum]):
     """
     Validator that uses an Enum class to parse input values to members of that enumeration.
 
-    This validator is based on the `AnyOfValidator`, using the Enum the get the list of allowed values and additionally
-    converting the raw values to Enum members after validation.
+    This validator uses an `AnyOfValidator` to check that the input value is one of the possible values of the Enum,
+    and then converts the raw value to the corresponding Enum member.
 
     By default all values in the Enum are accepted as input. This can be optionally restricted by specifying the
     `allowed_values` parameter, which will override the list of allowed values. This parameter can be specified using
@@ -69,6 +69,9 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
     Output: Member of specified Enum class
     """
 
+    # Validator to check whether the input is one of the allowed enum values
+    any_of_validator: AnyOfValidator[Any]
+
     # Enum class used to determine the list of allowed values
     enum_cls: type[T_Enum]
 
@@ -111,7 +114,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
             any_of_values = enum_values
 
         # Initialize base AnyOfValidator
-        super().__init__(
+        self.any_of_validator = AnyOfValidator(
             allowed_values=any_of_values,
             allowed_types=allowed_types,
             case_sensitive=case_sensitive,
@@ -123,7 +126,7 @@ class EnumValidator(Generic[T_Enum], AnyOfValidator):
         Validates input to be a valid value of the specified Enum. Returns the Enum member.
         """
         # Validate input using the AnyOfValidator first
-        input_data = super().validate(input_data, **kwargs)
+        input_data = self.any_of_validator.validate(input_data, **kwargs)
 
         # Try to convert value to enum member
         try:

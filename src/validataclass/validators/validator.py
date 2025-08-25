@@ -9,14 +9,19 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import Any
 
+from typing_extensions import Generic, TypeVar
+
 from validataclass.exceptions import InvalidTypeError, RequiredValueError
 
 __all__ = [
     'Validator',
 ]
 
+# Type parameter for the validated output of a validator
+T_Validated = TypeVar('T_Validated', covariant=True)
 
-class Validator(ABC):
+
+class Validator(Generic[T_Validated], ABC):
     """
     Base class for building extendable validator classes that validate, sanitize and transform input.
     """
@@ -33,7 +38,7 @@ class Validator(ABC):
         super().__init_subclass__(**kwargs)
 
     @abstractmethod
-    def validate(self, input_data: Any, **kwargs: Any) -> Any:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_Validated:
         """
         Validates input data. Returns sanitized data or raises a `ValidationError` (or any subclass).
 
@@ -46,7 +51,7 @@ class Validator(ABC):
         """
         raise NotImplementedError()
 
-    def validate_with_context(self, input_data: Any, **kwargs: Any) -> Any:
+    def validate_with_context(self, input_data: Any, **kwargs: Any) -> T_Validated:
         """
         This method is a wrapper for `validate()` that always accepts arbitrary keyword arguments (which can be used
         for context-sensitive validation).
@@ -77,16 +82,20 @@ class Validator(ABC):
 
     def _ensure_type(self, input_data: Any, expected_types: list[type] | type) -> None:
         """
-        Checks if input data is not `None` and has the expected type (or one of multiple expected types).
+        Checks the type of `input_data` against one or multiple expected types.
 
-        Raises `RequiredValueError` and `InvalidTypeError`.
+        If `type(None)` is not in the expected types, `_ensure_not_none(input_data)` will be called to ensure that the
+        input data is not `None`.
+
+        Raises `RequiredValueError` (only if input data is none) or `InvalidTypeError`.
         """
-        # Ensure input is not None
-        self._ensure_not_none(input_data)
-
         # Normalize expected_types to a list
         if not isinstance(expected_types, list):
             expected_types = [expected_types]
+
+        # Ensure input is not None (unless it's explicitly allowed)
+        if type(None) not in expected_types:
+            self._ensure_not_none(input_data)
 
         # Ensure input has correct type
         if type(input_data) not in expected_types:

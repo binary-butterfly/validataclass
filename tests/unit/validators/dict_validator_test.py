@@ -7,6 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from decimal import Decimal
 
 import pytest
+from typing_extensions import Never
 
 from tests.test_utils import UnitTestContextValidator
 from validataclass.exceptions import (
@@ -114,7 +115,6 @@ class DictValidatorTest:
         validator = DictValidator(
             default_validator=DecimalValidator(),
             required_fields=['foo', 'bar'],
-
         )
 
         validated_data = validator.validate({
@@ -169,7 +169,7 @@ class DictValidatorTest:
         Test a DictValidator with no field validators, which only returns empty dictionaries. Input dictionaries might
         contain fields, but they will be ignored.
         """
-        validator = DictValidator(field_validators={})
+        validator: DictValidator[Never] = DictValidator(field_validators={})
         assert validator.validate(input_dict) == {}
 
     @staticmethod
@@ -337,7 +337,7 @@ class DictValidatorTest:
     @staticmethod
     def test_dict_with_noneable_fields():
         """ Validate a dictionary that allows fields with None as value. """
-        validator = DictValidator(field_validators={
+        validator: DictValidator[Decimal | None] = DictValidator(field_validators={
             'test_a': Noneable(DecimalValidator()),
             'test_b': Noneable(DecimalValidator()),
         })
@@ -358,7 +358,7 @@ class DictValidatorTest:
     @staticmethod
     def test_with_context_arguments():
         """ Test that DictValidator passes context arguments down to the default and field validators. """
-        validator = DictValidator(
+        validator: DictValidator[str] = DictValidator(
             field_validators={
                 'unittest': UnitTestContextValidator(prefix='FIELD')
             },
@@ -557,7 +557,7 @@ class DictValidatorTest:
         Create a subclassed DictValidator that sets field_validators and required_fields and test it with valid data.
         """
 
-        class UnitTestDictValidator(DictValidator):
+        class UnitTestDictValidator(DictValidator[str | Decimal]):
             field_validators = {
                 'name': StringValidator(),
                 'value': DecimalValidator(),
@@ -602,7 +602,7 @@ class DictValidatorTest:
         Create a subclassed DictValidator that sets field_validators and required_fields and test it with invalid data.
         """
 
-        class UnitTestDictValidator(DictValidator):
+        class UnitTestDictValidator(DictValidator[str | Decimal]):
             field_validators = {
                 'name': StringValidator(),
                 'value': DecimalValidator(),
@@ -624,7 +624,7 @@ class DictValidatorTest:
     def test_subclassed_dict_with_default_validator_valid():
         """ Create a subclassed DictValidator that sets default_validator and test it with valid data. """
 
-        class UnitTestDefaultDictValidator(DictValidator):
+        class UnitTestDefaultDictValidator(DictValidator[Decimal]):
             default_validator = DecimalValidator()
 
         validator = UnitTestDefaultDictValidator()
@@ -645,7 +645,7 @@ class DictValidatorTest:
     def test_subclassed_dict_with_default_validator_invalid():
         """ Create a subclassed DictValidator that sets default_validator and test it with invalid data. """
 
-        class UnitTestDefaultDictValidator(DictValidator):
+        class UnitTestDefaultDictValidator(DictValidator[Decimal]):
             default_validator = DecimalValidator()
 
         validator = UnitTestDefaultDictValidator()

@@ -86,7 +86,7 @@ class ListValidatorTest:
     )
     def test_valid_nested_list(input_list, expected_output):
         """ Test nested ListValidator to validate lists of lists of decimals. """
-        validator: ListValidator[Decimal] = ListValidator(ListValidator(DecimalValidator()))
+        validator: ListValidator[list[Decimal]] = ListValidator(ListValidator(DecimalValidator()))
         output_list = validator.validate(input_list)
 
         for sublist in output_list:

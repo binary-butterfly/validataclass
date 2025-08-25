@@ -5,7 +5,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, overload
+
+from typing_extensions import Generic, TypeVar
 
 from validataclass.exceptions import InvalidTypeError
 from .validator import Validator
@@ -14,8 +16,15 @@ __all__ = [
     'AllowEmptyString',
 ]
 
+# Type parameters for the validation result of the wrapped validator and for the default value (empty string by default)
+T_WrappedValidated = TypeVar('T_WrappedValidated')
+T_EmptyStringDefault = TypeVar('T_EmptyStringDefault', default=str)
 
-class AllowEmptyString(Validator):
+
+class AllowEmptyString(
+    Validator[T_WrappedValidated | T_EmptyStringDefault],
+    Generic[T_WrappedValidated, T_EmptyStringDefault],
+):
     """
     Special validator that wraps another validator, but allows empty strings as the input value.
 
@@ -42,12 +51,20 @@ class AllowEmptyString(Validator):
     """
 
     # Default value returned in case the input is empty string
-    default_value: Any
+    default_value: T_EmptyStringDefault
 
     # Validator used in case the input is not empty string
-    wrapped_validator: Validator
+    wrapped_validator: Validator[T_WrappedValidated]
 
-    def __init__(self, validator: Validator, *, default: Any = ''):
+    @overload
+    def __init__(self, validator: Validator[T_WrappedValidated], *, default: str = ''):
+        ...
+
+    @overload
+    def __init__(self, validator: Validator[T_WrappedValidated], *, default: T_EmptyStringDefault):
+        ...
+
+    def __init__(self, validator: Validator[T_WrappedValidated], *, default: Any = ''):
         """
         Creates a `AllowEmptyString` wrapper validator.
 
@@ -62,18 +79,18 @@ class AllowEmptyString(Validator):
         self.wrapped_validator = validator
         self.default_value = default
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Any | None:
+    def validate(self, input_data: Any, **kwargs: Any) -> T_WrappedValidated | T_EmptyStringDefault:
         """
         Validates input data.
 
         If the input is an empty string, returns an empty string (or the value specified in the `default` parameter).
         Otherwise, pass the input to the wrapped validator and return its result.
         """
-        if input_data == "":
+        if input_data == '':
             return deepcopy(self.default_value)
 
         try:
-            # Call wrapped validator for all values other than empty string ('')
+            # Call wrapped validator for all values other than empty string
             return self.wrapped_validator.validate_with_context(input_data, **kwargs)
         except InvalidTypeError as error:
             # If wrapped validator raises an InvalidTypeError, add str to its 'expected_types' list and reraise it

@@ -7,9 +7,11 @@ Use of this source code is governed by an MIT-style license that can be found in
 from decimal import Decimal
 
 import pytest
+from typing_extensions import Never
+
+from tests.test_utils import UnitTestContextValidator
 from validataclass.exceptions import ValidationError
 from validataclass.validators import AllowEmptyString, DecimalValidator, IntegerValidator
-from tests.test_utils import UnitTestContextValidator
 
 
 class AllowEmptyStringTest:
@@ -92,7 +94,7 @@ class AllowEmptyStringTest:
         """
         # Use an empty list as an example for a mutable default value. This doesn't make a lot of sense together with
         # an IntegerValidator but simplifies the test.
-        validator = AllowEmptyString(IntegerValidator(), default=[])
+        validator: AllowEmptyString[int, list[Never]] = AllowEmptyString(IntegerValidator(), default=[])
 
         first_list = validator.validate('')
         second_list = validator.validate('')
