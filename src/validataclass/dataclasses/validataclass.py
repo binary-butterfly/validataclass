@@ -13,7 +13,7 @@ from typing_extensions import dataclass_transform
 
 from validataclass.exceptions import DataclassValidatorFieldException
 from validataclass.validators import Validator
-from .defaults import Default, NoDefault
+from .defaults import BaseDefault, NoDefault
 from .validataclass_field import validataclass_field
 
 __all__ = [
@@ -50,8 +50,8 @@ def validataclass(
     Prepares the class by generating dataclass metadata that is needed by the `DataclassValidator` (which contains the
     field validators and defaults). Then turns the class into a dataclass using the regular `@dataclass` decorator.
 
-    Dataclass fields can be defined by specifying a `Validator` object and optionally a `Default` object
-    (comma-separated as a tuple), or by using either `validataclass_field()` or `dataclasses.field()`.
+    Dataclass fields can be defined by specifying a `Validator` object and optionally a default object (subclass of
+    `BaseDefault`, e.g. `Default`) as a tuple, or by using either `validataclass_field()` or `dataclasses.field()`.
 
     For an attribute to be recognized as a dataclass field, the attribute MUST have a type annotation. For example,
     `foo: int = IntegerValidator()`.
@@ -65,7 +65,7 @@ def validataclass(
     ```
     @validataclass
     class ExampleDataclass:
-        # This field is required because it has no defined Default.
+        # This field is required because it has no defined default.
         example_field1: str = StringValidator()
         # This field is optional. If it's not set, it will have the string value "not set".
         example_field2: str = StringValidator(), Default('not set')
@@ -122,9 +122,9 @@ def _prepare_dataclass_metadata(cls: type[_T]) -> None:
 
         # Check if attribute has a validator and/or default object (as single value or as part of a tuple)
         value_tuple = value if isinstance(value, tuple) else (value,)
-        if any(isinstance(v, (Validator, Default)) for v in value_tuple):
+        if any(isinstance(v, (Validator, BaseDefault)) for v in value_tuple):
             raise DataclassValidatorFieldException(
-                f'Dataclass field "{name}" has a defined Validator and/or Default object, but no type annotation.')
+                f'Dataclass field "{name}" has a defined validator and/or default object, but no type annotation.')
 
     # Prepare dataclass fields by checking for validators and setting metadata accordingly
     for name, field_type in cls_annotations.items():
@@ -157,8 +157,8 @@ def _prepare_dataclass_metadata(cls: type[_T]) -> None:
 
         # Ensure that a validator is set, as well as a default (defaulting to NoDefault)
         if not isinstance(field_validator, Validator):
-            raise DataclassValidatorFieldException(f'Dataclass field "{name}" must specify a Validator.')
-        if not isinstance(field_default, Default):
+            raise DataclassValidatorFieldException(f'Dataclass field "{name}" must specify a validator.')
+        if not isinstance(field_default, BaseDefault):
             field_default = NoDefault
 
         # Create dataclass field
@@ -193,10 +193,10 @@ def _get_existing_validator_fields(cls: type[_T]) -> dict[str, _ValidatorField]:
     return validator_fields
 
 
-def _parse_validator_tuple(args: tuple[Any, ...] | Validator[Any] | Default | None) -> _ValidatorField:
+def _parse_validator_tuple(args: tuple[Any, ...] | Validator[Any] | BaseDefault[Any] | None) -> _ValidatorField:
     """
     Parses field arguments (the value of a field in a dataclass that has not been parsed by `@dataclass` yet) to a
-    tuple of a Validator and a Default object.
+    tuple of a validator and a default object.
 
     (Internal helper function.)
     """
@@ -206,7 +206,7 @@ def _parse_validator_tuple(args: tuple[Any, ...] | Validator[Any] | Default | No
     elif not isinstance(args, tuple):
         args = (args,)
 
-    # Currently a field can only have two arguments (a validator and/or a Default object)
+    # Currently a field can only have two arguments (a validator and/or a default object)
     if len(args) > 2:
         raise ValueError('Unexpected number of arguments.')
 
@@ -217,11 +217,11 @@ def _parse_validator_tuple(args: tuple[Any, ...] | Validator[Any] | Default | No
     for arg in args:
         if isinstance(arg, Validator):
             if arg_validator is not None:
-                raise ValueError('Only one Validator can be specified.')
+                raise ValueError('Only one validator can be specified.')
             arg_validator = arg
-        elif isinstance(arg, Default):
+        elif isinstance(arg, BaseDefault):
             if arg_default is not None:
-                raise ValueError('Only one Default can be specified.')
+                raise ValueError('Only one default can be specified.')
             arg_default = arg
         else:
             raise TypeError('Unexpected type of argument: ' + type(arg).__name__)

@@ -18,6 +18,11 @@ explicit_package_bases = true
 # Enable strict type checking
 strict = true
 
+# Enable further checks that are not included in strict mode
+enable_error_code = [
+    "deprecated",
+]
+
 [[tool.mypy.overrides]]
 module = 'tests.*'
 

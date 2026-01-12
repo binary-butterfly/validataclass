@@ -9,7 +9,7 @@ import inspect
 import warnings
 from typing import Any, Callable, TypeGuard, TypeVar
 
-from validataclass.dataclasses import Default, NoDefault
+from validataclass.dataclasses import BaseDefault, NoDefault
 from validataclass.exceptions import (
     DataclassInvalidPreValidateSignatureException,
     DataclassPostValidationError,
@@ -113,7 +113,7 @@ class DataclassValidator(Validator[T_Dataclass]):
     dataclass_cls: type[T_Dataclass]
 
     # Field default values
-    field_defaults: dict[str, Default]
+    field_defaults: dict[str, BaseDefault[Any]]
 
     def __init__(self, dataclass_cls: type[T_Dataclass] | None = None) -> None:
         # For easier subclassing: If 'self.dataclass_cls' is already set (e.g. as class member in a subclass), use that
@@ -165,17 +165,17 @@ class DataclassValidator(Validator[T_Dataclass]):
 
         # Ensure that validator is defined and has a valid type
         if validator is None:
-            raise DataclassValidatorFieldException(f'Dataclass field "{field.name}" has no defined Validator.')
+            raise DataclassValidatorFieldException(f'Dataclass field "{field.name}" has no defined validator.')
         if not isinstance(validator, Validator):
             raise DataclassValidatorFieldException(
-                f'Validator specified for dataclass field "{field.name}" is not of type "Validator".'
+                f'Validator specified for dataclass field "{field.name}" is not an instance of "Validator".'
             )
 
         return validator
 
     @staticmethod
-    def _get_field_default(field: dataclasses.Field[Any]) -> Default:
-        # Parse field metadata to get Default object
+    def _get_field_default(field: dataclasses.Field[Any]) -> BaseDefault[Any]:
+        # Parse field metadata to get default object
         default = field.metadata.get('validator_default', NoDefault)
 
         # Default is optional
@@ -183,9 +183,9 @@ class DataclassValidator(Validator[T_Dataclass]):
             return NoDefault
 
         # Ensure valid type
-        if not isinstance(default, Default):
+        if not isinstance(default, BaseDefault):
             raise DataclassValidatorFieldException(
-                f'Default specified for dataclass field "{field.name}" is not of type "Default".'
+                f'Default specified for dataclass field "{field.name}" is not an instance of "BaseDefault".'
             )
 
         return default

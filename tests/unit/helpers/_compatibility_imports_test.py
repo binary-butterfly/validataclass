@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 import pytest
 
+import validataclass.dataclasses as vdc_dataclasses
+
 
 class HelpersCompatibilityImportsTest:
     """ Tests backwards compatibility imports from validataclass.helpers. """
@@ -16,8 +18,8 @@ class HelpersCompatibilityImportsTest:
         with pytest.deprecated_call():
             from validataclass.helpers.dataclasses import validataclass, validataclass_field
 
-            assert callable(validataclass)
-            assert callable(validataclass_field)
+            assert validataclass is vdc_dataclasses.validataclass
+            assert validataclass_field is vdc_dataclasses.validataclass_field
 
     @staticmethod
     def test_import_from_dataclass_defaults():
@@ -25,10 +27,10 @@ class HelpersCompatibilityImportsTest:
         with pytest.deprecated_call():
             from validataclass.helpers.dataclass_defaults import Default, DefaultFactory, DefaultUnset, NoDefault
 
-            assert type(Default) is type
-            assert issubclass(DefaultFactory, Default)
-            assert isinstance(DefaultUnset, Default)
-            assert isinstance(NoDefault, Default)
+            assert Default is vdc_dataclasses.Default
+            assert DefaultFactory is vdc_dataclasses.DefaultFactory
+            assert DefaultUnset is vdc_dataclasses.DefaultUnset
+            assert NoDefault is vdc_dataclasses.NoDefault
 
     @staticmethod
     def test_import_from_dataclass_mixins():
@@ -36,7 +38,7 @@ class HelpersCompatibilityImportsTest:
         with pytest.deprecated_call():
             from validataclass.helpers.dataclass_mixins import ValidataclassMixin
 
-            assert type(ValidataclassMixin) is type
+            assert ValidataclassMixin is vdc_dataclasses.ValidataclassMixin
 
     @staticmethod
     def test_import_from_helpers_package():
@@ -47,13 +49,13 @@ class HelpersCompatibilityImportsTest:
                 validataclass, validataclass_field, ValidataclassMixin,  # noqa (not declared in __all__)
             )
 
-            assert type(Default) is type
-            assert issubclass(DefaultFactory, Default)
-            assert isinstance(DefaultUnset, Default)
-            assert isinstance(NoDefault, Default)
-            assert callable(validataclass)
-            assert callable(validataclass_field)
-            assert type(ValidataclassMixin) is type
+            assert Default is vdc_dataclasses.Default
+            assert DefaultFactory is vdc_dataclasses.DefaultFactory
+            assert DefaultUnset is vdc_dataclasses.DefaultUnset
+            assert NoDefault is vdc_dataclasses.NoDefault
+            assert validataclass is vdc_dataclasses.validataclass
+            assert validataclass_field is vdc_dataclasses.validataclass_field
+            assert ValidataclassMixin is vdc_dataclasses.ValidataclassMixin
 
     @staticmethod
     def test_import_from_helpers_package_fallback_to_exception():
