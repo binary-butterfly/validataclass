@@ -26,17 +26,6 @@
     main:10: error: Argument 1 to "Default" has incompatible type "int"; expected "str"  [arg-type]
     main:13: error: Argument 1 to "Default" has incompatible type "list[Never]"; expected "int"  [arg-type]
 
-# Check that Default() without parameter results in a deprecation warning.
-# NOTE: mypy falsely induces the type of Default() to be Default[Never] rather than Default[None]. We ignore this here
-# because this usage is deprecated and will be removed in the near future.
-- case: default_value_no_argument
-  main: |
-    from validataclass.dataclasses import BaseDefault, Default
-    reveal_type(Default())
-  out: |
-    main:2: error: overload def (self: validataclass.dataclasses.defaults.Default[T_Default`1], value: None =) of function validataclass.dataclasses.defaults.Default.__init__ is deprecated: Default() without argument is deprecated. Please use Default(None).  [deprecated]
-    main:2: note: Revealed type is "validataclass.dataclasses.defaults.Default[Never]"
-
 # Check that DefaultFactory has correct type parameter for BaseDefault[T] and DefaultFactory[T]
 - case: default_factory_type_params
   main: |

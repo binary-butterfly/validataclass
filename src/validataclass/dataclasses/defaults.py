@@ -7,9 +7,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from copy import deepcopy
-from typing import Any, Generic, TypeVar, overload
+from typing import Any, Generic, TypeVar
 
-from typing_extensions import Never, Self, deprecated
+from typing_extensions import Never, Self
 
 from validataclass.helpers import UnsetValue, UnsetValueType
 
@@ -71,17 +71,7 @@ class Default(BaseDefault[T_Default]):
     _value: T_Default
     _needs_factory: bool
 
-    @overload
     def __init__(self, value: T_Default):
-        ...
-
-    @overload
-    @deprecated("Default() without argument is deprecated. Please use Default(None).")
-    # TODO: Remove deprecated usage in the near future.
-    def __init__(self, value: None = None):
-        ...
-
-    def __init__(self, value: Any = None):
         # Deepcopy the value to avoid reusing mutable objects
         self._value = deepcopy(value)
 
