@@ -131,6 +131,13 @@ class DefaultTest:
         """ Test hashability (__hash__) of Default objects. """
         assert hash(Default(value)) == hash(value)
 
+    @staticmethod
+    def test_default_not_callable():
+        """ Test that default objects are not callable, except for the (deprecated) case of UnsetValue. """
+        default = Default(None)
+        with pytest.raises(TypeError, match="'Default' object is not callable"):
+            default()
+
 
 class DefaultFactoryTest:
     """ Tests for the DefaultFactory class. """
@@ -219,31 +226,21 @@ class DefaultFactoryTest:
 
 
 class DefaultUnsetTest:
-    """ Tests for the DefaultUnset sentinel object. """
+    """ Tests for the DefaultUnset object, formerly a subclass, now an alias for `Default(UnsetValue)`. """
 
     @staticmethod
     def test_default_unset():
-        """ Test the DefaultUnset sentinel object. """
-        assert repr(DefaultUnset) == 'DefaultUnset'
+        """ Test the DefaultUnset object. """
+        assert isinstance(DefaultUnset, Default)
+        assert repr(DefaultUnset) == 'Default(UnsetValue)'
         assert DefaultUnset.get_value() is UnsetValue
         assert not DefaultUnset.needs_factory()
 
     @staticmethod
-    def test_default_unset_is_unique():
-        """ Test that DefaultUnset cannot be cloned. """
-        default1 = DefaultUnset
-        default2 = copy(DefaultUnset)
-        assert default1 is default2 is DefaultUnset
-
-    @staticmethod
     def test_default_unset_equality():
-        """ Test equality between DefaultUnset and Default(UnsetValue) objects. """
-        assert DefaultUnset == DefaultUnset
+        """ Test equality of DefaultUnset with Default(UnsetValue). """
         assert DefaultUnset == Default(UnsetValue)
         assert Default(UnsetValue) == DefaultUnset
-
-        assert DefaultUnset != Default(None)
-        assert Default(None) != DefaultUnset
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -262,9 +259,10 @@ class DefaultUnsetTest:
         assert other != DefaultUnset
 
     @staticmethod
-    def test_default_unset_call():
-        """ Test that calling DefaultUnset returns the sentinel object itself. """
-        assert DefaultUnset() is DefaultUnset
+    def test_default_unset_call_is_deprecated():
+        """ Test that calling DefaultUnset returns the object itself, but issues a deprecation warning. """
+        with pytest.deprecated_call():
+            assert DefaultUnset() is DefaultUnset
 
 
 class NoDefaultTest:
@@ -313,6 +311,7 @@ class NoDefaultTest:
         assert hash(NoDefault) == object.__hash__(NoDefault)
 
     @staticmethod
-    def test_no_default_call():
-        """ Test that calling NoDefault returns the sentinel itself. """
-        assert NoDefault() is NoDefault
+    def test_no_default_call_is_deprecated():
+        """ Test that calling NoDefault returns the sentinel object itself, but issues a deprecation warning. """
+        with pytest.deprecated_call():
+            assert NoDefault() is NoDefault

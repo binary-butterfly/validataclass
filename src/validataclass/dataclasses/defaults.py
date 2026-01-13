@@ -4,6 +4,7 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from copy import deepcopy
@@ -92,6 +93,18 @@ class Default(BaseDefault[T_Default]):
     def __hash__(self) -> int:
         return hash(self._value)
 
+    # Deprecated: Allow DefaultUnset to be used as `DefaultUnset()`, returning the object itself.
+    # TODO: Remove this in a future version.
+    def __call__(self) -> Self:
+        # Only allow calling if it's Default(UnsetValue) / DefaultUnset. Don't introduce new deprecated features.
+        if self._value is UnsetValue:
+            warnings.warn(
+                "Calling default objects is deprecated. Please use `DefaultUnset` instead of `DefaultUnset()`.",
+                DeprecationWarning
+            )
+            return self
+        raise TypeError(f"'{type(self).__name__}' object is not callable")
+
     def get_value(self) -> T_Default:
         """
         Get actual default value.
@@ -159,30 +172,8 @@ class DefaultFactory(BaseDefault[T_Default]):
         return True
 
 
-# Temporary class to create the DefaultUnset sentinel, class will be deleted afterwards
-# TODO: Replace DefaultUnset sentinel with a simple alias variable:
-#   DefaultUnset: Default[UnsetValueType] = Default(UnsetValue)
-class _DefaultUnset(Default[UnsetValueType]):
-    """
-    Class for creating the sentinel object `DefaultUnset`, which is a shortcut for `Default(UnsetValue)`.
-    """
-
-    def __init__(self) -> None:
-        super().__init__(UnsetValue)
-
-    def __repr__(self) -> str:
-        return 'DefaultUnset'
-
-    # For convenience: Allow DefaultUnset to be used as `DefaultUnset()`, returning the sentinel itself.
-    # TODO: Deprecate this usage!
-    def __call__(self) -> Self:
-        return self
-
-
-# Create sentinel object DefaultUnset, redefine __new__ to always return the same instance, and delete temporary class
-DefaultUnset = _DefaultUnset()
-_DefaultUnset.__new__ = lambda cls: DefaultUnset  # type: ignore
-del _DefaultUnset
+# Define common shortcut/alias for Default(UnsetValue)
+DefaultUnset: Default[UnsetValueType] = Default(UnsetValue)
 
 
 # Temporary class to create the NoDefault sentinel, class will be deleted afterwards
@@ -209,9 +200,13 @@ class _NoDefault(BaseDefault[Never]):
     def needs_factory(self) -> bool:
         raise NotImplementedError('NoDefault can be used neither as a value nor as a factory.')
 
-    # For convenience: Allow NoDefault to be used as `NoDefault()`, returning the sentinel itself.
-    # TODO: Deprecate this usage!
+    # Deprecated: Allow NoDefault to be used as `NoDefault()`, returning the object itself.
+    # TODO: Remove this in a future version.
     def __call__(self) -> Self:
+        warnings.warn(
+            "Calling default objects is deprecated. Please use `NoDefault` instead of `NoDefault()`.",
+            DeprecationWarning
+        )
         return self
 
 

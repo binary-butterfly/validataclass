@@ -56,15 +56,12 @@
     from validataclass.helpers import UnsetValueType
     reveal_type(DefaultUnset)
     reveal_type(DefaultUnset.get_value())
-    var1: BaseDefault[UnsetValueType] = DefaultUnset  # correct
-    var2: BaseDefault[str] = DefaultUnset             # error (6)
-    var3: Default[UnsetValueType] = DefaultUnset      # correct
-    var4: Default[str] = DefaultUnset                 # error (8)
+    var1: Default[UnsetValueType] = DefaultUnset      # correct
+    var2: Default[str] = DefaultUnset                 # error (6)
   out: |
-    main:3: note: Revealed type is "validataclass.dataclasses.defaults._DefaultUnset"
+    main:3: note: Revealed type is "validataclass.dataclasses.defaults.Default[validataclass.helpers.unset_value.UnsetValueType]"
     main:4: note: Revealed type is "validataclass.helpers.unset_value.UnsetValueType"
-    main:6: error: Incompatible types in assignment (expression has type "_DefaultUnset", variable has type "BaseDefault[str]")  [assignment]
-    main:8: error: Incompatible types in assignment (expression has type "_DefaultUnset", variable has type "Default[str]")  [assignment]
+    main:6: error: Incompatible types in assignment (expression has type "Default[UnsetValueType]", variable has type "Default[str]")  [assignment]
 
 # Check that NoDefault has correct type parameter for BaseDefault[T]
 - case: no_default_type_params
