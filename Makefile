@@ -72,11 +72,13 @@ _docker-tox:
 
 # Run complete tox test suite in a multi-python Docker container
 .PHONY: docker-tox
-docker-tox: TOX_ARGS='-e clean,py313,py312,py311,py310,report,flake8,py313-mypy'
+docker-tox: TOX_ARGS='-e clean,py310,py311,py312,py313,py314,report,flake8,mypy'
 docker-tox: _docker-tox
 
 # Run partial tox test suites in Docker
-.PHONY: docker-test-py313 docker-test-py312 docker-test-py311 docker-test-py310
+.PHONY: docker-test-py314 docker-test-py313 docker-test-py312 docker-test-py311 docker-test-py310
+docker-test-py314: TOX_ARGS="-e clean,py314,py314-report"
+docker-test-py314: _docker-tox
 docker-test-py313: TOX_ARGS="-e clean,py313,py313-report"
 docker-test-py313: _docker-tox
 docker-test-py312: TOX_ARGS="-e clean,py312,py312-report"
@@ -93,11 +95,14 @@ docker-test-all:
 	make docker-test-py311
 	make docker-test-py312
 	make docker-test-py313
+	make docker-test-py314
 
 # Run mypy using all different (or specific) Python versions in Docker
-.PHONY: docker-mypy-all docker-mypy-py313 docker-mypy-py312 docker-mypy-py311 docker-mypy-py310
-docker-mypy-all: TOX_ARGS="-e py313-mypy,py312-mypy,py311-mypy,py310-mypy"
+.PHONY: docker-mypy-py314 docker-mypy-all docker-mypy-py313 docker-mypy-py312 docker-mypy-py311 docker-mypy-py310
+docker-mypy-all: TOX_ARGS="-e py310-mypy,py311-mypy,py312-mypy,py313-mypy,py314-mypy"
 docker-mypy-all: _docker-tox
+docker-mypy-py314: TOX_ARGS="-e py314-mypy"
+docker-mypy-py314: _docker-tox
 docker-mypy-py313: TOX_ARGS="-e py313-mypy"
 docker-mypy-py313: _docker-tox
 docker-mypy-py312: TOX_ARGS="-e py312-mypy"
