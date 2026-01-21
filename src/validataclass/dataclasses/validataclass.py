@@ -7,6 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 from collections import namedtuple
 from collections.abc import Callable
+from inspect import get_annotations
 from typing import Any, TypeVar, overload
 
 from typing_extensions import dataclass_transform
@@ -112,7 +113,7 @@ def _prepare_dataclass_metadata(cls: type[_T]) -> None:
     existing_validator_fields = _get_existing_validator_fields(cls)
 
     # Get class annotations
-    cls_annotations = cls.__dict__.get('__annotations__', {})
+    cls_annotations = get_annotations(cls)
 
     # Check for fields/attributes that have validators defined but missing a type annotation (most likely an error)
     for name, value in cls.__dict__.items():
