@@ -39,7 +39,7 @@ class ValidationError(Exception):
         self.extra_data = {key: value for key, value in kwargs.items() if value is not None}
 
     def __repr__(self) -> str:
-        params_string = ', '.join(f'{key}={value}' for key, value in self._get_repr_dict().items() if value is not None)
+        params_string = ', '.join(f'{key}={value}' for key, value in self._get_repr_dict().items())
         return f'{type(self).__name__}({params_string})'
 
     def __str__(self) -> str:

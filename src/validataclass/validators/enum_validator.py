@@ -97,7 +97,7 @@ class EnumValidator(Validator[T_Enum]):
             `case_insensitive`: DEPRECATED. Validator is case-insensitive by default (see `case_sensitive`)
         """
         # Ensure parameter is an Enum class
-        if not isinstance(enum_cls, type) or not issubclass(enum_cls, Enum):
+        if not issubclass(enum_cls, Enum):
             raise InvalidValidatorOptionException('Parameter "enum_cls" must be an Enum class.')
 
         self.enum_cls = enum_cls

@@ -212,5 +212,5 @@ class _NoDefault(BaseDefault[Never]):
 
 # Create sentinel object NoDefault, redefine __new__ to always return the same instance, and delete temporary class
 NoDefault = _NoDefault()
-_NoDefault.__new__ = lambda cls: NoDefault  # type: ignore
+_NoDefault.__new__ = lambda cls: NoDefault  # type: ignore[assignment, method-assign, return-value]
 del _NoDefault

@@ -12,12 +12,15 @@
     from validataclass.validators import RejectValidator, Validator
     validator = RejectValidator()
     reveal_type(validator)
-    reveal_type(validator.validate(42))
+    try:
+        reveal_type(validator.validate(42))
+    except:
+        pass
     var1: Validator[Never] = validator  # correct
     var2: Validator[None] = validator   # actually also correct
   out: |
     main:4: note: Revealed type is "validataclass.validators.reject_validator.RejectValidator"
-    main:5: note: Revealed type is "Never"
+    main:6: note: Revealed type is "Never"
 
 # Check that inferred type parameter for a Noneable(RejectValidator) is None and not Never.
 - case: reject_validator_wrapped_in_noneable
