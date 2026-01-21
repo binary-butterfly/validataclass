@@ -9,6 +9,8 @@ from datetime import time
 from enum import Enum
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidTimeError
 from .string_validator import StringValidator
 from .validator import Validator
@@ -98,6 +100,7 @@ class TimeValidator(Validator[time]):
         self.time_format = time_format
         self.time_format_regex = re.compile(self.time_format.regex_str)
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> time:
         """
         Validates input as a valid time string and convert it to a `datetime.time` object.

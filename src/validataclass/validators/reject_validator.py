@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
-from typing_extensions import Never
+from typing_extensions import Never, override
 
 from validataclass.exceptions import ValidationError, FieldNotAllowedError
 from .validator import Validator
@@ -97,6 +97,7 @@ class RejectValidator(Validator[Never]):
         self.error_code = error_code
         self.error_reason = error_reason
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> Never:
         """
         Validates input data. In this case, reject any value (except for `None` if `allow_none` is set).

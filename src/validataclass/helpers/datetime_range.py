@@ -9,6 +9,8 @@ from collections.abc import Callable
 from datetime import datetime, timedelta, timezone, tzinfo
 from typing import TypeAlias
 
+from typing_extensions import override
+
 __all__ = [
     'BaseDateTimeRange',
     'DateTimeRange',
@@ -101,9 +103,11 @@ class DateTimeRange(BaseDateTimeRange):
         self.lower_boundary = lower_boundary
         self.upper_boundary = upper_boundary
 
+    @override
     def __repr__(self) -> str:
         return f'{type(self).__name__}(lower_boundary={self.lower_boundary!r}, upper_boundary={self.upper_boundary!r})'
 
+    @override
     def contains_datetime(self, dt: datetime, local_timezone: tzinfo | None = None) -> bool:
         """
         Returns `True` if the datetime is contained in the datetime range.
@@ -117,6 +121,7 @@ class DateTimeRange(BaseDateTimeRange):
         # Note: These comparisons will raise TypeErrors when mixing datetimes with and without timezones
         return (lower_datetime is None or dt >= lower_datetime) and (upper_datetime is None or dt <= upper_datetime)
 
+    @override
     def to_dict(self, local_timezone: tzinfo | None = None) -> dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries, suitable for the `DateTimeRangeError`
@@ -204,12 +209,14 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         self.offset_minus = offset_minus
         self.offset_plus = offset_plus
 
+    @override
     def __repr__(self) -> str:
         return (
             f'{type(self).__name__}(pivot={self.pivot!r}, offset_minus={self.offset_minus!r}, '
             f'offset_plus={self.offset_plus!r})'
         )
 
+    @override
     def contains_datetime(self, dt: datetime, local_timezone: tzinfo | None = None) -> bool:
         """
         Returns `True` if the datetime is contained in the datetime range.
@@ -223,6 +230,7 @@ class DateTimeOffsetRange(BaseDateTimeRange):
         # Note: These comparisons will raise TypeErrors when mixing datetimes with and without timezones
         return lower_datetime <= dt <= upper_datetime
 
+    @override
     def to_dict(self, local_timezone: tzinfo | None = None) -> dict[str, str]:
         """
         Returns a dictionary with string representations of the range boundaries (calculating `lower_datetime` and

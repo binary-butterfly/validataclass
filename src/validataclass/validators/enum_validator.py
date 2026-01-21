@@ -8,6 +8,8 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import Any, TypeVar
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidValidatorOptionException, ValueNotAllowedError
 from .any_of_validator import AnyOfValidator
 from .validator import Validator
@@ -121,6 +123,7 @@ class EnumValidator(Validator[T_Enum]):
             case_insensitive=case_insensitive,
         )
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> T_Enum:
         """
         Validates input to be a valid value of the specified Enum. Returns the Enum member.

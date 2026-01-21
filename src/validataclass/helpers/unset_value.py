@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import TypeAlias, TypeVar
 
-from typing_extensions import Self
+from typing_extensions import Self, override
 
 __all__ = [
     'UnsetValue',
@@ -33,9 +33,11 @@ class UnsetValueType:
     def __call__(self) -> Self:
         return self
 
+    @override
     def __repr__(self) -> str:
         return 'UnsetValue'
 
+    @override
     def __str__(self) -> str:
         return '<UnsetValue>'
 

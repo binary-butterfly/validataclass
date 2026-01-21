@@ -9,6 +9,8 @@ import re
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import (
     DecimalPlacesError,
     InvalidDecimalError,
@@ -149,6 +151,7 @@ class DecimalValidator(Validator[Decimal]):
                 raise InvalidValidatorOptionException('Parameter "output_places" cannot be negative.')
             self.output_quantum = Decimal('0.1') ** output_places
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> Decimal:
         """
         Validates input data as a string, convert it to a `Decimal` object and check optional constraints.

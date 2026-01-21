@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
+from typing_extensions import override
+
 from .base_exceptions import ValidationError
 
 __all__ = [
@@ -33,6 +35,7 @@ class DictFieldsValidationError(ValidationError):
         assert all(isinstance(error, ValidationError) for error in field_errors.values())
         self.field_errors = field_errors
 
+    @override
     def _get_repr_dict(self) -> dict[str, str]:
         base_dict = super()._get_repr_dict()
         return {
@@ -40,6 +43,7 @@ class DictFieldsValidationError(ValidationError):
             'field_errors': repr(self.field_errors),
         }
 
+    @override
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         return {

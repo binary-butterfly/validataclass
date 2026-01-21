@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any, Generic, TypeVar
 
+from typing_extensions import override
+
 from validataclass.exceptions import (
     InvalidValidatorOptionException,
     ListItemsValidationError,
@@ -108,6 +110,7 @@ class ListValidator(Validator[list[T_ListItem]], Generic[T_ListItem]):
         self.max_length = max_length
         self.discard_invalid = discard_invalid
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> list[T_ListItem]:
         """
         Validates input data. Returns a validated list.

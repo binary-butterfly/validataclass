@@ -9,7 +9,7 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import Any
 
-from typing_extensions import Generic, TypeVar
+from typing_extensions import Generic, TypeVar, override
 
 from validataclass.exceptions import InvalidTypeError, RequiredValueError
 
@@ -26,6 +26,7 @@ class Validator(Generic[T_Validated], ABC):
     Base class for building extendable validator classes that validate, sanitize and transform input.
     """
 
+    @override
     def __init_subclass__(cls, **kwargs: Any):
         # Check if subclasses are future-proof
         if inspect.getfullargspec(cls.validate).varkw is None:

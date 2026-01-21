@@ -9,6 +9,8 @@ from datetime import datetime, tzinfo
 from enum import Enum
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import DateTimeRangeError, InvalidDateTimeError, InvalidValidatorOptionException
 from validataclass.helpers import BaseDateTimeRange
 from .string_validator import StringValidator
@@ -345,6 +347,7 @@ class DateTimeValidator(Validator[datetime]):
         # Precompile regular expression for datetime format
         self.datetime_format_regex = re.compile(self.datetime_format.regex_str)
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> datetime:
         """
         Validates input as a valid datetime string and convert it to a `datetime.datetime` object.

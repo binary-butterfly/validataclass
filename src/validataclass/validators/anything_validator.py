@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from collections.abc import Iterable
 from typing import Any, cast, overload
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeVar, override
 
 from validataclass.exceptions import InvalidValidatorOptionException
 from .validator import Validator
@@ -164,6 +164,7 @@ class AnythingValidator(Validator[T_AllowedTypes]):
 
         return list(allowed_types_set)
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> T_AllowedTypes:
         """
         Validates input data. Accepts anything (or only specific types) and returns data unmodified.

@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import (
     StringTooShortError,
     StringTooLongError,
@@ -110,6 +112,7 @@ class StringValidator(Validator[str]):
         self.allow_multiline = multiline
         self.unsafe = unsafe
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates input data to be a valid string, optionally checking length and allowed characters.

@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from copy import deepcopy
 from typing import Any, overload
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeVar, override
 
 from .validator import Validator
 
@@ -66,6 +66,7 @@ class DiscardValidator(Validator[T_DiscardOutput]):
         """
         self.output_value = output_value
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> T_DiscardOutput:
         """
         Validates input data.

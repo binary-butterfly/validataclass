@@ -7,6 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 import math
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidValidatorOptionException, NumberRangeError, NonFiniteNumberError
 from .validator import Validator
 
@@ -79,6 +81,7 @@ class FloatValidator(Validator[float]):
         self.max_value = float(max_value) if max_value is not None else None
         self.allow_integers = allow_integers
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> float:
         """
         Validates type (and optionally value) of input data. Returns unmodified float.

@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
+from typing_extensions import override
+
 __all__ = [
     'ValidationError',
 ]
@@ -38,10 +40,12 @@ class ValidationError(Exception):
             self.reason = reason
         self.extra_data = {key: value for key, value in kwargs.items() if value is not None}
 
+    @override
     def __repr__(self) -> str:
         params_string = ', '.join(f'{key}={value}' for key, value in self._get_repr_dict().items())
         return f'{type(self).__name__}({params_string})'
 
+    @override
     def __str__(self) -> str:
         return self.__repr__()
 

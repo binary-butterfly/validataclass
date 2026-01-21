@@ -7,6 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidEmailError
 from validataclass.internal import internet_helpers
 from .string_validator import StringValidator
@@ -88,6 +90,7 @@ class EmailValidator(StringValidator):
         self.allow_empty = allow_empty
         self.to_lowercase = to_lowercase
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates that input is a valid email address string. Returns unmodified string.
