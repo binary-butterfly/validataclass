@@ -5,13 +5,12 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
-from typing import Any
 
 import pytest
 
 from tests.unit.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from tests.test_utils import UNSET_PARAMETER
-from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, NoDefault, validataclass_field
+from validataclass.dataclasses import BaseDefault, Default, DefaultFactory, DefaultUnset, NoDefault, validataclass_field
 from validataclass.helpers import UnsetValue
 from validataclass.validators import IntegerValidator
 
@@ -47,28 +46,22 @@ class ValidataclassFieldTest:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'param_default, expected_default, expected_as_factory',
+        'param_default, expected_default',
         [
             # Explicit Default objects
-            (Default(42), 42, False),
-            (Default(None), None, False),
-            (Default(UnsetValue), UnsetValue, False),
-            (DefaultUnset, UnsetValue, False),
-
-            # Default object with mutable value (should result in a default_factory)
-            (Default([]), [], True),
-
-            # DefaultFactory object
-            (DefaultFactory(lambda: 3), 3, True),
+            (Default(42), 42),
+            (Default(None), None),
+            (Default(UnsetValue), UnsetValue),
+            (DefaultUnset, UnsetValue),
 
             # Regular values (automatically converted to Default objects)
-            (42, 42, False),
-            (None, None, False),
-            (UnsetValue, UnsetValue, False),
+            (42, 42),
+            (None, None),
+            (UnsetValue, UnsetValue),
         ],
     )
-    def test_validataclass_field_with_default(param_default, expected_default, expected_as_factory):
-        """ Test validataclass_field function on its own, with various default values. """
+    def test_validataclass_field_with_default(param_default, expected_default):
+        """ Test validataclass_field function on its own, with various static default values. """
         # Create field
         field = validataclass_field(IntegerValidator(), default=param_default)
 
@@ -76,39 +69,48 @@ class ValidataclassFieldTest:
         assert type(field.metadata.get('validator')) is IntegerValidator
         assert isinstance(field.metadata.get('validator_default'), Default)
         assert field.metadata.get('validator_default').get_value() == expected_default
+        assert field.metadata.get('validator_default').needs_factory() is False
 
         # Check field default and default_factory
-        if expected_as_factory:
-            assert field.default is dataclasses.MISSING
-            assert field.default_factory() == expected_default
-        else:
-            assert field.default == expected_default
-            assert field.default_factory is dataclasses.MISSING
+        assert field.default == expected_default
+        assert field.default_factory is dataclasses.MISSING
 
     @staticmethod
-    def test_validataclass_field_with_default_factory():
-        """ Test validataclass_field function on its own, with a default factory. """
+    @pytest.mark.parametrize(
+        'param_default, expected_default, expected_default_cls',
+        [
+            # Default object with mutable value (should result in a default_factory)
+            (Default([]), [], Default),
+
+            # DefaultFactory object
+            (DefaultFactory(lambda: 3), 3, DefaultFactory),
+        ],
+    )
+    def test_validataclass_field_with_default_factory(param_default, expected_default, expected_default_cls):
+        """ Test validataclass_field function on its own, with default objects that require a default_factory. """
         # Create field
-        field = validataclass_field(IntegerValidator(), default=DefaultFactory(lambda: 3))
+        field = validataclass_field(IntegerValidator(), default=param_default)
 
         # Check field metadata
         assert type(field.metadata.get('validator')) is IntegerValidator
-        assert isinstance(field.metadata.get('validator_default'), DefaultFactory)
-        assert field.metadata.get('validator_default').get_value() == 3
+        assert isinstance(field.metadata.get('validator_default'), BaseDefault)
+        assert isinstance(field.metadata.get('validator_default'), expected_default_cls)
+        assert field.metadata.get('validator_default').get_value() == expected_default
+        assert field.metadata.get('validator_default').needs_factory() is True
 
         # Check field default and default_factory
         assert field.default is dataclasses.MISSING
-        assert callable(field.default_factory) and field.default_factory() == 3
+        assert field.default_factory() == expected_default
 
     @staticmethod
     def test_validataclass_field_with_custom_default_class():
         """ Test validataclass_field() on its own with a custom default class (which generates a default factory). """
 
         # Create a custom Default subclass
-        class CustomDefault(Default):
+        class CustomDefault(BaseDefault[int]):
             counter: int = 0
 
-            def get_value(self) -> Any:
+            def get_value(self) -> int:
                 self.counter += 1
                 return self.counter
 
@@ -123,6 +125,7 @@ class ValidataclassFieldTest:
         assert isinstance(field.metadata.get('validator_default'), CustomDefault)
         assert field.metadata.get('validator_default').get_value() == 1
         assert field.metadata.get('validator_default').get_value() == 2
+        assert field.metadata.get('validator_default').needs_factory() is True
 
         # Check field default and default_factory
         assert field.default is dataclasses.MISSING

@@ -99,7 +99,7 @@ class ValidatorDataclassTest:
 
     @staticmethod
     def test_validataclass_with_tuples():
-        """ Create a dataclass using @validataclass with tuple syntax for setting Defaults. """
+        """ Create a dataclass using @validataclass with tuple syntax for setting defaults. """
 
         @validataclass
         class UnitTestValidatorDataclass:
@@ -426,7 +426,7 @@ class ValidatorDataclassTest:
             class InvalidDataclass:
                 foo: int
 
-        assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
+        assert str(exception_info.value) == 'Dataclass field "foo" must specify a validator.'
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -435,12 +435,12 @@ class ValidatorDataclassTest:
             (
                 # None, missing validator
                 None,
-                'Dataclass field "foo" must specify a Validator.',
+                'Dataclass field "foo" must specify a validator.',
             ),
             (
                 # Default only, missing validator
                 (Default(3)),
-                'Dataclass field "foo" must specify a Validator.',
+                'Dataclass field "foo" must specify a validator.',
             ),
             (
                 # Tuple with invalid length
@@ -460,12 +460,12 @@ class ValidatorDataclassTest:
             (
                 # Two validators in a tuple
                 (IntegerValidator(), StringValidator()),
-                'Dataclass field "foo": Only one Validator can be specified.',
+                'Dataclass field "foo": Only one validator can be specified.',
             ),
             (
                 # Two defaults in a tuple
                 (Default(3), Default(None)),
-                'Dataclass field "foo": Only one Default can be specified.',
+                'Dataclass field "foo": Only one default can be specified.',
             ),
         ],
     )
@@ -512,7 +512,7 @@ class ValidatorDataclassTest:
 
         assert (
             str(exception_info.value)
-            == 'Dataclass field "foo" has a defined Validator and/or Default object, but no type annotation.'
+            == 'Dataclass field "foo" has a defined validator and/or default object, but no type annotation.'
         )
 
     @staticmethod

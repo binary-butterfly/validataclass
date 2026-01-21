@@ -386,8 +386,8 @@ class DataclassValidatorTest:
     @staticmethod
     def test_dataclass_with_various_default_classes():
         """
-        Test DataclassValidator with a dataclass with all kinds of Default objects (Default, DefaultUnset,
-        DefaultFactory).
+        Test DataclassValidator with a dataclass with all kinds of default objects (`Default`, `DefaultUnset`,
+        `DefaultFactory`).
         """
 
         def counter():
@@ -1089,7 +1089,7 @@ class DataclassValidatorTest:
 
     @staticmethod
     def test_dataclass_field_without_validator():
-        """ Test that DataclassValidator only allows dataclasses where every field has a defined Validator. """
+        """ Test that DataclassValidator only allows dataclasses where every field has a defined validator. """
 
         @dataclass
         class IncompatibleDataclass:
@@ -1099,21 +1099,24 @@ class DataclassValidatorTest:
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
 
-        assert str(exception_info.value) == 'Dataclass field "foo" has no defined Validator.'
+        assert str(exception_info.value) == 'Dataclass field "foo" has no defined validator.'
 
     @staticmethod
     def test_dataclass_field_with_invalid_validator():
-        """ Test that DataclassValidator only allows dataclasses where every field has a valid Validator. """
+        """ Test that DataclassValidator only allows dataclasses where every field has a valid validator. """
 
         @dataclass
         class IncompatibleDataclass:
-            # Metadata contains 'validator' but it is not of type Validator
+            # Metadata contains 'validator' but it is not an instance of Validator or a subclass
             foo: str = field(default='unknown', metadata={'validator': 'foobar'})
 
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
 
-        assert str(exception_info.value) == 'Validator specified for dataclass field "foo" is not of type "Validator".'
+        assert (
+            str(exception_info.value)
+            == 'Validator specified for dataclass field "foo" is not an instance of "Validator".'
+        )
 
     @staticmethod
     def test_dataclass_field_with_invalid_default():
@@ -1121,7 +1124,7 @@ class DataclassValidatorTest:
 
         @dataclass
         class IncompatibleDataclass:
-            # Metadata contains 'validator_default' but it is not of type Default
+            # Metadata contains 'validator_default' but it is not an instance of BaseDefault or a subclass
             foo: str = field(default='unknown', metadata={
                 'validator': StringValidator(),
                 'validator_default': 'foobar',
@@ -1130,4 +1133,7 @@ class DataclassValidatorTest:
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             DataclassValidator(IncompatibleDataclass)
 
-        assert str(exception_info.value) == 'Default specified for dataclass field "foo" is not of type "Default".'
+        assert (
+            str(exception_info.value)
+            == 'Default specified for dataclass field "foo" is not an instance of "BaseDefault".'
+        )

@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that Default has correct type parameter for BaseDefault[T] and Default[T]
+- case: default_value_type_params
+  main: |
+    from typing import Any
+    from validataclass.dataclasses import BaseDefault, Default
+    reveal_type(Default(None))
+    reveal_type(Default(None).get_value())
+    reveal_type(Default(42))
+    reveal_type(Default(42).get_value())
+    reveal_type(Default([]))
+    reveal_type(Default([]).get_value())
+    var1: BaseDefault[int] = Default(42)        # correct
+    var2: BaseDefault[str] = Default(42)        # error (10)
+    var3: BaseDefault[list[Any]] = Default([])  # correct
+    var4: BaseDefault[list[int]] = Default([])  # correct
+    var5: BaseDefault[int] = Default([])        # error (13)
+  out: |
+    main:3: note: Revealed type is "validataclass.dataclasses.defaults.Default[None]"
+    main:4: note: Revealed type is "None"
+    main:5: note: Revealed type is "validataclass.dataclasses.defaults.Default[builtins.int]"
+    main:6: note: Revealed type is "builtins.int"
+    main:7: note: Revealed type is "validataclass.dataclasses.defaults.Default[builtins.list[Never]]"
+    main:8: note: Revealed type is "builtins.list[Never]"
+    main:10: error: Argument 1 to "Default" has incompatible type "int"; expected "str"  [arg-type]
+    main:13: error: Argument 1 to "Default" has incompatible type "list[Never]"; expected "int"  [arg-type]
+
+# Check that DefaultFactory has correct type parameter for BaseDefault[T] and DefaultFactory[T]
+- case: default_factory_type_params
+  main: |
+    from typing import Any
+    from validataclass.dataclasses import BaseDefault, DefaultFactory
+    reveal_type(DefaultFactory(lambda: 42))
+    reveal_type(DefaultFactory(lambda: 42).get_value())
+    reveal_type(DefaultFactory(list))
+    reveal_type(DefaultFactory(list).get_value())
+    var1: BaseDefault[int] = DefaultFactory(lambda: 42)  # correct
+    var2: BaseDefault[str] = DefaultFactory(lambda: 42)  # error (8)
+    var3: BaseDefault[list[Any]] = DefaultFactory(list)  # correct
+    var4: BaseDefault[list[int]] = DefaultFactory(list)  # correct
+    var5: BaseDefault[int] = DefaultFactory(list)        # error (11)
+  out: |
+    main:3: note: Revealed type is "validataclass.dataclasses.defaults.DefaultFactory[builtins.int]"
+    main:4: note: Revealed type is "builtins.int"
+    main:5: note: Revealed type is "validataclass.dataclasses.defaults.DefaultFactory[builtins.list[Never]]"
+    main:6: note: Revealed type is "builtins.list[Never]"
+    main:8: error: Argument 1 to "DefaultFactory" has incompatible type "Callable[[], int]"; expected "Callable[[], str]"  [arg-type]
+    main:8: error: Incompatible return value type (got "int", expected "str")  [return-value]
+    main:11: error: Argument 1 to "DefaultFactory" has incompatible type "type[list[_T]]"; expected "Callable[[], int]"  [arg-type]
+
+# Check that DefaultUnset has correct type parameter for BaseDefault[T] and Default[T]
+- case: default_unset_type_params
+  main: |
+    from validataclass.dataclasses import BaseDefault, Default, DefaultUnset
+    from validataclass.helpers import UnsetValueType
+    reveal_type(DefaultUnset)
+    reveal_type(DefaultUnset.get_value())
+    var1: Default[UnsetValueType] = DefaultUnset      # correct
+    var2: Default[str] = DefaultUnset                 # error (6)
+  out: |
+    main:3: note: Revealed type is "validataclass.dataclasses.defaults.Default[validataclass.helpers.unset_value.UnsetValueType]"
+    main:4: note: Revealed type is "validataclass.helpers.unset_value.UnsetValueType"
+    main:6: error: Incompatible types in assignment (expression has type "Default[UnsetValueType]", variable has type "Default[str]")  [assignment]
+
+# Check that NoDefault has correct type parameter for BaseDefault[T]
+- case: no_default_type_params
+  main: |
+    from typing_extensions import Any, Never
+    from validataclass.dataclasses import BaseDefault, Default, NoDefault
+    reveal_type(NoDefault)
+    try:
+        reveal_type(NoDefault.get_value())
+    except:
+        pass
+    var1: BaseDefault[Never] = NoDefault  # correct
+    var2: BaseDefault[str] = NoDefault    # error (9)
+  out: |
+    main:3: note: Revealed type is "validataclass.dataclasses.defaults._NoDefault"
+    main:5: note: Revealed type is "Never"
+    main:9: error: Incompatible types in assignment (expression has type "_NoDefault", variable has type "BaseDefault[str]")  [assignment]

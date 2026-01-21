@@ -9,12 +9,41 @@ from typing import Any
 
 import pytest
 
-from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, NoDefault
+from validataclass.dataclasses import BaseDefault, Default, DefaultFactory, DefaultUnset, NoDefault
 from validataclass.helpers import UnsetValue
 
 
+# Create a non-abstract subclass of BaseDefault to test methods inherited from BaseDefault
+class ExampleDefaultClass(BaseDefault[int]):
+    def get_value(self) -> int:
+        return 42
+
+    def needs_factory(self) -> bool:
+        return False
+
+
+class BaseDefaultTest:
+    """ Tests for the BaseDefault abstract base class. """
+
+    @staticmethod
+    def test_base_default_repr():
+        assert repr(ExampleDefaultClass()) == 'ExampleDefaultClass'
+
+    @staticmethod
+    def test_base_default_equality():
+        default1 = ExampleDefaultClass()
+        default2 = ExampleDefaultClass()
+        assert default1 == default1
+        assert default1 != default2
+
+    @staticmethod
+    def test_base_default_hashable():
+        default = ExampleDefaultClass()
+        assert hash(default) == object.__hash__(default)
+
+
 class DefaultTest:
-    """ Tests for the base Default class. """
+    """ Tests for the Default class. """
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -102,6 +131,13 @@ class DefaultTest:
         """ Test hashability (__hash__) of Default objects. """
         assert hash(Default(value)) == hash(value)
 
+    @staticmethod
+    def test_default_not_callable():
+        """ Test that default objects are not callable, except for the (deprecated) case of UnsetValue. """
+        default = Default(None)
+        with pytest.raises(TypeError, match="'Default' object is not callable"):
+            default()
+
 
 class DefaultFactoryTest:
     """ Tests for the DefaultFactory class. """
@@ -109,13 +145,12 @@ class DefaultFactoryTest:
     @staticmethod
     def test_default_factory_repr():
         """ Test DefaultFactory __repr__ method. """
-        default_factory = DefaultFactory(list)
-        assert repr(default_factory) == "DefaultFactory(<class 'list'>)"
+        assert repr(DefaultFactory(list)) == "DefaultFactory(<class 'list'>)"
 
     @staticmethod
     def test_default_factory_list():
         """ Test DefaultFactory with `list` as default generator. """
-        default_factory = DefaultFactory(list)
+        default_factory: DefaultFactory[list[int]] = DefaultFactory(list)
         assert default_factory.needs_factory()
 
         # Generate values and test that they are not the same objects
@@ -191,32 +226,21 @@ class DefaultFactoryTest:
 
 
 class DefaultUnsetTest:
-    """ Tests for the DefaultUnset sentinel object. """
+    """ Tests for the DefaultUnset object, formerly a subclass, now an alias for `Default(UnsetValue)`. """
 
     @staticmethod
     def test_default_unset():
-        """ Test the DefaultUnset sentinel object. """
-        default = DefaultUnset
-        assert repr(default) == 'DefaultUnset'
-        assert default.get_value() is UnsetValue
-        assert not default.needs_factory()
-
-    @staticmethod
-    def test_default_unset_is_unique():
-        """ Test that DefaultUnset cannot be cloned. """
-        default1 = DefaultUnset
-        default2 = copy(DefaultUnset)
-        assert default1 is default2 is DefaultUnset
+        """ Test the DefaultUnset object. """
+        assert isinstance(DefaultUnset, Default)
+        assert repr(DefaultUnset) == 'Default(UnsetValue)'
+        assert DefaultUnset.get_value() is UnsetValue
+        assert not DefaultUnset.needs_factory()
 
     @staticmethod
     def test_default_unset_equality():
-        """ Test equality between DefaultUnset and Default(UnsetValue) objects. """
-        assert DefaultUnset == DefaultUnset
+        """ Test equality of DefaultUnset with Default(UnsetValue). """
         assert DefaultUnset == Default(UnsetValue)
         assert Default(UnsetValue) == DefaultUnset
-
-        assert DefaultUnset != Default(None)
-        assert Default(None) != DefaultUnset
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -235,9 +259,10 @@ class DefaultUnsetTest:
         assert other != DefaultUnset
 
     @staticmethod
-    def test_default_unset_call():
-        """ Test that calling DefaultUnset returns the sentinel object itself. """
-        assert DefaultUnset() is DefaultUnset
+    def test_default_unset_call_is_deprecated():
+        """ Test that calling DefaultUnset returns the object itself, but issues a deprecation warning. """
+        with pytest.deprecated_call():
+            assert DefaultUnset() is DefaultUnset
 
 
 class NoDefaultTest:
@@ -246,13 +271,15 @@ class NoDefaultTest:
     @staticmethod
     def test_no_default():
         """ Test the NoDefault sentinel's behaviour as a Default object. """
-        default = NoDefault
-        assert repr(default) == 'NoDefault'
+        assert repr(NoDefault) == 'NoDefault'
 
         # get_value() must raise an exception
-        with pytest.raises(ValueError) as exception_info:
-            default.get_value()
-        assert str(exception_info.value) == 'No default value specified!'
+        with pytest.raises(ValueError, match=r'^No default value specified!$'):
+            NoDefault.get_value()
+
+        # needs_factory() must raise an exception
+        with pytest.raises(NotImplementedError, match=r'^NoDefault can be used neither as a value nor as a factory\.$'):
+            NoDefault.needs_factory()
 
     @staticmethod
     def test_no_default_is_unique():
@@ -284,6 +311,7 @@ class NoDefaultTest:
         assert hash(NoDefault) == object.__hash__(NoDefault)
 
     @staticmethod
-    def test_no_default_call():
-        """ Test that calling NoDefault returns the sentinel itself. """
-        assert NoDefault() is NoDefault
+    def test_no_default_call_is_deprecated():
+        """ Test that calling NoDefault returns the sentinel object itself, but issues a deprecation warning. """
+        with pytest.deprecated_call():
+            assert NoDefault() is NoDefault
