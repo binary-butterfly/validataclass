@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any, Generic, TypeVar
 
+from typing_extensions import override
+
 from validataclass.exceptions import (
     DictFieldsValidationError,
     DictInvalidKeyTypeError,
@@ -135,6 +137,7 @@ class DictValidator(Validator[dict[str, T_DictValues]], Generic[T_DictValues]):
         if optional_fields is not None:
             self.required_fields = self.required_fields - set(optional_fields)
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> dict[str, T_DictValues]:
         """
         Validates input data. Returns a validated dict.

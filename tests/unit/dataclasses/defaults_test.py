@@ -8,6 +8,7 @@ from copy import copy
 from typing import Any
 
 import pytest
+from typing_extensions import override
 
 from validataclass.dataclasses import BaseDefault, Default, DefaultFactory, DefaultUnset, NoDefault
 from validataclass.helpers import UnsetValue
@@ -15,9 +16,11 @@ from validataclass.helpers import UnsetValue
 
 # Create a non-abstract subclass of BaseDefault to test methods inherited from BaseDefault
 class ExampleDefaultClass(BaseDefault[int]):
+    @override
     def get_value(self) -> int:
         return 42
 
+    @override
     def needs_factory(self) -> bool:
         return False
 

@@ -9,6 +9,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from typing_extensions import override
 
 from tests.test_utils import UnitTestContextValidator
 from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, validataclass, validataclass_field
@@ -124,6 +125,7 @@ class UnitTestContextSensitiveDataclassWithPosArgs(UnitTestContextSensitiveDatac
     """
 
     # Same as UnitTestContextSensitiveDataclass, but with positional arguments
+    @override
     def __post_validate__(self, value_required: bool = False) -> None:
         super().__post_validate__(value_required=value_required)
 

@@ -9,6 +9,8 @@ import inspect
 import warnings
 from typing import Any, Callable, TypeGuard, TypeVar
 
+from typing_extensions import override
+
 from validataclass.dataclasses import BaseDefault, NoDefault
 from validataclass.exceptions import (
     DataclassInvalidPreValidateSignatureException,
@@ -236,6 +238,7 @@ class DataclassValidator(Validator[T_Dataclass]):
 
         return validated_dict
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> T_Dataclass:
         """
         Validate an input dictionary according to the specified dataclass. Returns an instance of the dataclass.

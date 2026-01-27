@@ -6,7 +6,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import TypeAlias, TypeVar
 
-from typing_extensions import Self
+from typing_extensions import Self, override
 
 __all__ = [
     'UnsetValue',
@@ -33,9 +33,11 @@ class UnsetValueType:
     def __call__(self) -> Self:
         return self
 
+    @override
     def __repr__(self) -> str:
         return 'UnsetValue'
 
+    @override
     def __str__(self) -> str:
         return '<UnsetValue>'
 
@@ -48,7 +50,7 @@ class UnsetValueType:
 
 # Create sentinel object and redefine __new__ so that the object cannot be cloned
 UnsetValue = UnsetValueType()
-UnsetValueType.__new__ = lambda cls: UnsetValue  # type: ignore
+UnsetValueType.__new__ = lambda cls: UnsetValue  # type: ignore[assignment, method-assign, return-value]
 
 # Type alias OptionalUnset[T] for fields with DefaultUnset: Allows either the type T or UnsetValue
 OptionalUnset: TypeAlias = T | UnsetValueType

@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
+from dataclasses import FrozenInstanceError
 
 import pytest
 
@@ -77,25 +78,28 @@ class ValidatorDataclassTest:
     def test_validataclass_with_kwargs():
         """ Create a dataclass using @validataclass() with arguments and check that they are passed to @dataclass(). """
 
-        # Create two dataclasses, one without any arguments and one with unsafe_hash=True.
-        # The first won't have a __hash__ function, but the latter will have one.
-        # We can use this to check that the argument was really passed to @dataclass.
+        # As an example, create two dataclasses, one without any arguments and one with frozen=True.
+        # Writing to an object of the frozen dataclass should raise an exception.
 
         @validataclass()
-        class FooDataclass:
+        class NormalDataclass:
             foo: int = IntegerValidator()
 
-        @validataclass(unsafe_hash=True)
-        class BarDataclass:
+        @validataclass(frozen=True)
+        class FrozenDataclass:
             foo: int = IntegerValidator()
 
-        # Check that @validataclass actually created a dataclass (i.e. used @dataclass on the class)
-        assert dataclasses.is_dataclass(FooDataclass)
-        assert dataclasses.is_dataclass(BarDataclass)
+        # NormalDataclass is not frozen, writing is allowed
+        normal = NormalDataclass(foo=42)
+        assert normal.foo == 42
+        normal.foo = 13
+        assert normal.foo == 13
 
-        # Check if __hash__ exists
-        assert FooDataclass.__hash__ is None
-        assert BarDataclass.__hash__ is not None
+        # FrozenDataclass is frozen, writing should raise an exception!
+        frozen = FrozenDataclass(foo=42)
+        assert frozen.foo == 42
+        with pytest.raises(FrozenInstanceError, match="cannot assign to field 'foo'"):
+            frozen.foo = 13  # type: ignore[misc]
 
     @staticmethod
     def test_validataclass_with_tuples():

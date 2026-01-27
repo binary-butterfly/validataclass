@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidIntegerError, InvalidValidatorOptionException, NumberRangeError
 from .validator import Validator
 
@@ -89,6 +91,7 @@ class IntegerValidator(Validator[int]):
         self.max_value = max_value
         self.allow_strings = allow_strings
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> int:
         """
         Validates type (and optionally value) of input data. Returns unmodified integer.

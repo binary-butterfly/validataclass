@@ -7,6 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 from datetime import date
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidDateError
 from .string_validator import StringValidator
 from .validator import Validator
@@ -46,6 +48,7 @@ class DateValidator(Validator[date]):
         # Initialize StringValidator without any parameters
         self.string_validator = StringValidator()
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> date:
         """
         Validates input as a valid date string and convert it to a `datetime.date` object.

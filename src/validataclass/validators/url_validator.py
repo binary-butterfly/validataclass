@@ -7,6 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidUrlError
 from validataclass.internal import internet_helpers
 from .string_validator import StringValidator
@@ -138,6 +140,7 @@ class UrlValidator(StringValidator):
         self.allow_userinfo = allow_userinfo
         self.allow_empty = allow_empty
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates that input is a valid URL string. Returns unmodified string.

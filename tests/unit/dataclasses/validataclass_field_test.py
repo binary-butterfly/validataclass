@@ -7,9 +7,10 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 
 import pytest
+from typing_extensions import override
 
-from tests.unit.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from tests.test_utils import UNSET_PARAMETER
+from tests.unit.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from validataclass.dataclasses import BaseDefault, Default, DefaultFactory, DefaultUnset, NoDefault, validataclass_field
 from validataclass.helpers import UnsetValue
 from validataclass.validators import IntegerValidator
@@ -110,10 +111,12 @@ class ValidataclassFieldTest:
         class CustomDefault(BaseDefault[int]):
             counter: int = 0
 
+            @override
             def get_value(self) -> int:
                 self.counter += 1
                 return self.counter
 
+            @override
             def needs_factory(self) -> bool:
                 return True
 

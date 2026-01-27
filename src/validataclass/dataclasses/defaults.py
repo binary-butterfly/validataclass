@@ -10,7 +10,7 @@ from collections.abc import Callable
 from copy import deepcopy
 from typing import Any, Generic, TypeVar
 
-from typing_extensions import Never, Self
+from typing_extensions import Never, Self, override
 
 from validataclass.helpers import UnsetValue, UnsetValueType
 
@@ -35,9 +35,11 @@ class BaseDefault(Generic[T_Default], ABC):
     See also: `Default`, `DefaultFactory()`, `DefaultUnset`, `NoDefault`
     """
 
+    @override
     def __repr__(self) -> str:
         return type(self).__name__
 
+    @override
     def __eq__(self, other: Any) -> bool:
         return NotImplemented
 
@@ -79,9 +81,11 @@ class Default(BaseDefault[T_Default]):
         # If copying the value resulted in the identical object, no factory is needed
         self._needs_factory = self._value is not value
 
+    @override
     def __repr__(self) -> str:
         return f'{type(self).__name__}({self._value!r})'
 
+    @override
     def __eq__(self, other: Any) -> bool:
         # Only handle this if self is of the same type as other OR self is a subclass of other.
         # In other words, don't handle this if other is a completely different type or more specialized than self.
@@ -90,6 +94,7 @@ class Default(BaseDefault[T_Default]):
             return isinstance(other, Default) and bool(self._value == other._value)
         return NotImplemented
 
+    @override
     def __hash__(self) -> int:
         return hash(self._value)
 
@@ -105,12 +110,14 @@ class Default(BaseDefault[T_Default]):
             return self
         raise TypeError(f"'{type(self).__name__}' object is not callable")
 
+    @override
     def get_value(self) -> T_Default:
         """
         Get actual default value.
         """
         return deepcopy(self._value)
 
+    @override
     def needs_factory(self) -> bool:
         """
         Return True if a dataclass `default_factory` is needed for this default object, for example if the value is a
@@ -144,9 +151,11 @@ class DefaultFactory(BaseDefault[T_Default]):
     def __init__(self, factory: Callable[[], T_Default]):
         self._factory = factory
 
+    @override
     def __repr__(self) -> str:
         return f'{type(self).__name__}({self._factory!r})'
 
+    @override
     def __eq__(self, other: Any) -> bool:
         # Only handle this if self is of the same type as other OR self is a subclass of other.
         # In other words, don't handle this if other is a completely different type or more specialized than self.
@@ -155,15 +164,18 @@ class DefaultFactory(BaseDefault[T_Default]):
             return isinstance(other, DefaultFactory) and bool(self._factory == other._factory)
         return NotImplemented
 
+    @override
     def __hash__(self) -> int:
         return hash(self._factory)
 
+    @override
     def get_value(self) -> T_Default:
         """
         Get an actual default value by calling the factory function.
         """
         return self._factory()
 
+    @override
     def needs_factory(self) -> bool:
         """
         Return True if a dataclass `default_factory` is needed for this default object.
@@ -185,18 +197,22 @@ class _NoDefault(BaseDefault[Never]):
     A validataclass field with `NoDefault` is equivalent to a validataclass field without specified default.
     """
 
+    @override
     def __repr__(self) -> str:
         return 'NoDefault'
 
+    @override
     def __eq__(self, other: Any) -> bool:
         # Nothing is equal to NoDefault except itself
         return self is other
 
     __hash__ = BaseDefault.__hash__
 
+    @override
     def get_value(self) -> Never:
         raise ValueError('No default value specified!')
 
+    @override
     def needs_factory(self) -> bool:
         raise NotImplementedError('NoDefault can be used neither as a value nor as a factory.')
 
@@ -212,5 +228,5 @@ class _NoDefault(BaseDefault[Never]):
 
 # Create sentinel object NoDefault, redefine __new__ to always return the same instance, and delete temporary class
 NoDefault = _NoDefault()
-_NoDefault.__new__ = lambda cls: NoDefault  # type: ignore
+_NoDefault.__new__ = lambda cls: NoDefault  # type: ignore[assignment, method-assign, return-value]
 del _NoDefault

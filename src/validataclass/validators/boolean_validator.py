@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidTypeError
 from .validator import Validator
 
@@ -47,6 +49,7 @@ class BooleanValidator(Validator[bool]):
         """
         self.allow_strings = allow_strings
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> bool:
         """
         Validates type of input data. Returns a boolean.

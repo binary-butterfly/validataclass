@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from copy import deepcopy
 from typing import Any, overload
 
-from typing_extensions import Generic, TypeVar
+from typing_extensions import Generic, TypeVar, override
 
 from validataclass.exceptions import InvalidTypeError
 from .validator import Validator
@@ -79,6 +79,7 @@ class AllowEmptyString(
         self.wrapped_validator = validator
         self.default_value = default
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> T_WrappedValidated | T_EmptyStringDefault:
         """
         Validates input data.

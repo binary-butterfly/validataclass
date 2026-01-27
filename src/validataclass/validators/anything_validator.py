@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from collections.abc import Iterable
 from typing import Any, cast, overload
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeVar, override
 
 from validataclass.exceptions import InvalidValidatorOptionException
 from .validator import Validator
@@ -140,9 +140,8 @@ class AnythingValidator(Validator[T_AllowedTypes]):
         """
         Helper method to normalize the `allowed_types` parameter to a unique list that contains only types.
         """
-        # If allowed_types is not already an Iterable, put it in a list. (Treating strings as iterable doesn't make
-        # sense here, so we make an exception for strings to give the user a more meaningful error message.)
-        if not isinstance(allowed_types, Iterable) or isinstance(allowed_types, str):
+        # If allowed_types is not already an Iterable, put it in a list
+        if not isinstance(allowed_types, Iterable):
             allowed_types = [allowed_types]
 
         # Make sure allowed_types only contains valid types (or None, which is replaced later)
@@ -165,6 +164,7 @@ class AnythingValidator(Validator[T_AllowedTypes]):
 
         return list(allowed_types_set)
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> T_AllowedTypes:
         """
         Validates input data. Accepts anything (or only specific types) and returns data unmodified.

@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
+from typing_extensions import override
+
 from .base_exceptions import ValidationError
 
 __all__ = [
@@ -69,6 +71,7 @@ class InvalidTypeError(ValidationError):
         if new_type not in self.expected_types:
             self.expected_types.append(new_type)
 
+    @override
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         self.expected_types.sort()

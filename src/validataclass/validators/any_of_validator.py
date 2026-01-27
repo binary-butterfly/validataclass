@@ -8,6 +8,8 @@ import warnings
 from collections.abc import Iterable
 from typing import Any, TypeVar
 
+from typing_extensions import override
+
 from validataclass.exceptions import ValueNotAllowedError, InvalidValidatorOptionException
 from .validator import Validator
 
@@ -125,6 +127,7 @@ class AnyOfValidator(Validator[T_AnyOfValues]):
         # Set case_sensitive parameter, defaulting to False.
         self.case_sensitive = case_sensitive if case_sensitive is not None else False
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> T_AnyOfValues:
         """
         Validate that input is in the list of allowed values. Returns the value (as defined in the list).
