@@ -67,10 +67,13 @@ class ValidataclassFieldTest:
         field = validataclass_field(IntegerValidator(), default=param_default)
 
         # Check field metadata
-        assert type(field.metadata.get('validator')) is IntegerValidator
-        assert isinstance(field.metadata.get('validator_default'), Default)
-        assert field.metadata.get('validator_default').get_value() == expected_default
-        assert field.metadata.get('validator_default').needs_factory() is False
+        metadata_validator = field.metadata.get('validator')
+        metadata_default = field.metadata.get('validator_default')
+
+        assert type(metadata_validator) is IntegerValidator
+        assert type(metadata_default) is Default
+        assert metadata_default.get_value() == expected_default
+        assert metadata_default.needs_factory() is False
 
         # Check field default and default_factory
         assert field.default == expected_default
@@ -93,14 +96,17 @@ class ValidataclassFieldTest:
         field = validataclass_field(IntegerValidator(), default=param_default)
 
         # Check field metadata
-        assert type(field.metadata.get('validator')) is IntegerValidator
-        assert isinstance(field.metadata.get('validator_default'), BaseDefault)
-        assert isinstance(field.metadata.get('validator_default'), expected_default_cls)
-        assert field.metadata.get('validator_default').get_value() == expected_default
-        assert field.metadata.get('validator_default').needs_factory() is True
+        metadata_validator = field.metadata.get('validator')
+        metadata_default = field.metadata.get('validator_default')
+
+        assert type(metadata_validator) is IntegerValidator
+        assert type(metadata_default) is expected_default_cls
+        assert metadata_default.get_value() == expected_default
+        assert metadata_default.needs_factory() is True
 
         # Check field default and default_factory
         assert field.default is dataclasses.MISSING
+        assert field.default_factory is not dataclasses.MISSING
         assert field.default_factory() == expected_default
 
     @staticmethod
@@ -124,14 +130,18 @@ class ValidataclassFieldTest:
         field = validataclass_field(IntegerValidator(), default=CustomDefault())
 
         # Check field metadata
-        assert type(field.metadata.get('validator')) is IntegerValidator
-        assert isinstance(field.metadata.get('validator_default'), CustomDefault)
-        assert field.metadata.get('validator_default').get_value() == 1
-        assert field.metadata.get('validator_default').get_value() == 2
-        assert field.metadata.get('validator_default').needs_factory() is True
+        metadata_validator = field.metadata.get('validator')
+        metadata_default = field.metadata.get('validator_default')
+
+        assert type(metadata_validator) is IntegerValidator
+        assert type(metadata_default) is CustomDefault
+        assert metadata_default.get_value() == 1
+        assert metadata_default.get_value() == 2
+        assert metadata_default.needs_factory() is True
 
         # Check field default and default_factory
         assert field.default is dataclasses.MISSING
+        assert field.default_factory is not dataclasses.MISSING
         assert field.default_factory() == 3
         assert field.default_factory() == 4
 
@@ -150,8 +160,12 @@ class ValidataclassFieldTest:
         )
 
         # Check field metadata
-        assert type(field.metadata.get('validator')) is IntegerValidator
-        assert field.metadata.get('validator_default').get_value() == 42
+        metadata_validator = field.metadata.get('validator')
+        metadata_default = field.metadata.get('validator_default')
+
+        assert type(metadata_validator) is IntegerValidator
+        assert type(metadata_default) is Default
+        assert metadata_default.get_value() == 42
         assert field.metadata.get('unittest') == 123
 
     @staticmethod

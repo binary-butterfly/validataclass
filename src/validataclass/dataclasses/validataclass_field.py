@@ -7,21 +7,71 @@ Use of this source code is governed by an MIT-style license that can be found in
 import dataclasses
 from typing import Any
 
+from typing_extensions import TypeVar, overload
+
 from validataclass.validators import Validator
-from .defaults import BaseDefault, Default, NoDefault
+from .defaults import BaseDefault, Default, NoDefault, _NoDefaultType
 
 __all__ = [
     'validataclass_field',
 ]
 
+T_Validated = TypeVar('T_Validated')
+T_Default = TypeVar('T_Default')
+T_RawDefault = TypeVar('T_RawDefault')
+
+
+@overload
+def validataclass_field(
+    validator: Validator[T_Validated],
+    *,
+    default: _NoDefaultType = NoDefault,
+    metadata: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> dataclasses.Field[T_Validated]:
+    ...
+
+
+@overload
+def validataclass_field(
+    validator: Validator[T_Validated],
+    *,
+    default: dataclasses._MISSING_TYPE,
+    metadata: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> dataclasses.Field[T_Validated]:
+    ...
+
+
+@overload
+def validataclass_field(
+    validator: Validator[T_Validated],
+    *,
+    default: BaseDefault[T_Default],
+    metadata: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> dataclasses.Field[T_Validated | T_Default]:
+    ...
+
+
+@overload
+def validataclass_field(
+    validator: Validator[T_Validated],
+    *,
+    default: T_RawDefault,
+    metadata: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> dataclasses.Field[T_Validated | T_RawDefault]:
+    ...
+
 
 def validataclass_field(
-    validator: Validator[Any],
+    validator: Validator[T_Validated],
     *,
     default: Any = NoDefault,
     metadata: dict[str, Any] | None = None,
     **kwargs: Any,
-) -> Any:
+) -> dataclasses.Field[Any]:
     """
     Defines a dataclass field compatible with DataclassValidator.
 
@@ -75,4 +125,5 @@ def validataclass_field(
             kwargs['default'] = default.get_value()
 
     # Create a dataclass field with our metadata
-    return dataclasses.field(metadata=metadata, **kwargs)
+    # NOTE: typeshed types the field() function as 'T' rather than 'Field[T]', but the actual return type is a Field.
+    return dataclasses.field(metadata=metadata, **kwargs)  # type: ignore[no-any-return]
