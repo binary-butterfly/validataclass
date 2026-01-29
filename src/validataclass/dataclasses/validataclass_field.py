@@ -17,8 +17,8 @@ __all__ = [
 
 def validataclass_field(
     validator: Validator[Any],
-    default: Any = NoDefault,
     *,
+    default: Any = NoDefault,
     metadata: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> Any:
