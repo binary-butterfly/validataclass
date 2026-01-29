@@ -15,6 +15,15 @@ files = ["src/", "tests/"]
 mypy_path = "src/"
 explicit_package_bases = true
 
+# Enable mypy plugins
+plugins = [
+    # Our custom mypy plugin for type checking validataclasses
+    "validataclass.mypy.plugin",
+
+    # Plugin to type check mypy plugins (only for plugin development)
+    "mypy.plugins.proper_plugin",
+]
+
 # Enable strict type checking
 strict = true
 

@@ -1,0 +1,258 @@
+"""
+validataclass
+Copyright (c) 2026, binary butterfly GmbH and contributors
+Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
+"""
+
+from typing import Any
+
+from mypy.errorcodes import ErrorCode
+from mypy.nodes import Context, Expression, MemberExpr, TempNode
+from mypy.plugin import CheckerPluginInterface, FunctionContext
+from mypy.typeops import make_simplified_union
+from mypy.types import (
+    AnyType,
+    CallableType,
+    Instance,
+    Overloaded,
+    ProperType,
+    TupleType,
+    Type,
+    TypeOfAny,
+    get_proper_type,
+)
+
+from .constants import ERROR_CODE_VALIDATACLASS, FIELD_DEFAULT_BASE_CLASS, VALIDATOR_BASE_CLASS
+from .helpers import DebugLogger
+
+
+class ParsedValidataclassField:
+    """
+    Internal representation of the types of a validataclass field.
+    """
+
+    # True if there was an error while analyzing the field
+    error: bool = False
+
+    # If None, the field does not have an explicit validator/default, but could still have one from the base class.
+    validated_type: ProperType | None = None
+    default_type: ProperType | None = None
+
+
+class VirtualFieldResolver:
+    """
+    Handler for function hook to analyse the wrapped expression in virtual field wrapper calls, i.e. the right-hand side
+    expressions of assignments in a validataclass.
+    """
+
+    _ctx: FunctionContext
+
+    # Interface to mypy's type checker
+    _api: CheckerPluginInterface
+
+    # Logger for plugin development and debugging
+    _logger: DebugLogger
+
+    def __init__(self, ctx: FunctionContext, logger: DebugLogger):
+        self._ctx = ctx
+        self._api = ctx.api
+        self._logger = logger
+
+    def _get_logger_context(self) -> str:
+        """
+        Return a string representation of the current context, i.e. the file path and line number of this call.
+        """
+        return f'{self._api.path}:{self._ctx.context.line}'
+
+    def _log_warn(self, msg: str, *objects: Any) -> None:
+        """
+        Log a message on WARN level.
+        Use this to warn about unhandled expressions/types or features that are not implemented yet.
+        """
+        return self._logger.log('WARN', self._get_logger_context(), msg, *objects)
+
+    def _log_debug(self, msg: str, *objects: Any) -> None:
+        """
+        Log a message on DEBUG level. Only printed if debug mode is enabled.
+        Use this for better traceability and debugging of what the plugin is doing.
+        """
+        return self._logger.log('DEBUG', self._get_logger_context(), msg, *objects)
+
+    def _fail(self, msg: str, context: Context | None = None, *, code: ErrorCode | None = None) -> None:
+        """
+        Report a mypy error to the user. Default code is "validataclass".
+        """
+        self._api.fail(
+            msg,
+            context or self._ctx.context,
+            code=code or ERROR_CODE_VALIDATACLASS,
+        )
+
+    def resolve(self) -> Type:
+        """
+        Analyze the wrapped expression (right-hand side of a validataclass field assignment) for validator and default
+        objects. Return the field type by combining the validator result type and the default value type.
+        """
+
+        # TODO: These assertions just lead to "internal errors". I guess here that's fine?
+        assert len(self._ctx.args) == 1
+        assert len(self._ctx.args[0]) == 1, 'Function was called without an argument?'
+
+        # Get only argument of virtual function call, this is the entire RHS of the validataclass field assignment
+        rhs_expr = self._ctx.args[0][0]
+
+        # Parse right-hand side expression based on its type(s)
+        parsed_field = self._parse_rhs_expression(rhs_expr)
+
+        # Stop here if there was an error parsing the tuple (fallback to returning Any)
+        if parsed_field is None:
+            return AnyType(TypeOfAny.from_error)
+
+        # These conditions should always be true, otherwise we have an error in our code
+        assert parsed_field.error is False
+        assert parsed_field.validated_type is not None
+
+        # Get the combined type of the field (union of validated type and default type)
+        combined_type = self._get_combined_type(parsed_field)
+        self._log_debug('  => Combined type of tuple', combined_type)
+        return combined_type
+
+    def _parse_rhs_expression(self, rhs_expr: Expression) -> ParsedValidataclassField | None:
+        """
+        Analyze the right-hand side expression of a validataclass field, determining its type based on validator and
+        default objects found in the type of the expression.
+        """
+        # Get type of field assignment RHS
+        rhs_type = get_proper_type(self._api.get_expression_type(rhs_expr))
+
+        # TODO: Handle validataclass_field() calls properly.
+
+        parsed_field = ParsedValidataclassField()
+
+        if isinstance(rhs_type, TupleType):
+            # We have a tuple on the right-hand side, probably a tuple with validator and default object
+            self._log_debug('Field RHS is a tuple', rhs_type)
+
+            for index, item_type in enumerate(rhs_type.items):
+                item_type = get_proper_type(item_type)
+                self._parse_rhs_item(item_type, parsed_field)
+        else:
+            # We have a single Instance on the right-hand side, probably a validator or default object
+            self._log_debug('Field RHS is a single item', rhs_type)
+            self._parse_rhs_item(rhs_type, parsed_field)
+
+        # Stop analyzing if we have already found errors in the field definition
+        if parsed_field.error:
+            self._log_debug('Field has errors, stop checking any further')
+            return None
+
+        # Make sure the field has at least a validator instance
+        if parsed_field.validated_type is None:
+            # TODO: Consider base classes here too
+            self._fail('No Validator found in field definition')
+            return None
+
+        return parsed_field
+
+    def _parse_rhs_item(self, item_type: Type, parsed_field: ParsedValidataclassField) -> None:
+        """
+        Analyze the type of a single item in the right-hand side of a validataclass field, i.e. an item in a tuple or
+        a the whole right-hand side if it's not a tuple.
+
+        The result will be written into the given ParsedValidataclassField. May report errors, e.g. for unknown types or
+        for another validator/default instance if the parsed field already has one.
+        """
+        item_type = get_proper_type(item_type)
+
+        # Usually we're expecting an instance of class here, namely of a validator class or default class
+        if isinstance(item_type, Instance):
+            # Check for validator instances (base class Validator)
+            if item_type.type.has_base(VALIDATOR_BASE_CLASS):
+                # Make sure only one validator is set
+                if parsed_field.validated_type is not None:
+                    parsed_field.error = True
+                    self._fail('Multiple validator instances found in field definition')
+                else:
+                    # Find out the output type of this validator
+                    parsed_field.validated_type = self._get_method_return_type(item_type, 'validate')
+                    self._log_debug(f'  - Validator: {item_type.type.name} -> {parsed_field.validated_type}')
+                return
+
+            # Check for default instances (base class BaseDefault)
+            if item_type.type.has_base(FIELD_DEFAULT_BASE_CLASS):
+                # Make sure only one default object is set
+                if parsed_field.default_type is not None:
+                    parsed_field.error = True
+                    self._fail('Multiple default objects found in field definition')
+                else:
+                    # Find out the value type of this default object
+                    parsed_field.default_type = self._get_method_return_type(item_type, 'get_value')
+                    self._log_debug(f'  - Default object: {item_type.type.name} -> {parsed_field.default_type}')
+                return
+
+        # One easy mistake is writing a validator class name without parentheses (e.g. `field: int = IntegerValidator`).
+        # Let's provide a more helpful error message (the default string representation would be long and confusing).
+        if isinstance(item_type, CallableType):
+            callable_ret_type = get_proper_type(item_type.ret_type)
+            item_type_str = f'Callable[..., {callable_ret_type}]'
+
+            # Check if the callable's return type is a validator instance
+            if isinstance(callable_ret_type, Instance) and callable_ret_type.type.has_base(VALIDATOR_BASE_CLASS):
+                parsed_field.error = True
+                self._fail(
+                    f'Unexpected type "{item_type_str}" in field definition (did you mean '
+                    f'"{callable_ret_type.type.name}()"?)'
+                )
+                return
+        else:
+            item_type_str = str(item_type)
+
+        # Everything else is probably an error
+        parsed_field.error = True
+        self._fail(f'Unexpected type "{item_type_str}" in field definition (expected Validator or BaseDefault)')
+
+    def _get_method_return_type(self, instance_type: Instance, method_name: str) -> ProperType | None:
+        """
+        Construct a MemberExpr for the given instance type and method name, resolve expression type and return the
+        return type of the method. Report an error if it's not a valid callable.
+
+        In other words, returns the return type of `instance.method_name()`.
+        """
+        # We don't need to construct an actual CallExpr here, the MemberExpr is enough. Evaluating a CallExpr type can
+        # have side effects, like mypy falsely reporting "code unreachable" if we have a RejectValidator or NoDefault.
+        constructed_memberexpr = MemberExpr(TempNode(instance_type), method_name)
+        constructed_method_type = get_proper_type(
+            self._api.get_expression_type(constructed_memberexpr)
+        )
+
+        # Special case: It's an overloaded method. Combine all possible return types in a union.
+        if isinstance(constructed_method_type, Overloaded):
+            return make_simplified_union(
+                [item.ret_type for item in constructed_method_type.items],
+                line=self._ctx.context.line,
+                column=self._ctx.context.column,
+            )
+
+        # Make sure it's a callable. If it isn't, either we forgot some edge case, or the user is doing something *very*
+        # weird (namely overriding validate or get_value to be something that's not callable, which mypy should notice
+        # anyway). We should report an error here, but can return None as if the validator/default didn't exist.
+        if not isinstance(constructed_method_type, CallableType):
+            self._fail(f'"{instance_type.type.name}.{method_name}" is not a callable')
+            return None
+
+        return get_proper_type(constructed_method_type.ret_type)
+
+    def _get_combined_type(self, parsed_field: ParsedValidataclassField) -> ProperType:
+        """
+        Returns the combined type of a field, i.e. a union of validated type and default type.
+        """
+        assert parsed_field.validated_type is not None, 'No validator. This should have been caught earlier.'
+
+        if parsed_field.default_type is None:
+            return parsed_field.validated_type
+        else:
+            return make_simplified_union(
+                [parsed_field.validated_type, parsed_field.default_type],
+                line=self._ctx.context.line,
+                column=self._ctx.context.column,
+            )

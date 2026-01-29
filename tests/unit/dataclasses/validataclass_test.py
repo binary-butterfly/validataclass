@@ -478,7 +478,7 @@ class ValidatorDataclassTest:
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
             class InvalidDataclass:
-                foo: int = field_tuple
+                foo: int = field_tuple  # type: ignore[validataclass]
 
         assert str(exception_info.value) == expected_exception_msg
 
