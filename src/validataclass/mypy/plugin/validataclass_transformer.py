@@ -129,17 +129,19 @@ class ValidataclassTransformer:
 
             # Edge case for right-hand side: We can have a type annotation statement without an assignment (`x: int`),
             # which mypy represents as an AssignmentStmt with a TempNode(AnyType, no_rhs=True) as rvalue
-            # TODO: This isn't allowed in validataclasses, we should report an error for this
             if isinstance(stmt.rvalue, TempNode) and stmt.rvalue.no_rhs:
-                self._log_warn(stmt, f'Skipping assignment for "{lvalue.name}" without RHS')
+                self._fail(
+                    'Annotated field without assignment (missing Validator or BaseDefault on right-hand side)',
+                    stmt,
+                )
                 continue
 
-            # The validataclass decorator ignores attributes without annotations and those that start with a '_'.
-            if stmt.type is None:
+            # The validataclass decorator ignores attributes without annotations (in most cases)
+            if stmt.unanalyzed_type is None:
+                # TODO: Unless the attribute starts with an underscore, the decorator actually checks the type of the
+                #   rhs of an annotation-less field and raises an error if it contains a validator or default (because
+                #   it means you probably forgot the annotation). It's a bit more difficult to check this here though.
                 self._log_debug(stmt, f'Skipping assignment for "{lvalue.name}" without type annotation')
-                continue
-            if lvalue.name.startswith('_'):
-                self._log_debug(stmt, f'Skipping assignment for "{lvalue.name}" because it starts with an underscore')
                 continue
 
             # Skip fields that are already wrapped or created with field specifier functions

@@ -1,0 +1,225 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Create a trivial validataclass without any fields
+- case: empty_validataclass
+  main: |
+    from validataclass.dataclasses import validataclass
+
+    @validataclass
+    class EmptyDataclass:
+        pass
+
+    obj = EmptyDataclass()
+    reveal_type(obj)  # N: Revealed type is "main.EmptyDataclass"
+
+# Create a simple validataclass with several different validators but without defaults
+# TODO: Missing init parameters aren't reported as errors yet.
+- case: simple_validataclass
+  main: |
+    from validataclass.dataclasses import validataclass
+    from validataclass.validators import ListValidator, IntegerValidator, Noneable, StringValidator
+
+    @validataclass
+    class SimpleDataclass:
+        """ Example dataclass (docstring should be ignored!). """
+        name: str = StringValidator(min_length=1)
+        noneable: int | None = Noneable(IntegerValidator())
+        numbers: list[int] = ListValidator(IntegerValidator(min_value=0))
+
+    # Valid initializations
+    valid1 = SimpleDataclass(
+        name='test',
+        noneable=None,
+        numbers=[],
+    )
+    valid2 = SimpleDataclass(
+        name='test',
+        noneable=42,
+        numbers=[1, 2, 3],
+    )
+    reveal_type(valid1)  # N: Revealed type is "main.SimpleDataclass"
+    reveal_type(valid2)  # N: Revealed type is "main.SimpleDataclass"
+
+    # Invalid initializations
+    invalid1 = SimpleDataclass()  # TODO: This should be an error!
+    invalid2 = SimpleDataclass(   # E: Unexpected keyword argument "unknown_field" for "SimpleDataclass"  [call-arg]
+        name=42,                  # E: Argument "name" to "SimpleDataclass" has incompatible type "int"; expected "str"  [arg-type]
+        noneable='foo',           # E: Argument "noneable" to "SimpleDataclass" has incompatible type "str"; expected "int | None"  [arg-type]
+        numbers=['foo'],          # E: List item 0 has incompatible type "str"; expected "int"  [list-item]
+        unknown_field=42,         # (error reported for first line of statement)
+    )
+
+    # Positional arguments shouldn't be allowed
+    invalid3 = SimpleDataclass('', 1, [])  # E: Too many positional arguments for "SimpleDataclass"  [misc]
+
+# Create a validataclass with validator-default tuples
+# TODO: Missing init parameters aren't reported as errors yet.
+- case: validataclass_with_defaults
+  main: |
+    from validataclass.dataclasses import validataclass, Default, DefaultFactory, DefaultUnset, NoDefault
+    from validataclass.helpers import UnsetValue, UnsetValueType
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class DataclassWithDefaults:
+        required_implicit: int = IntegerValidator()
+        required_explicit: int = IntegerValidator(), NoDefault
+
+        optional_str: str = StringValidator(), Default('')
+        optional_none: str | None = StringValidator(), Default(None)
+        optional_unset: str | UnsetValueType = StringValidator(), DefaultUnset
+        optional_factory: int = IntegerValidator(), DefaultFactory(lambda: 42)
+
+    # Valid initializations
+    valid1 = DataclassWithDefaults(
+        required_implicit=1,
+        required_explicit=2,
+    )
+    valid2 = DataclassWithDefaults(
+        required_implicit=1,
+        required_explicit=2,
+        optional_str='example',
+        optional_none='example',
+        optional_unset='example',
+        optional_factory=42,
+    )
+    valid3 = DataclassWithDefaults(
+        required_implicit=1,
+        required_explicit=2,
+        optional_str='example',
+        optional_none=None,
+        optional_unset=UnsetValue,
+        optional_factory=42,
+    )
+    reveal_type(valid1)  # N: Revealed type is "main.DataclassWithDefaults"
+    reveal_type(valid2)  # N: Revealed type is "main.DataclassWithDefaults"
+    reveal_type(valid3)  # N: Revealed type is "main.DataclassWithDefaults"
+
+    # Invalid initializations
+    invalid1 = DataclassWithDefaults()  # TODO: This should be an error!
+    invalid2 = DataclassWithDefaults(
+        required_implicit=None,    # E: Argument "required_implicit" to "DataclassWithDefaults" has incompatible type "None"; expected "int"  [arg-type]
+        required_explicit=None,    # E: Argument "required_explicit" to "DataclassWithDefaults" has incompatible type "None"; expected "int"  [arg-type]
+        optional_str=None,         # E: Argument "optional_str" to "DataclassWithDefaults" has incompatible type "None"; expected "str"  [arg-type]
+        optional_none=UnsetValue,  # E: Argument "optional_none" to "DataclassWithDefaults" has incompatible type "UnsetValueType"; expected "str | None"  [arg-type]
+        optional_unset=None,       # E: Argument "optional_unset" to "DataclassWithDefaults" has incompatible type "None"; expected "str | UnsetValueType"  [arg-type]
+        optional_factory='foo',    # E: Argument "optional_factory" to "DataclassWithDefaults" has incompatible type "str"; expected "int"  [arg-type]
+    )
+
+# Invalid validataclasses with errors that the mypy plugin should detect
+- case: validataclass_invalid
+  main: |
+    from validataclass.dataclasses import validataclass, Default, DefaultFactory, DefaultUnset, NoDefault
+    from validataclass.helpers import UnsetValue, UnsetValueType
+    from validataclass.validators import IntegerValidator, StringValidator, Validator
+
+    class BadValidator(Validator[None]):
+        """ Validator class with invalid validate method. """
+        validate = None  # type: ignore[assignment]
+
+    @validataclass
+    class BadValidataclass:
+        # Valid definitions, incorrect typing
+        wrong_validator: int = StringValidator()              # E: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+        wrong_default: int = IntegerValidator(), Default('')  # E: Incompatible types in assignment (expression has type "int | str", variable has type "int")  [assignment]
+        wrong_both: int = StringValidator(), Default(None)    # E: Incompatible types in assignment (expression has type "str | None", variable has type "int")  [assignment]
+
+        # Annotated field without assignment right-hand side
+        missing_rhs: int  # E: Annotated field without assignment (missing Validator or BaseDefault on right-hand side)  [validataclass]
+
+        # Missing validator
+        missing_validator: int = Default(42)  # E: No Validator found in field definition  [validataclass]
+
+        # Too many validators/defaults
+        double_validator: int = IntegerValidator(), Default(42), StringValidator()  # E: Multiple validator instances found in field definition  [validataclass]
+        double_default: int = IntegerValidator(), Default(42), Default(None)        # E: Multiple default objects found in field definition  [validataclass]
+
+        # Missing parentheses (class instead of instance)
+        missing_parentheses: int = IntegerValidator                   # E: Unexpected type "Callable[..., validataclass.validators.integer_validator.IntegerValidator]" in field definition (did you mean "IntegerValidator()"?)  [validataclass]
+        missing_parentheses_tuple: int = IntegerValidator(), Default  # E: Unexpected type "Callable[..., validataclass.dataclasses.defaults.Default[T_Default`1]]" in field definition (expected Validator or BaseDefault)  [validataclass]
+
+        # Miscellaneous nonsense
+        nonsense1: int = 42          # E: Unexpected type "Literal[42]?" in field definition (expected Validator or BaseDefault)  [validataclass]
+        nonsense2: int = [42]        # E: Unexpected type "builtins.list[builtins.int]" in field definition (expected Validator or BaseDefault)  [validataclass]
+        nonsense3: int = list        # E: Unexpected type "Overload(def [_T] () -> builtins.list[_T`1], def [_T] (typing.Iterable[_T`1]) -> builtins.list[_T`1])" in field definition (expected Validator or BaseDefault)  [validataclass]
+        nonsense4: int = lambda: 42  # E: Unexpected type "Callable[..., Literal[42]?]" in field definition (expected Validator or BaseDefault)  [validataclass]
+
+        # Bad validator (.validate is not a function)
+        bad_validator: None = BadValidator()  # (multiple errors, see below)
+  out: |
+    main:37: error: "BadValidator.validate" is not a callable  [validataclass]
+    main:37: error: No Validator found in field definition  [validataclass]
+
+# Validataclass with various edge cases (that are all allowed / should be ignored)
+- case: validataclass_valid_edge_cases
+  main: |
+    from typing_extensions import Any, overload, override
+
+    from validataclass.dataclasses import validataclass, Default
+    from validataclass.exceptions import InvalidTypeError
+    from validataclass.validators import IntegerValidator, StringValidator, Validator
+
+    class OverloadedValidator(Validator[int | str]):
+        @overload
+        def validate(self, input_data: int, **kwargs: Any) -> int: ...
+
+        @overload
+        def validate(self, input_data: str, **kwargs: Any) -> str: ...
+
+        @override
+        def validate(self, input_data: Any, **kwargs: Any) -> int | str:
+            if isinstance(input_data, (int, str)):
+                return input_data
+            raise InvalidTypeError(expected_types=[int, str])
+
+    # Predefined objects to use in the validataclass
+    predefined_validator = StringValidator()
+    predefined_default = Default(42)
+    predefined_tuple = StringValidator(), Default(42)
+
+    def validator_generator() -> Validator[int]:
+        return IntegerValidator()
+
+    def validator_tuple_generator() -> tuple[Validator[int], Default[None]]:
+        return IntegerValidator(), Default(None)
+
+    @validataclass
+    class OddValidataclass:
+        """
+        Docstrings are statements in the class that should be ignored.
+        """
+
+        # Annotation-less fields with a validator are allowed if they start with an underscore
+        _reusable_validator = IntegerValidator()
+
+        # Annotation-less fields with values that are not validators or defaults are allowed, even without underscore
+        some_constant = 42
+
+        # Predefined validators, defaults or tuples
+        field1: str = predefined_validator
+        field2: str | int = predefined_validator, predefined_default
+        field3: str | int = predefined_tuple
+        field4: int = validator_generator()
+        field5: int | None = validator_tuple_generator()
+
+        # Validator with @overload-ed validate() method
+        overloaded_validator: int | str = OverloadedValidator()
+
+        # Inner classes should be ignored
+        class InnerClass: pass
+
+        # Methods should be ignored as well
+        def __post_init__(self) -> None:
+            pass
+        def __post_validate__(self, **kwargs: Any) -> None:
+            pass
+        def get_some_value(self) -> str:
+            return self.field1
+
+        @classmethod
+        def some_class_method(cls) -> None:
+            pass
+
+        @staticmethod
+        def some_static_method() -> None:
+            pass

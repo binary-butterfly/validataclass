@@ -428,7 +428,7 @@ class ValidatorDataclassTest:
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
             class InvalidDataclass:
-                foo: int
+                foo: int  # type: ignore[validataclass]
 
         assert str(exception_info.value) == 'Dataclass field "foo" must specify a validator.'
 
