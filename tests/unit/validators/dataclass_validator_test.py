@@ -14,6 +14,7 @@ from typing_extensions import override
 from tests.test_utils import UnitTestContextValidator
 from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, validataclass, validataclass_field
 from validataclass.exceptions import (
+    AdditionalPropertiesError,
     DataclassInvalidPreValidateSignatureException,
     DataclassPostValidationError,
     DataclassValidatorFieldException,
@@ -57,6 +58,17 @@ class UnitTestNestedDataclass:
     test_fruit: UnitTestDataclass = DataclassValidator(UnitTestDataclass)
     test_vegetable: UnitTestDataclass | None = \
         validataclass_field(DataclassValidator(UnitTestDataclass), default=Default(None))
+
+
+# Dataclass with prevent_additional_properties=True
+
+@validataclass(prevent_additional_properties=True)
+class UnitTestStrictDataclass:
+    """
+    Dataclass that does not allow additional properties in the input dictionary.
+    """
+    name: str = StringValidator()
+    color: str = StringValidator(), Default('unknown color')
 
 
 # Dataclass with non-init field and __post_init__() method
@@ -1139,3 +1151,94 @@ class DataclassValidatorTest:
             str(exception_info.value)
             == 'Default specified for dataclass field "foo" is not an instance of "BaseDefault".'
         )
+    # Tests for prevent_additional_properties option
+
+    @staticmethod
+    def test_strict_dataclass_valid():
+        """ Validate a strict dataclass with no extra keys. """
+        validator = DataclassValidator(UnitTestStrictDataclass)
+        validated_data = validator.validate({
+            'name': 'banana',
+            'color': 'yellow',
+        })
+
+        assert type(validated_data) is UnitTestStrictDataclass
+        assert validated_data.name == 'banana'
+        assert validated_data.color == 'yellow'
+
+    @staticmethod
+    def test_strict_dataclass_valid_with_optional_field_omitted():
+        """ Validate a strict dataclass with optional field omitted. """
+        validator = DataclassValidator(UnitTestStrictDataclass)
+        validated_data = validator.validate({
+            'name': 'apple',
+        })
+
+        assert type(validated_data) is UnitTestStrictDataclass
+        assert validated_data.name == 'apple'
+        assert validated_data.color == 'unknown color'
+
+    @staticmethod
+    def test_strict_dataclass_with_additional_properties():
+        """ Test that a strict dataclass raises AdditionalPropertiesError for unknown keys. """
+        validator = DataclassValidator(UnitTestStrictDataclass)
+
+        with pytest.raises(AdditionalPropertiesError) as exception_info:
+            validator.validate({
+                'name': 'banana',
+                'unknown_field': 'unknown_value',
+            })
+
+        assert exception_info.value.to_dict() == {
+            'code': 'additional_properties',
+            'additional_properties': ['unknown_field'],
+        }
+
+    @staticmethod
+    def test_strict_dataclass_with_multiple_additional_properties():
+        """ Test that additional properties are sorted in the error. """
+        validator = DataclassValidator(UnitTestStrictDataclass)
+
+        with pytest.raises(AdditionalPropertiesError) as exception_info:
+            validator.validate({
+                'name': 'banana',
+                'zebra': 1,
+                'alpha': 2,
+                'mango': 3,
+            })
+
+        assert exception_info.value.to_dict() == {
+            'code': 'additional_properties',
+            'additional_properties': ['alpha', 'mango', 'zebra'],
+        }
+
+    @staticmethod
+    def test_default_allows_additional_properties():
+        """ Test that by default (prevent_additional_properties=False), unknown keys are silently ignored. """
+        validator = DataclassValidator(UnitTestDataclass)
+        validated_data = validator.validate({
+            'name': 'banana',
+            'color': 'yellow',
+            'amount': 10,
+            'weight': '1.234',
+            'unknown_field': 'should be ignored',
+        })
+
+        assert type(validated_data) is UnitTestDataclass
+        assert validated_data.name == 'banana'
+
+    @staticmethod
+    def test_explicit_prevent_additional_properties_false():
+        """ Test that prevent_additional_properties=False explicitly allows unknown keys. """
+
+        @validataclass(prevent_additional_properties=False)
+        class ExplicitAllowDataclass:
+            name: str = StringValidator()
+
+        validator = DataclassValidator(ExplicitAllowDataclass)
+        validated_data = validator.validate({
+            'name': 'banana',
+            'extra': 'ignored',
+        })
+
+        assert validated_data.name == 'banana'

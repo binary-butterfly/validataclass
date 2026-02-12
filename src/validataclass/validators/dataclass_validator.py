@@ -13,6 +13,7 @@ from typing_extensions import override
 
 from validataclass.dataclasses import BaseDefault, NoDefault
 from validataclass.exceptions import (
+    AdditionalPropertiesError,
     DataclassInvalidPreValidateSignatureException,
     DataclassPostValidationError,
     DataclassValidatorFieldException,
@@ -114,6 +115,9 @@ class DataclassValidator(Validator[T_Dataclass]):
     # Dataclass type that the validated dictionary will be converted to
     dataclass_cls: type[T_Dataclass]
 
+    # Whether to prevent additional properties in the input dictionary
+    prevent_additional_properties: bool
+
     # Field default values
     field_defaults: dict[str, BaseDefault[Any]]
 
@@ -134,6 +138,7 @@ class DataclassValidator(Validator[T_Dataclass]):
             raise InvalidValidatorOptionException('Parameter "dataclass_cls" must be a dataclass type.')
 
         self.dataclass_cls = dataclass_cls
+        self.prevent_additional_properties = getattr(dataclass_cls, '__prevent_additional_properties__', False)
         self.field_defaults = {}
 
         # Collect field validators and required fields for the DictValidator by examining the dataclass fields
@@ -228,7 +233,14 @@ class DataclassValidator(Validator[T_Dataclass]):
             # Filter input dictionary through __pre_validate__()
             input_data = pre_validate_func(input_data, **context_kwargs)
 
-        # Validate raw dictionary using DictValidator
+        # Check for additional properties if not allowed
+        if self.prevent_additional_properties:
+            self._ensure_type(input_data, dict)
+            additional = sorted(set(input_data.keys()) - set(self.field_validators.keys()))
+            if additional:
+                raise AdditionalPropertiesError(additional_properties=additional)
+
+        # Validate raw dictionary using underlying DictValidator
         validated_dict = self.dict_validator.validate(input_data, **kwargs)
 
         # Fill optional fields with default values

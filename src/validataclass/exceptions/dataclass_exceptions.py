@@ -11,8 +11,31 @@ from typing_extensions import override
 from .base_exceptions import ValidationError
 
 __all__ = [
+    'AdditionalPropertiesError',
     'DataclassPostValidationError',
 ]
+
+
+class AdditionalPropertiesError(ValidationError):
+    """
+    Validation error raised by `DataclassValidator` when the input dictionary contains keys that do not correspond to
+    any field in the dataclass, and `prevent_additional_properties` is set to `True`.
+
+    The `additional_properties` attribute contains a sorted list of the extra field names.
+
+    Example as dictionary:
+
+    ```
+    {
+        'code': 'additional_properties',
+        'additional_properties': ['unknown1', 'unknown2'],
+    }
+    ```
+    """
+    code = 'additional_properties'
+
+    def __init__(self, *, additional_properties: list[str], **kwargs: Any):
+        super().__init__(additional_properties=sorted(additional_properties), **kwargs)
 
 
 class DataclassPostValidationError(ValidationError):

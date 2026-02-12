@@ -297,6 +297,31 @@ It is also worth noting that you can use the `@validataclass` decorator with opt
 being applied to the class.
 
 
+## Prevent additional properties
+
+Per default, validataclass just ignores any additional properties in the input dictionary when validating an object.
+This makes sense for normal APIs, as additional fields are just filtered out, and it makes validataclass more robust to 
+changes in the API. There might be situations where one needs to have a strict validation of additional parameters,
+for example, to match an OpenAPI validation. 
+
+You can prevent additional properties by setting `prevent_additional_properties` at the `@validataclass` to `True`, 
+like this:
+
+```python
+from validataclass.dataclasses import validataclass
+from validataclass.validators import DataclassValidator, StringValidator
+
+@validataclass(prevent_additional_properties=True)
+class MyModel:
+    name: str = StringValidator()
+
+my_validator = DataclassValidator(MyModel)
+
+my_validator.validate({'name': 'test'})  # would work fine
+my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw an AdditionalPropertiesError
+```
+
+
 ## Defining field defaults
 
 While dataclasses have built-in support for field default values, they unfortunately have a rather impractical
