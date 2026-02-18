@@ -1242,3 +1242,75 @@ class DataclassValidatorTest:
         })
 
         assert validated_data.name == 'banana'
+
+    # Tests for reject_unknown_fields as DataclassValidator init parameter
+
+    @staticmethod
+    def test_reject_unknown_fields_validator_param_enables_rejection():
+        """ Test that reject_unknown_fields=True on DataclassValidator rejects unknown fields. """
+        validator = DataclassValidator(UnitTestDataclass, reject_unknown_fields=True)
+
+        with pytest.raises(UnknownFieldsError) as exception_info:
+            validator.validate({
+                'name': 'banana',
+                'color': 'yellow',
+                'amount': 10,
+                'weight': '1.234',
+                'unknown_field': 'unknown_value',
+            })
+
+        assert exception_info.value.to_dict() == {
+            'code': 'unknown_fields',
+            'unknown_fields': ['unknown_field'],
+        }
+
+    @staticmethod
+    def test_reject_unknown_fields_validator_param_allows_valid_input():
+        """ Test that reject_unknown_fields=True on DataclassValidator allows valid input without unknown fields. """
+        validator = DataclassValidator(UnitTestDataclass, reject_unknown_fields=True)
+        validated_data = validator.validate({
+            'name': 'banana',
+            'color': 'yellow',
+            'amount': 10,
+            'weight': '1.234',
+        })
+
+        assert type(validated_data) is UnitTestDataclass
+        assert validated_data.name == 'banana'
+
+    @staticmethod
+    def test_reject_unknown_fields_validator_param_overrides_dataclass_true():
+        """
+        Test that reject_unknown_fields=False on DataclassValidator overrides reject_unknown_fields=True on the
+        dataclass.
+        """
+        validator = DataclassValidator(UnitTestStrictDataclass, reject_unknown_fields=False)
+        validated_data = validator.validate({
+            'name': 'banana',
+            'extra': 'ignored',
+        })
+
+        assert type(validated_data) is UnitTestStrictDataclass
+        assert validated_data.name == 'banana'
+
+    @staticmethod
+    def test_reject_unknown_fields_validator_param_overrides_dataclass_false():
+        """
+        Test that reject_unknown_fields=True on DataclassValidator overrides reject_unknown_fields=False on the
+        dataclass.
+        """
+        validator = DataclassValidator(UnitTestDataclass, reject_unknown_fields=True)
+
+        with pytest.raises(UnknownFieldsError) as exception_info:
+            validator.validate({
+                'name': 'banana',
+                'color': 'yellow',
+                'amount': 10,
+                'weight': '1.234',
+                'extra': 'not allowed',
+            })
+
+        assert exception_info.value.to_dict() == {
+            'code': 'unknown_fields',
+            'unknown_fields': ['extra'],
+        }

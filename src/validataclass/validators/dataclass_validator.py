@@ -121,7 +121,12 @@ class DataclassValidator(Validator[T_Dataclass]):
     # Field default values
     field_defaults: dict[str, BaseDefault[Any]]
 
-    def __init__(self, dataclass_cls: type[T_Dataclass] | None = None) -> None:
+    def __init__(
+        self,
+        dataclass_cls: type[T_Dataclass] | None = None,
+        *,
+        reject_unknown_fields: bool | None = None,
+    ) -> None:
         # For easier subclassing: If 'self.dataclass_cls' is already set (e.g. as class member in a subclass), use that
         # class as the default.
         if dataclass_cls is None:
@@ -138,7 +143,12 @@ class DataclassValidator(Validator[T_Dataclass]):
             raise InvalidValidatorOptionException('Parameter "dataclass_cls" must be a dataclass type.')
 
         self.dataclass_cls = dataclass_cls
-        self.reject_unknown_fields = getattr(dataclass_cls, '__reject_unknown_fields__', False)
+
+        # Use the explicit parameter if given, otherwise fall back to the dataclass setting
+        if reject_unknown_fields is not None:
+            self.reject_unknown_fields = reject_unknown_fields
+        else:
+            self.reject_unknown_fields = getattr(dataclass_cls, '__reject_unknown_fields__', False)
         self.field_defaults = {}
 
         # Collect field validators and required fields for the DictValidator by examining the dataclass fields
