@@ -14,7 +14,7 @@ from typing_extensions import override
 from tests.test_utils import UnitTestContextValidator
 from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, validataclass, validataclass_field
 from validataclass.exceptions import (
-    AdditionalPropertiesError,
+    UnknownFieldsError,
     DataclassInvalidPreValidateSignatureException,
     DataclassPostValidationError,
     DataclassValidatorFieldException,
@@ -60,9 +60,9 @@ class UnitTestNestedDataclass:
         validataclass_field(DataclassValidator(UnitTestDataclass), default=Default(None))
 
 
-# Dataclass with prevent_additional_properties=True
+# Dataclass with reject_unknown_fields=True
 
-@validataclass(prevent_additional_properties=True)
+@validataclass(reject_unknown_fields=True)
 class UnitTestStrictDataclass:
     """
     Dataclass that does not allow additional properties in the input dictionary.
@@ -1151,8 +1151,8 @@ class DataclassValidatorTest:
             str(exception_info.value)
             == 'Default specified for dataclass field "foo" is not an instance of "BaseDefault".'
         )
-    # Tests for prevent_additional_properties option
 
+    # Tests for reject_unknown_fields option
     @staticmethod
     def test_strict_dataclass_valid():
         """ Validate a strict dataclass with no extra keys. """
@@ -1180,26 +1180,26 @@ class DataclassValidatorTest:
 
     @staticmethod
     def test_strict_dataclass_with_additional_properties():
-        """ Test that a strict dataclass raises AdditionalPropertiesError for unknown keys. """
+        """ Test that a strict dataclass raises UnknownFieldsError for unknown keys. """
         validator = DataclassValidator(UnitTestStrictDataclass)
 
-        with pytest.raises(AdditionalPropertiesError) as exception_info:
+        with pytest.raises(UnknownFieldsError) as exception_info:
             validator.validate({
                 'name': 'banana',
                 'unknown_field': 'unknown_value',
             })
 
         assert exception_info.value.to_dict() == {
-            'code': 'additional_properties',
-            'additional_properties': ['unknown_field'],
+            'code': 'unknown_fields',
+            'unknown_fields': ['unknown_field'],
         }
 
     @staticmethod
-    def test_strict_dataclass_with_multiple_additional_properties():
-        """ Test that additional properties are sorted in the error. """
+    def test_strict_dataclass_with_multiple_additional_fields():
+        """ Test that additional fields are sorted in the error. """
         validator = DataclassValidator(UnitTestStrictDataclass)
 
-        with pytest.raises(AdditionalPropertiesError) as exception_info:
+        with pytest.raises(UnknownFieldsError) as exception_info:
             validator.validate({
                 'name': 'banana',
                 'zebra': 1,
@@ -1208,13 +1208,13 @@ class DataclassValidatorTest:
             })
 
         assert exception_info.value.to_dict() == {
-            'code': 'additional_properties',
-            'additional_properties': ['alpha', 'mango', 'zebra'],
+            'code': 'unknown_fields',
+            'unknown_fields': ['alpha', 'mango', 'zebra'],
         }
 
     @staticmethod
-    def test_default_allows_additional_properties():
-        """ Test that by default (prevent_additional_properties=False), unknown keys are silently ignored. """
+    def test_default_allows_additional_fields():
+        """ Test that by default (reject_unknown_fields=False), unknown keys are silently ignored. """
         validator = DataclassValidator(UnitTestDataclass)
         validated_data = validator.validate({
             'name': 'banana',
@@ -1228,10 +1228,10 @@ class DataclassValidatorTest:
         assert validated_data.name == 'banana'
 
     @staticmethod
-    def test_explicit_prevent_additional_properties_false():
-        """ Test that prevent_additional_properties=False explicitly allows unknown keys. """
+    def test_explicit_reject_unknown_fields_false():
+        """ Test that reject_unknown_fields=False explicitly allows unknown keys. """
 
-        @validataclass(prevent_additional_properties=False)
+        @validataclass(reject_unknown_fields=False)
         class ExplicitAllowDataclass:
             name: str = StringValidator()
 

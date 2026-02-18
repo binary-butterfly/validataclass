@@ -90,7 +90,7 @@ def validataclass(
 
     def decorator(_cls: type[_T]) -> type[_T]:
         # Pop validataclass-specific options before passing kwargs to @dataclass
-        prevent_additional_properties = kwargs.pop('prevent_additional_properties', False)
+        reject_unknown_fields = kwargs.pop('reject_unknown_fields', False)
 
         # Set kw_only=True as the default to allow required and optional fields in any order
         kwargs.setdefault('kw_only', True)
@@ -102,7 +102,7 @@ def validataclass(
         _cls = dataclasses.dataclass(**kwargs)(_cls)
 
         # Store validataclass-specific settings on the class
-        _cls.__prevent_additional_properties__ = prevent_additional_properties  # type: ignore[attr-defined]
+        _cls.__reject_unknown_fields__ = reject_unknown_fields  # type: ignore[attr-defined]
 
         return _cls
 

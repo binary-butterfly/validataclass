@@ -10,7 +10,7 @@ from .common_exceptions import (
     InvalidTypeError,
     RequiredValueError,
 )
-from .dataclass_exceptions import AdditionalPropertiesError, DataclassPostValidationError
+from .dataclass_exceptions import UnknownFieldsError, DataclassPostValidationError
 from .datetime_exceptions import (
     DateTimeRangeError,
     InvalidDateError,
@@ -50,7 +50,7 @@ from .string_exceptions import (
 from .url_exceptions import InvalidUrlError
 
 __all__ = [
-    'AdditionalPropertiesError',
+    'UnknownFieldsError',
     'DataclassInvalidPreValidateSignatureException',
     'DataclassPostValidationError',
     'DataclassValidatorFieldException',

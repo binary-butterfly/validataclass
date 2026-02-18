@@ -297,28 +297,28 @@ It is also worth noting that you can use the `@validataclass` decorator with opt
 being applied to the class.
 
 
-## Prevent additional properties
+## Reject unknown fields
 
-Per default, validataclass just ignores any additional properties in the input dictionary when validating an object.
-This makes sense for normal APIs, as additional fields are just filtered out, and it makes validataclass more robust to 
-changes in the API. There might be situations where one needs to have a strict validation of additional parameters,
-for example, to match an OpenAPI validation. 
+Per default, validataclass just ignores any unknown fields in the input dictionary when validating an object.
+This makes sense for normal APIs, as additional fields are just filtered out, and it makes validataclass more robust to
+changes in the API. There might be situations where one needs to have a strict validation of additional fields,
+for example, to match an OpenAPI validation.
 
-You can prevent additional properties by setting `prevent_additional_properties` at the `@validataclass` to `True`, 
+You can reject unknown fields by setting `reject_unknown_fields` at the `@validataclass` to `True`,
 like this:
 
 ```python
 from validataclass.dataclasses import validataclass
 from validataclass.validators import DataclassValidator, StringValidator
 
-@validataclass(prevent_additional_properties=True)
+@validataclass(reject_unknown_fields=True)
 class MyModel:
     name: str = StringValidator()
 
 my_validator = DataclassValidator(MyModel)
 
 my_validator.validate({'name': 'test'})  # would work fine
-my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw an AdditionalPropertiesError
+my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw an UnknownFieldsError
 ```
 
 

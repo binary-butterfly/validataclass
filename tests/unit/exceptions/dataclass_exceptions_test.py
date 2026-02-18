@@ -5,7 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from validataclass.exceptions import (
-    AdditionalPropertiesError,
+    UnknownFieldsError,
     DataclassPostValidationError,
     DictRequiredFieldError,
     InvalidTypeError,
@@ -13,40 +13,40 @@ from validataclass.exceptions import (
 )
 
 
-class AdditionalPropertiesErrorTest:
+class UnknownFieldsErrorTest:
     """
-    Tests for the AdditionalPropertiesError exception class.
+    Tests for the UnknownFieldsError exception class.
     """
 
     @staticmethod
-    def test_additional_properties_error_single_property():
-        """ Tests AdditionalPropertiesError with a single additional property. """
-        error = AdditionalPropertiesError(additional_properties=['unknown_field'])
+    def test_unknown_fields_error_single_property():
+        """ Tests UnknownFieldsError with a single additional property. """
+        error = UnknownFieldsError(unknown_fields=['unknown_field'])
 
         assert error.to_dict() == {
-            'code': 'additional_properties',
-            'additional_properties': ['unknown_field'],
+            'code': 'unknown_fields',
+            'unknown_fields': ['unknown_field'],
         }
 
     @staticmethod
-    def test_additional_properties_error_multiple_properties():
-        """ Tests AdditionalPropertiesError with multiple additional properties (sorted). """
-        error = AdditionalPropertiesError(additional_properties=['watermelon', 'apple', 'mango'])
+    def test_unknown_fields_error_multiple_fields():
+        """ Tests UnknownFieldsError with multiple additional fields (sorted). """
+        error = UnknownFieldsError(unknown_fields=['watermelon', 'apple', 'mango'])
 
         assert error.to_dict() == {
-            'code': 'additional_properties',
-            'additional_properties': ['apple', 'mango', 'watermelon'],
+            'code': 'unknown_fields',
+            'unknown_fields': ['apple', 'mango', 'watermelon'],
         }
 
     @staticmethod
-    def test_additional_properties_error_repr():
-        """ Tests repr of AdditionalPropertiesError. """
-        error = AdditionalPropertiesError(additional_properties=['unknown1', 'unknown2'])
+    def test_unknown_fields_error_repr():
+        """ Tests repr of UnknownFieldsError. """
+        error = UnknownFieldsError(unknown_fields=['unknown1', 'unknown2'])
 
         assert (
             repr(error)
-            == "AdditionalPropertiesError(code='additional_properties', "
-               "additional_properties=['unknown1', 'unknown2'])"
+            == "UnknownFieldsError(code='unknown_fields', "
+               "unknown_fields=['unknown1', 'unknown2'])"
         )
         assert str(error) == repr(error)
 
