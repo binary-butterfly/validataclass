@@ -9,7 +9,15 @@ Use of this source code is governed by an MIT-style license that can be found in
 import sys
 from mypy import api
 
-result = api.run(['--show-traceback', '--no-incremental'] + sys.argv[1:])
+# Set this to True to disable the mypy cache (or pass --no-incremental via CLI args)
+disable_mypy_cache = False
+
+# Run mypy
+mypy_args = ['--show-traceback']
+if disable_mypy_cache:
+    mypy_args.append('--no-incremental')
+
+result = api.run(mypy_args + sys.argv[1:])
 
 if result[0]:
     print('\nType checking report:\n')

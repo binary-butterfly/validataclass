@@ -4,10 +4,10 @@ Copyright (c) 2026, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from typing import Any
+from typing import Any, cast
 
 from mypy.errorcodes import ErrorCode
-from mypy.nodes import Context, Expression, MemberExpr, TempNode
+from mypy.nodes import Context, Expression, ListExpr, MemberExpr, StrExpr, TempNode
 from mypy.plugin import CheckerPluginInterface, FunctionContext
 from mypy.typeops import make_simplified_union
 from mypy.types import (
@@ -24,19 +24,7 @@ from mypy.types import (
 
 from .constants import ERROR_CODE_VALIDATACLASS, FIELD_DEFAULT_BASE_CLASS, VALIDATOR_BASE_CLASS
 from .helpers import DebugLogger
-
-
-class ParsedValidataclassField:
-    """
-    Internal representation of the types of a validataclass field.
-    """
-
-    # True if there was an error while analyzing the field
-    error: bool = False
-
-    # If None, the field does not have an explicit validator/default, but could still have one from the base class.
-    validated_type: ProperType | None = None
-    default_type: ProperType | None = None
+from .parsed_field_cache import ParsedFieldCache, ParsedValidataclassField
 
 
 class VirtualFieldResolver:
@@ -53,10 +41,14 @@ class VirtualFieldResolver:
     # Logger for plugin development and debugging
     _logger: DebugLogger
 
-    def __init__(self, ctx: FunctionContext, logger: DebugLogger):
+    # Internal cache for parsed validataclass fields (i.e. parsed types), shared across instances of this class
+    _parsed_field_cache: ParsedFieldCache
+
+    def __init__(self, ctx: FunctionContext, logger: DebugLogger, parsed_field_cache: ParsedFieldCache):
         self._ctx = ctx
         self._api = ctx.api
         self._logger = logger
+        self._parsed_field_cache = parsed_field_cache
 
     def _get_logger_context(self) -> str:
         """
@@ -90,34 +82,117 @@ class VirtualFieldResolver:
 
     def resolve(self) -> Type:
         """
-        Analyze the wrapped expression (right-hand side of a validataclass field assignment) for validator and default
-        objects. Return the field type by combining the validator result type and the default value type.
+        Analyze the wrapped expression (right-hand side of a validataclass field assignment) to find validator and
+        default objects within it and determine the type that this field can have, taking base classes into account.
+
+        Return the expected field type by combining the validator result type and the default value type.
         """
+        # Parse call arguments of the virtual field wrapper call
+        field_rhs_expr, class_name, field_name, base_classes = self._get_call_args()
 
-        # TODO: These assertions just lead to "internal errors". I guess here that's fine?
-        assert len(self._ctx.args) == 1
-        assert len(self._ctx.args[0]) == 1, 'Function was called without an argument?'
+        # Parse entire field definition (parse RHS expression and merge with parsed fields from base classes)
+        parsed_field = self._parse_field_definition(field_name, field_rhs_expr, base_classes)
 
-        # Get only argument of virtual function call, this is the entire RHS of the validataclass field assignment
-        rhs_expr = self._ctx.args[0][0]
-
-        # Parse right-hand side expression based on its type(s)
-        parsed_field = self._parse_rhs_expression(rhs_expr)
+        # Store parsed types in internal cache (not persisted between mypy runs!)
+        self._parsed_field_cache.set_field(class_name, field_name, parsed_field)
 
         # Stop here if there was an error parsing the tuple (fallback to returning Any)
-        if parsed_field is None:
+        if parsed_field.error:
             return AnyType(TypeOfAny.from_error)
-
-        # These conditions should always be true, otherwise we have an error in our code
-        assert parsed_field.error is False
-        assert parsed_field.validated_type is not None
 
         # Get the combined type of the field (union of validated type and default type)
         combined_type = self._get_combined_type(parsed_field)
         self._log_debug('  => Combined type of tuple', combined_type)
         return combined_type
 
-    def _parse_rhs_expression(self, rhs_expr: Expression) -> ParsedValidataclassField | None:
+    def _get_call_args(self) -> tuple[Expression, str, str, list[str]]:
+        """
+        Parse the call argument expressions of the virtual field wrapper call.
+        Return a tuple with the field RHS expression, the class name, the field name and a list of base class names.
+        """
+        # We can assume that every call to the virtual field wrapper was constructed by us, and that every call has
+        # the expected number of arguments, so using assert is safe here.
+        assert len(self._ctx.args) == 4, 'Virtual field wrapper was called with invalid number of arguments'
+        assert all(len(arg) == 1 for arg in self._ctx.args)
+
+        return (
+            # First argument: Wrapped right-hand side expression of the validataclass field assignment statement
+            self._ctx.args[0][0],
+
+            # Second argument: String expression, fully qualified name of the current class
+            self._get_call_arg_as_str(1),
+
+            # Third argument: String expression, name of the field
+            self._get_call_arg_as_str(2),
+
+            # Fourth argument: List expression with string expressions, names of base classes that define this field.
+            self._get_call_arg_as_list_of_str(3),
+        )
+
+    def _get_call_arg_as_str(self, arg_number: int) -> str:
+        """
+        Parse the n-th call argument as a StrExpr and return the string value.
+        """
+        expr = self._ctx.args[arg_number][0]
+        assert isinstance(expr, StrExpr)
+        return expr.value
+
+    def _get_call_arg_as_list_of_str(self, arg_number: int) -> list[str]:
+        """
+        Parse the n-th call argument as a ListExpr containing StrExprs and return a list of the string values.
+        """
+        expr = self._ctx.args[arg_number][0]
+        assert isinstance(expr, ListExpr)
+        assert all(isinstance(item, StrExpr) for item in expr.items)
+        return [cast(StrExpr, item).value for item in expr.items]
+
+    def _parse_field_definition(
+        self,
+        field_name: str,
+        field_rhs_expr: Expression,
+        base_classes: list[str],
+    ) -> ParsedValidataclassField:
+        """
+        Analyze the entire field definition, starting by collecting the validator and default types of all base classes
+        (by retrieving the ParsedValidataclasFields from the parsed field cache), then analyzing the right-hand side
+        expression of the current field assignment and merging the results.
+        """
+        # This will hold the end result that's returned at the end of the function
+        fully_parsed_field = ParsedValidataclassField()
+
+        # First, retrieve the parsed field of all base classes from our cache, starting with the "oldest" class
+        for base_class in base_classes:
+            self._log_debug(f'Retrieving parsed field of base class"{base_class}" from cache')
+            base_parsed_field = self._parsed_field_cache.get_field(base_class, field_name)
+
+            # If there was an error when the field in the base class was parsed, set the error flag for later, then
+            # ignore the base class and continue.
+            if base_parsed_field.error:
+                fully_parsed_field.error = True
+            else:
+                # Overwrite validator and default, but only if they are defined in the expression
+                fully_parsed_field.merge(base_parsed_field)
+
+        # Report an error if one of the base classes had an error. We don't need a more specific error message here
+        # because the error should have already been reported when the base class was analyzed. We will continue parsing
+        # the field so that specific errors in this class are reported, but the user should know that parsing is
+        # incomplete because of a prior error.
+        if fully_parsed_field.error:
+            self._fail('Field cannot be fully parsed because of a prior error in one of the base classes')
+
+        # Now, parse the right-hand side expression of the assignment in the current class and merge the result
+        self._log_debug('Parsing RHS of assignment', field_rhs_expr)
+        assignment_parsed_field = self._parse_rhs_expression(field_rhs_expr)
+        fully_parsed_field.merge(assignment_parsed_field)
+
+        # Make sure that the field has a validator instance (if there was no other error yet)
+        if not fully_parsed_field.error and fully_parsed_field.validated_type is None:
+            fully_parsed_field.error = True
+            self._fail('No Validator found in field definition')
+
+        return fully_parsed_field
+
+    def _parse_rhs_expression(self, rhs_expr: Expression) -> ParsedValidataclassField:
         """
         Analyze the right-hand side expression of a validataclass field, determining its type based on validator and
         default objects found in the type of the expression.
@@ -131,33 +206,19 @@ class VirtualFieldResolver:
 
         if isinstance(rhs_type, TupleType):
             # We have a tuple on the right-hand side, probably a tuple with validator and default object
-            self._log_debug('Field RHS is a tuple', rhs_type)
-
-            for index, item_type in enumerate(rhs_type.items):
+            for item_type in rhs_type.items:
                 item_type = get_proper_type(item_type)
                 self._parse_rhs_item(item_type, parsed_field)
         else:
             # We have a single Instance on the right-hand side, probably a validator or default object
-            self._log_debug('Field RHS is a single item', rhs_type)
             self._parse_rhs_item(rhs_type, parsed_field)
-
-        # Stop analyzing if we have already found errors in the field definition
-        if parsed_field.error:
-            self._log_debug('Field has errors, stop checking any further')
-            return None
-
-        # Make sure the field has at least a validator instance
-        if parsed_field.validated_type is None:
-            # TODO: Consider base classes here too
-            self._fail('No Validator found in field definition')
-            return None
 
         return parsed_field
 
     def _parse_rhs_item(self, item_type: Type, parsed_field: ParsedValidataclassField) -> None:
         """
         Analyze the type of a single item in the right-hand side of a validataclass field, i.e. an item in a tuple or
-        a the whole right-hand side if it's not a tuple.
+        the whole right-hand side if it's not a tuple.
 
         The result will be written into the given ParsedValidataclassField. May report errors, e.g. for unknown types or
         for another validator/default instance if the parsed field already has one.
@@ -172,10 +233,12 @@ class VirtualFieldResolver:
                 if parsed_field.validated_type is not None:
                     parsed_field.error = True
                     self._fail('Multiple validator instances found in field definition')
-                else:
-                    # Find out the output type of this validator
-                    parsed_field.validated_type = self._get_method_return_type(item_type, 'validate')
-                    self._log_debug(f'  - Validator: {item_type.type.name} -> {parsed_field.validated_type}')
+                    return
+
+                # Find out the output type of this validator
+                # TODO: Actually store the Validator and evaluate its type later
+                parsed_field.validated_type = self._get_method_return_type(item_type, 'validate')
+                self._log_debug(f'  - Validator: {item_type.type.name} -> {parsed_field.validated_type}')
                 return
 
             # Check for default instances (base class BaseDefault)
@@ -184,14 +247,19 @@ class VirtualFieldResolver:
                 if parsed_field.default_type is not None:
                     parsed_field.error = True
                     self._fail('Multiple default objects found in field definition')
-                else:
-                    # Find out the value type of this default object
-                    parsed_field.default_type = self._get_method_return_type(item_type, 'get_value')
-                    self._log_debug(f'  - Default object: {item_type.type.name} -> {parsed_field.default_type}')
+                    return
+
+                # Find out the value type of this default object
+                # TODO: Actually store the Default and evaluate its type later
+                parsed_field.default_type = self._get_method_return_type(item_type, 'get_value')
+                self._log_debug(f'  - Default object: {item_type.type.name} -> {parsed_field.default_type}')
                 return
+
+        # (Everything else is probably an error!)
 
         # One easy mistake is writing a validator class name without parentheses (e.g. `field: int = IntegerValidator`).
         # Let's provide a more helpful error message (the default string representation would be long and confusing).
+        item_type_str = str(item_type)
         if isinstance(item_type, CallableType):
             callable_ret_type = get_proper_type(item_type.ret_type)
             item_type_str = f'Callable[..., {callable_ret_type}]'
@@ -204,10 +272,8 @@ class VirtualFieldResolver:
                     f'"{callable_ret_type.type.name}()"?)'
                 )
                 return
-        else:
-            item_type_str = str(item_type)
 
-        # Everything else is probably an error
+        # Fallback to unexpected type error
         parsed_field.error = True
         self._fail(f'Unexpected type "{item_type_str}" in field definition (expected Validator or BaseDefault)')
 
@@ -246,10 +312,13 @@ class VirtualFieldResolver:
         """
         Returns the combined type of a field, i.e. a union of validated type and default type.
         """
-        assert parsed_field.validated_type is not None, 'No validator. This should have been caught earlier.'
+        assert parsed_field.validated_type is not None or parsed_field.default_type is not None, \
+            'No validator and no default. This should have been caught earlier.'
 
         if parsed_field.default_type is None:
-            return parsed_field.validated_type
+            return parsed_field.validated_type  # type: ignore[return-value]  # TODO: Known issue, fix me
+        elif parsed_field.validated_type is None:
+            return parsed_field.default_type
         else:
             return make_simplified_union(
                 [parsed_field.validated_type, parsed_field.default_type],
