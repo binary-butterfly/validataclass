@@ -16,7 +16,7 @@
     base = EmptyBase()
     sub = EmptySubClass()
     reveal_type(base)  # N: Revealed type is "main.EmptyBase"
-    reveal_type(sub)  # N: Revealed type is "main.EmptySubClass"
+    reveal_type(sub)   # N: Revealed type is "main.EmptySubClass"
 
     # Test polymorphy
     base_var: EmptyBase = sub      # ok
@@ -371,3 +371,132 @@
         class SubClassB(SubClassA):
             field2: str | None = Default(None)
             field3: int = IntegerValidator()
+
+# Base class with errors
+- case: validataclass_base_class_with_errors
+  main: |
+    from validataclass.dataclasses import validataclass, Default
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class BaseClassWithErrors:
+        # Valid definitions, incorrect typing
+        wrong_validator: int = StringValidator(), Default(None)  # E: Incompatible types in assignment (expression has type "str | None", variable has type "int")  [assignment]
+
+        # Missing validator
+        missing_validator: int = Default(42)  # E: No Validator found in field definition  [validataclass]
+
+        # A valid field for good measure
+        valid_field: str = StringValidator()
+
+    @validataclass
+    class SubClass(BaseClassWithErrors):
+        # Modify fields
+        wrong_validator: int = Default(42)           # E: Incompatible types in assignment (expression has type "str | int", variable has type "int")  [assignment]
+        missing_validator: int = IntegerValidator()  # E: Field cannot be fully parsed because of a prior error in one of the base classes  [validataclass]
+
+        # New field (valid)
+        new_field: str = StringValidator()
+
+    # Initializations
+    obj1 = SubClass(
+        valid_field='example',
+        new_field='example',
+    )
+    obj2 = SubClass(
+        wrong_validator=1,
+        missing_validator=2,
+        valid_field='example',
+        new_field='example',
+    )
+
+# Valid base class, subclass with errors
+- case: validataclass_subclass_with_errors
+  main: |
+    from validataclass.dataclasses import validataclass, Default
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class Base:
+        field1: int = IntegerValidator(), Default(42)
+        field2: int | None = IntegerValidator(), Default(None)
+        not_a_method: int = IntegerValidator()
+
+    @validataclass
+    class SubClassWithErrors(Base):
+        # Incompatibilities with base class
+        field1: str = StringValidator()  # E: Incompatible types in assignment (expression has type "str | int", variable has type "str")  [assignment]
+        field2: str = Default('empty')   # E: Incompatible types in assignment (expression has type "int | str", variable has type "str")  [assignment]
+
+        # New fields with errors
+        missing_validator: int = Default(42)                                        # E: No Validator found in field definition  [validataclass]
+        double_validator: int = IntegerValidator(), Default(42), StringValidator()  # E: Multiple validator instances found in field definition  [validataclass]
+        double_default: int = IntegerValidator(), Default(42), Default(None)        # E: Multiple default objects found in field definition  [validataclass]
+        missing_rhs: int                                                            # E: Annotated field without assignment (missing Validator or BaseDefault on right-hand side)  [validataclass]
+        nonsense1: int = 42                                                         # E: Unexpected type "Literal[42]?" in field definition (expected Validator or BaseDefault)  [validataclass]
+
+        # Redefine dataclass field as method
+        def not_a_method(self) -> int:  # (line 24, multiple errors, see below)
+            return 42
+  out: |
+    main:24: error: Dataclass attribute may only be overridden by another attribute  [misc]
+    main:24: error: Signature of "not_a_method" incompatible with supertype "Base"  [override]
+    main:24: note:      Superclass:
+    main:24: note:          int
+    main:24: note:      Subclass:
+    main:24: note:          def not_a_method(self) -> int
+    main:24: error: Method "not_a_method" is not using @override but is overriding a method in class "main.Base"  [explicit-override]
+
+# Validataclass with ValidataclassMixin base class
+- case: validataclass_with_validataclass_mixin
+  main: |
+    from validataclass.dataclasses import Default, ValidataclassMixin, validataclass
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class Base(ValidataclassMixin):
+        field1: int = IntegerValidator()
+        field2: str | None = StringValidator(), Default(None)
+
+    @validataclass
+    class SubClass(Base):
+        field3: str = StringValidator()
+
+    base = Base(
+        field1=42,
+    )
+    reveal_type(base)            # N: Revealed type is "main.Base"
+    reveal_type(base.field1)     # N: Revealed type is "builtins.int"
+    reveal_type(base.field2)     # N: Revealed type is "builtins.str | None"
+    reveal_type(base.to_dict())  # N: Revealed type is "builtins.dict[builtins.str, Any]"
+
+    sub = SubClass(
+        field1=42,
+        field2=None,
+        field3='foo',
+    )
+    reveal_type(sub)   # N: Revealed type is "main.SubClass"
+    reveal_type(sub.field1)     # N: Revealed type is "builtins.int"
+    reveal_type(sub.field2)     # N: Revealed type is "builtins.str | None"
+    reveal_type(sub.field3)     # N: Revealed type is "builtins.str"
+    reveal_type(sub.to_dict())  # N: Revealed type is "builtins.dict[builtins.str, Any]"
+
+# Validataclass with other non-validataclass base classes
+- case: validataclass_with_non_validataclass_base
+  main: |
+    from validataclass.dataclasses import Default, ValidataclassMixin, validataclass
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    class Base:
+        field_validator: IntegerValidator = IntegerValidator()
+        field_default: Default[None] = Default(None)
+
+    @validataclass
+    class ActualValidataclass(Base):
+        field1: int | None = Base.field_validator, Base.field_default
+        field2: str = Base.field_validator  # E: Incompatible types in assignment (expression has type "int", variable has type "str")  [assignment]
+
+    valid = ActualValidataclass(field1=42)
+    reveal_type(valid)            # N: Revealed type is "main.ActualValidataclass"
+    reveal_type(valid.field1)     # N: Revealed type is "builtins.int | None"
+    reveal_type(valid.field2)     # N: Revealed type is "builtins.str"

@@ -112,7 +112,7 @@ def _prepare_dataclass_metadata(cls: type[_T]) -> None:
     # In case of a subclassed validataclass, get the already existing fields
     existing_validator_fields = _get_existing_validator_fields(cls)
 
-    # Get class annotations
+    # Get annotations of this class (ignores base classes)
     cls_annotations = get_annotations(cls)
 
     # Check for fields/attributes that have validators defined but missing a type annotation (most likely an error)

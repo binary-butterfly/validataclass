@@ -4,7 +4,7 @@ Copyright (c) 2026, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-from mypy.types import ProperType
+from mypy.types import Instance
 from typing_extensions import Self
 
 
@@ -17,19 +17,19 @@ class ParsedValidataclassField:
     error: bool = False
 
     # If None, the field does not have an explicit validator/default, but could still have one from the base class.
-    validated_type: ProperType | None = None
-    default_type: ProperType | None = None
+    validator_type: Instance | None = None
+    default_type: Instance | None = None
 
     def merge(self, other: Self) -> None:
         """
         Merge another instance of this class into this one.
-        Validated type and default type are replaced if the attributes in the other instance are not None.
+        Validator type and default object type are replaced if the attributes in the other instance are not None.
         The error flag is set to True if it's true for any instance.
         """
         self.error = self.error or other.error
 
-        if other.validated_type is not None:
-            self.validated_type = other.validated_type
+        if other.validator_type is not None:
+            self.validator_type = other.validator_type
         if other.default_type is not None:
             self.default_type = other.default_type
 

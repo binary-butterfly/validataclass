@@ -32,11 +32,12 @@ from typing_extensions import override
 
 from .constants import (
     ERROR_CODE_VALIDATACLASS,
+    ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED,
     VALIDATACLASS_FIELD_FUNC,
     VIRTUAL_FIELD_WRAPPER_FUNC,
     VIRTUAL_FIELD_WRAPPER_FUNC_NAME,
 )
-from .helpers import DebugLogger
+from .debug_logger import DebugLogger
 
 
 class ValidataclassField:
@@ -63,7 +64,7 @@ class ValidataclassField:
         self.assignment_stmt = None
 
     @override
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: nocover
         return f'ValidataclassField({self.name})'
 
     @property
@@ -143,25 +144,43 @@ class ValidataclassTransformer:
             context = self._decorator
         return f'{self._class_def.fullname}:{context.line}'
 
-    def _log_warn(self, context: Context | None, msg: str, *objects: Any) -> None:
+    def _log_warn(self, context: Context | None, msg: str, *objects: Any) -> None:  # pragma: nocover
         """
-        Logs a message on WARN level.
-        Use this to warn about unhandled expressions/types or features that are not implemented yet.
+        Log a message on WARN level.
+
+        This should only be used during plugin development to warn about unhandled expressions/types. In real code,
+        please use `_fail` or `_fail_not_implemented` instead, which result in actual mypy errors.
         """
         return self._logger.log('WARN', self._get_logger_context(context), msg, *objects)
 
     def _log_debug(self, context: Context | None, msg: str, *objects: Any) -> None:
         """
-        Logs a message on DEBUG level. Only printed if debug mode is enabled.
+        Log a message on DEBUG level. Only printed if debug mode is enabled.
         Use this for better traceability and debugging of what the plugin is doing.
         """
         return self._logger.log('DEBUG', self._get_logger_context(context), msg, *objects)
 
     def _fail(self, msg: str, context: Context, *, code: ErrorCode | None = None) -> None:
         """
-        Reports a mypy error to the user. Default code is "validataclass".
+        Report a mypy error to the user. Default code is "validataclass".
         """
         self._api.fail(msg, context, code=code or ERROR_CODE_VALIDATACLASS)
+
+    def _fail_not_implemented(self, msg: str, context: Context) -> None:  # pragma: nocover
+        """
+        Report a mypy error with error code "validataclass-not-implemented" as well as a note with more explanation.
+
+        This is intended for edge cases that we don't support yet (e.g. because we don't have a real life example to
+        reproduce it). The user is requested to please create an upstream issue.
+        """
+        error_info = self._api.msg.fail(msg, context, code=ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED)
+        self._api.msg.note(
+            'You found an edge case that is not supported by the validataclass mypy plugin. Please report this error '
+            'with a minimal code example to help improve the plugin: '
+            'https://github.com/binary-butterfly/validataclass/issues',
+            context,
+            parent_error=error_info,
+        )
 
     def transform(self) -> bool:
         """
@@ -207,7 +226,7 @@ class ValidataclassTransformer:
             if isinstance(stmt, AssignmentStmt):
                 yield stmt
             else:
-                self._log_debug(stmt, f'Skipping statement of type {type(stmt)}')
+                self._log_debug(stmt, f'Skip statement of type {type(stmt)}')
 
     def _collect_fields(self) -> list[ValidataclassField] | None:
         """
@@ -221,12 +240,12 @@ class ValidataclassTransformer:
 
             # Ignore base classes that are not validataclasses
             if 'validataclass_tag' not in base_typeinfo.metadata:
-                self._log_debug(None, f'Skipping base class "{base_fullname}" (no validataclass tag)')
+                self._log_debug(None, f'Skip base class "{base_fullname}" (no validataclass tag)')
                 continue
 
             # Ensure base class has already been processed by this plugin, otherwise we need another pass
             if 'validataclass' not in base_typeinfo.metadata:
-                self._log_debug(None, f'Base class "{base_fullname}" not processsed yet, need another pass')
+                self._log_debug(None, f'Base class "{base_fullname}" not processed yet, need another pass')
                 return None
 
             # Gather all fields previously collected by this very function when the base class was analyzed
@@ -252,15 +271,32 @@ class ValidataclassTransformer:
                 # TODO: Unless the attribute starts with an underscore, the decorator actually checks the type of the
                 #   RHS of an annotation-less field and raises an error if it contains a validator or default (because
                 #   it means you probably forgot the annotation). It's a bit more difficult to check this here though.
-                self._log_debug(stmt, f'Skipping assignment for "{stmt.lvalues}" without type annotation')
+                self._log_debug(stmt, f'Skip assignment for "{stmt.lvalues}" without type annotation')
                 continue
 
-            # There are more edge cases for the left-hand side that we can skip for now, like multiple assignments
-            # (`x, y = z`) or chained assignments (`x = y = z`).
-            # TODO: Check if there are edge cases that we should handle, or that we should even report an error for!
+            # There are more edge cases for the left-hand side expression that we can skip, like multiple assignments
+            # (`x, y = z`) or chained assignments (`x = y = z`). These shouldn't happen because they aren't supported
+            # by Python's type annotation syntax. We report this as an error and ask the user to create a bug report.
             lvalue = stmt.lvalues[0] if len(stmt.lvalues) == 1 else None
-            if lvalue is None or not isinstance(lvalue, NameExpr):
-                self._log_warn(stmt, 'Skipping weird edge case for assignment LHS', stmt.lvalues)
+            if lvalue is None or not isinstance(lvalue, NameExpr):  # pragma: nocover
+                lvalues_str_repr = ', '.join(str(lvalue) for lvalue in stmt.lvalues)
+                self._fail_not_implemented(
+                    f'Unexpected left-hand side expression type "{lvalues_str_repr}" in assignment', stmt
+                )
+                continue
+
+            # Edge case when a variable is defined twice in the same class: NameExpr without node. This error is handled
+            # by mypy (no-redef), so we can just skip it here.
+            if lvalue.node is None:
+                self._log_debug(stmt, 'Skip assignment with NameExpr without node (probably redefined)', stmt.lvalues)
+                continue
+
+            # In theory, the NameExpr node can be something other than a Var (e.g. a FuncDef or TypeInfo), but I have
+            # no idea when this can happen. Another edge case to report to the user.
+            if not isinstance(lvalue.node, Var):  # pragma: nocover
+                self._fail_not_implemented(
+                    f'Unexpected NameExpr node type "{str(lvalue.node)}" in assignment left-hand side', stmt
+                )
                 continue
 
             # Edge case for right-hand side: We can have a type annotation statement without an assignment (`x: int`),
@@ -279,7 +315,7 @@ class ValidataclassTransformer:
                 # Ignore fields that have been created with the regular dataclasses.field() or similar
                 if callee_name in DATACLASS_FIELD_SPECIFIERS:
                     # TODO: Handle these properly.
-                    self._log_debug(stmt, f'Skipping field "{lvalue.name}" with {callee_name}')
+                    self._log_debug(stmt, f'Skip field "{lvalue.name}" with {callee_name}')
                     continue
 
                 # Skip fields that have been created with validataclass_field()
@@ -287,12 +323,12 @@ class ValidataclassTransformer:
                 if callee_name == VALIDATACLASS_FIELD_FUNC:
                     # TODO: Normalize `default` - if it's NoDefault, remove the default instead?
                     # TODO: (Can probably be ignored because we'll have to fix __init__ manually anyway.)
-                    self._log_debug(stmt, f'Skipping field "{lvalue.name}" with validataclass_field()')
+                    self._log_debug(stmt, f'Skip field "{lvalue.name}" with validataclass_field()')
                     continue
 
                 # Skip field if it has already been wrapped in a previous pass
                 if callee_name == VIRTUAL_FIELD_WRAPPER_FUNC:
-                    self._log_debug(stmt, f'Skipping already wrapped field "{lvalue.name}"')
+                    self._log_debug(stmt, f'Skip already wrapped field "{lvalue.name}"')
                     continue
 
             # If we're still here, we might actually have a validataclass field definition that we care about!
@@ -320,7 +356,7 @@ class ValidataclassTransformer:
 
         # Wrap the right-hand side of the assignment in a call to the virtual field wrapper function, changing the
         # assignment statement in the class body in-place.
-        self._log_debug(field.assignment_stmt, f'Wrapping field "{field.name}" with RHS', field.rvalue)
+        self._log_debug(field.assignment_stmt, f'Wrap field "{field.name}" with RHS', field.rvalue)
         field.assignment_stmt.rvalue = self._construct_virtual_wrapper_callexpr(
             field.rvalue,
             field.name,

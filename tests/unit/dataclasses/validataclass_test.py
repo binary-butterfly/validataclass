@@ -191,7 +191,8 @@ class ValidatorDataclassTest:
     @staticmethod
     def test_validataclass_create_objects_invalid():
         """
-        Create a dataclass using @validataclass and try to instantiate objects from it, but missing a required value.
+        Create a dataclass using @validataclass and try to instantiate objects from it, but missing a required value or
+        using positional arguments.
         """
 
         @validataclass
@@ -200,12 +201,18 @@ class ValidatorDataclassTest:
             optional_field: int = IntegerValidator(), Default(10)
 
         # Try to instantiate without the required field
-        with pytest.raises(TypeError, match="required keyword-only argument"):
+        with pytest.raises(TypeError, match="missing 1 required keyword-only argument: 'required_field'"):
+            # TODO: It would be good if mypy detected the missing required kwargs here too
             UnitTestDataclass()
 
         # Try to instantiate with the optional field, but still lacking the required field
-        with pytest.raises(TypeError, match="required keyword-only argument"):
+        with pytest.raises(TypeError, match="missing 1 required keyword-only argument: 'required_field'"):
+            # TODO: It would be good if mypy detected the missing required kwargs here too
             UnitTestDataclass(optional_field=42)
+
+        # Try to instantiate with positional arguments
+        with pytest.raises(TypeError, match="takes 1 positional argument but 2 were given"):
+            UnitTestDataclass(42)  # type: ignore[misc]
 
     @staticmethod
     def test_validataclass_with_mutable_defaults():

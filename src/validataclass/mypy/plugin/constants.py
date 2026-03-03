@@ -33,7 +33,20 @@ VIRTUAL_FIELD_WRAPPER_FUNC: Final = 'validataclass.mypy._virtual_field_wrapper'
 VIRTUAL_FIELD_WRAPPER_FUNC_NAME: Final = '_virtual_field_wrapper'
 
 # Custom error codes for validataclass
-# TODO: Maybe add multiple error codes (as sub codes of the validataclass code).
 ERROR_CODE_VALIDATACLASS: Final = ErrorCode(
-    'validataclass', 'Check that validataclasses are defined correctly', 'Plugin'
+    'validataclass',
+    'Check that validataclasses are defined correctly',
+    'Plugin',
+)
+ERROR_CODE_VALIDATACLASS_EMPTY_TYPE: Final = ErrorCode(
+    'validataclass-empty-type',
+    'Check that validataclass field has a validator or default that can return a value',
+    'Plugin',
+    sub_code_of=ERROR_CODE_VALIDATACLASS,
+)
+ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED: Final = ErrorCode(
+    'validataclass-not-implemented',
+    'Special code for edge cases that are currently not supported by the plugin (please create a bug report)',
+    'Plugin',
+    sub_code_of=ERROR_CODE_VALIDATACLASS,
 )

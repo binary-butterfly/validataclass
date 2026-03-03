@@ -17,7 +17,7 @@ class DebugLogger:
     def __init__(self, debug_mode: bool):
         self.debug_mode = debug_mode
 
-    def log(self, level: str, context: str | None, msg: str, *objects: Any) -> None:
+    def log(self, level: str, context: str | None, msg: str, *objects: Any) -> None:  # pragma: nocover
         """
         Log a message on a given level, optionally with a context (e.g. file/line) and with object dumps.
         Debug level messages are only logged if debug mode is enabled.

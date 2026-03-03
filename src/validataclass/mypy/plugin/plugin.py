@@ -15,7 +15,7 @@ from mypy.types import Type
 from typing_extensions import override
 
 from .constants import VALIDATACLASS_DECORATORS, VIRTUAL_FIELD_WRAPPER_FUNC
-from .helpers import DebugLogger
+from .debug_logger import DebugLogger
 from .parsed_field_cache import ParsedFieldCache
 from .validataclass_transformer import ValidataclassTransformer
 from .virtual_field_resolver import VirtualFieldResolver

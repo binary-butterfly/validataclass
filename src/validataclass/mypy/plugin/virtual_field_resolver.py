@@ -19,11 +19,17 @@ from mypy.types import (
     TupleType,
     Type,
     TypeOfAny,
+    UninhabitedType,
     get_proper_type,
 )
 
-from .constants import ERROR_CODE_VALIDATACLASS, FIELD_DEFAULT_BASE_CLASS, VALIDATOR_BASE_CLASS
-from .helpers import DebugLogger
+from .constants import (
+    ERROR_CODE_VALIDATACLASS,
+    ERROR_CODE_VALIDATACLASS_EMPTY_TYPE,
+    FIELD_DEFAULT_BASE_CLASS,
+    VALIDATOR_BASE_CLASS,
+)
+from .debug_logger import DebugLogger
 from .parsed_field_cache import ParsedFieldCache, ParsedValidataclassField
 
 
@@ -56,10 +62,13 @@ class VirtualFieldResolver:
         """
         return f'{self._api.path}:{self._ctx.context.line}'
 
-    def _log_warn(self, msg: str, *objects: Any) -> None:
+    def _log_warn(self, msg: str, *objects: Any) -> None:  # pragma: nocover
         """
         Log a message on WARN level.
-        Use this to warn about unhandled expressions/types or features that are not implemented yet.
+
+        This should only be used during plugin development to warn about unhandled expressions/types. In real code,
+        please use `_fail` or `_fail_not_implemented` (see ValidataclassTransformer) instead, which result in actual
+        mypy errors.
         """
         return self._logger.log('WARN', self._get_logger_context(), msg, *objects)
 
@@ -101,9 +110,24 @@ class VirtualFieldResolver:
             return AnyType(TypeOfAny.from_error)
 
         # Get the combined type of the field (union of validated type and default type)
-        combined_type = self._get_combined_type(parsed_field)
-        self._log_debug('  => Combined type of tuple', combined_type)
-        return combined_type
+        resolved_type = self._resolve_field_type(parsed_field)
+        self._log_debug('  => Resolved and combined field type', resolved_type)
+
+        # Handle edge case where resolved type is the empty type (i.e. Never). The most likely cause for this (which is
+        # not "user does weird stuff") is that the field uses a RejectValidator (or similar, anything where validate()
+        # never returns) and does not have a default value. A validataclass with this field *can* be instantiated
+        # manually (if the field type is anything other than Never), but a DataclassValidator would never return.
+        # If we return resolved_type here, mypy will mark the class as unreachable code. Instead, we report an error
+        # and return an Any type.
+        if isinstance(resolved_type, UninhabitedType):
+            self._fail(
+                f'Dataclass can never be validated, validator and default have empty type "{resolved_type}" (did you '
+                'forget a default value?)',
+                code=ERROR_CODE_VALIDATACLASS_EMPTY_TYPE,
+            )
+            return AnyType(TypeOfAny.from_error)
+
+        return resolved_type
 
     def _get_call_args(self) -> tuple[Expression, str, str, list[str]]:
         """
@@ -162,7 +186,7 @@ class VirtualFieldResolver:
 
         # First, retrieve the parsed field of all base classes from our cache, starting with the "oldest" class
         for base_class in base_classes:
-            self._log_debug(f'Retrieving parsed field of base class"{base_class}" from cache')
+            self._log_debug(f'Retrieve parsed field of base class"{base_class}" from cache')
             base_parsed_field = self._parsed_field_cache.get_field(base_class, field_name)
 
             # If there was an error when the field in the base class was parsed, set the error flag for later, then
@@ -181,12 +205,12 @@ class VirtualFieldResolver:
             self._fail('Field cannot be fully parsed because of a prior error in one of the base classes')
 
         # Now, parse the right-hand side expression of the assignment in the current class and merge the result
-        self._log_debug('Parsing RHS of assignment', field_rhs_expr)
+        self._log_debug('Parse RHS of assignment', field_rhs_expr)
         assignment_parsed_field = self._parse_rhs_expression(field_rhs_expr)
         fully_parsed_field.merge(assignment_parsed_field)
 
         # Make sure that the field has a validator instance (if there was no other error yet)
-        if not fully_parsed_field.error and fully_parsed_field.validated_type is None:
+        if not fully_parsed_field.error and fully_parsed_field.validator_type is None:
             fully_parsed_field.error = True
             self._fail('No Validator found in field definition')
 
@@ -230,15 +254,14 @@ class VirtualFieldResolver:
             # Check for validator instances (base class Validator)
             if item_type.type.has_base(VALIDATOR_BASE_CLASS):
                 # Make sure only one validator is set
-                if parsed_field.validated_type is not None:
+                if parsed_field.validator_type is not None:
                     parsed_field.error = True
                     self._fail('Multiple validator instances found in field definition')
                     return
 
                 # Find out the output type of this validator
-                # TODO: Actually store the Validator and evaluate its type later
-                parsed_field.validated_type = self._get_method_return_type(item_type, 'validate')
-                self._log_debug(f'  - Validator: {item_type.type.name} -> {parsed_field.validated_type}')
+                self._log_debug(f'  - Validator: {item_type}')
+                parsed_field.validator_type = item_type
                 return
 
             # Check for default instances (base class BaseDefault)
@@ -250,9 +273,8 @@ class VirtualFieldResolver:
                     return
 
                 # Find out the value type of this default object
-                # TODO: Actually store the Default and evaluate its type later
-                parsed_field.default_type = self._get_method_return_type(item_type, 'get_value')
-                self._log_debug(f'  - Default object: {item_type.type.name} -> {parsed_field.default_type}')
+                self._log_debug(f'  - Default object: {item_type}')
+                parsed_field.default_type = item_type
                 return
 
         # (Everything else is probably an error!)
@@ -277,7 +299,31 @@ class VirtualFieldResolver:
         parsed_field.error = True
         self._fail(f'Unexpected type "{item_type_str}" in field definition (expected Validator or BaseDefault)')
 
-    def _get_method_return_type(self, instance_type: Instance, method_name: str) -> ProperType | None:
+    def _resolve_field_type(self, parsed_field: ParsedValidataclassField) -> ProperType:
+        """
+        Resolve the type of the parsed field by determining the result type of the validator and default objects and
+        combining them in a type union.
+        """
+        assert parsed_field.validator_type is not None, 'No validator. This should have been caught earlier!'
+
+        # Determine the result type of the validator (i.e. the return type of its validate method)
+        validator_result_type = self._get_method_return_type(parsed_field.validator_type, 'validate')
+
+        # Determine the result type of the default object (i.e. the return type of its get_value method)
+        if parsed_field.default_type is not None:
+            default_result_type = self._get_method_return_type(parsed_field.default_type, 'get_value')
+        else:
+            # UninhabitedType is the bottom type (Never/NoReturn), meaning there is no default value
+            default_result_type = UninhabitedType()
+
+        # Combine result types of validator and default object
+        return make_simplified_union(
+            [validator_result_type, default_result_type],
+            line=self._ctx.context.line,
+            column=self._ctx.context.column,
+        )
+
+    def _get_method_return_type(self, instance_type: Instance, method_name: str) -> ProperType:
         """
         Construct a MemberExpr for the given instance type and method name, resolve expression type and return the
         return type of the method. Report an error if it's not a valid callable.
@@ -301,27 +347,9 @@ class VirtualFieldResolver:
 
         # Make sure it's a callable. If it isn't, either we forgot some edge case, or the user is doing something *very*
         # weird (namely overriding validate or get_value to be something that's not callable, which mypy should notice
-        # anyway). We should report an error here, but can return None as if the validator/default didn't exist.
+        # anyway). We should report an error here, but can return a Never type as if the validator/default didn't exist.
         if not isinstance(constructed_method_type, CallableType):
             self._fail(f'"{instance_type.type.name}.{method_name}" is not a callable')
-            return None
+            return UninhabitedType()
 
         return get_proper_type(constructed_method_type.ret_type)
-
-    def _get_combined_type(self, parsed_field: ParsedValidataclassField) -> ProperType:
-        """
-        Returns the combined type of a field, i.e. a union of validated type and default type.
-        """
-        assert parsed_field.validated_type is not None or parsed_field.default_type is not None, \
-            'No validator and no default. This should have been caught earlier.'
-
-        if parsed_field.default_type is None:
-            return parsed_field.validated_type  # type: ignore[return-value]  # TODO: Known issue, fix me
-        elif parsed_field.validated_type is None:
-            return parsed_field.default_type
-        else:
-            return make_simplified_union(
-                [parsed_field.validated_type, parsed_field.default_type],
-                line=self._ctx.context.line,
-                column=self._ctx.context.column,
-            )
