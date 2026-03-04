@@ -320,7 +320,7 @@ class MyModel:
 my_validator = DataclassValidator(MyModel)
 
 my_validator.validate({'name': 'test'})  # would work fine
-my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw an UnknownFieldsError
+my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw a DictFieldsValidationError with FieldNotAllowedError
 ```
 
 Setting it on the `DataclassValidator` (this also works with dataclasses that don't have `reject_unknown_fields` set
@@ -337,7 +337,7 @@ class MyModel:
 my_validator = DataclassValidator(MyModel, reject_unknown_fields=True)
 
 my_validator.validate({'name': 'test'})  # would work fine
-my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw an UnknownFieldsError
+my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw a DictFieldsValidationError with FieldNotAllowedError
 ```
 
 
