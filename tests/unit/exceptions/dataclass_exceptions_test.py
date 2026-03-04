@@ -5,50 +5,11 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 from validataclass.exceptions import (
-    UnknownFieldsError,
     DataclassPostValidationError,
     DictRequiredFieldError,
     InvalidTypeError,
     ValidationError,
 )
-
-
-class UnknownFieldsErrorTest:
-    """
-    Tests for the UnknownFieldsError exception class.
-    """
-
-    @staticmethod
-    def test_unknown_fields_error_single_property():
-        """ Tests UnknownFieldsError with a single additional property. """
-        error = UnknownFieldsError(unknown_fields=['unknown_field'])
-
-        assert error.to_dict() == {
-            'code': 'unknown_fields',
-            'unknown_fields': ['unknown_field'],
-        }
-
-    @staticmethod
-    def test_unknown_fields_error_multiple_fields():
-        """ Tests UnknownFieldsError with multiple additional fields (sorted). """
-        error = UnknownFieldsError(unknown_fields=['watermelon', 'apple', 'mango'])
-
-        assert error.to_dict() == {
-            'code': 'unknown_fields',
-            'unknown_fields': ['apple', 'mango', 'watermelon'],
-        }
-
-    @staticmethod
-    def test_unknown_fields_error_repr():
-        """ Tests repr of UnknownFieldsError. """
-        error = UnknownFieldsError(unknown_fields=['unknown1', 'unknown2'])
-
-        assert (
-            repr(error)
-            == "UnknownFieldsError(code='unknown_fields', "
-               "unknown_fields=['unknown1', 'unknown2'])"
-        )
-        assert str(error) == repr(error)
 
 
 class DataclassPostValidationErrorTest:

@@ -13,7 +13,6 @@ from typing_extensions import override
 
 from validataclass.dataclasses import BaseDefault, NoDefault
 from validataclass.exceptions import (
-    UnknownFieldsError,
     DataclassInvalidPreValidateSignatureException,
     DataclassPostValidationError,
     DataclassValidatorFieldException,
@@ -21,6 +20,7 @@ from validataclass.exceptions import (
     ValidationError,
 )
 from .dict_validator import DictValidator
+from .reject_validator import RejectValidator
 from .validator import Validator
 
 __all__ = [
@@ -115,9 +115,6 @@ class DataclassValidator(Validator[T_Dataclass]):
     # Dataclass type that the validated dictionary will be converted to
     dataclass_cls: type[T_Dataclass]
 
-    # Whether to reject unknown fields in the input dictionary
-    reject_unknown_fields: bool
-
     # Field default values
     field_defaults: dict[str, BaseDefault[Any]]
 
@@ -145,10 +142,8 @@ class DataclassValidator(Validator[T_Dataclass]):
         self.dataclass_cls = dataclass_cls
 
         # Use the explicit parameter if given, otherwise fall back to the dataclass setting
-        if reject_unknown_fields is not None:
-            self.reject_unknown_fields = reject_unknown_fields
-        else:
-            self.reject_unknown_fields = getattr(dataclass_cls, '__reject_unknown_fields__', False)
+        if reject_unknown_fields is None:
+            reject_unknown_fields = getattr(dataclass_cls, '__reject_unknown_fields__', None)
         self.field_defaults = {}
 
         # Collect field validators and required fields for the DictValidator by examining the dataclass fields
@@ -173,8 +168,13 @@ class DataclassValidator(Validator[T_Dataclass]):
                 required_fields.append(field.name)
 
         # Initialize the DictValidator
-        self.dict_validator = DictValidator(field_validators=field_validators, required_fields=required_fields)
-
+        default_validator = RejectValidator(error_reason='Unknown field') if reject_unknown_fields else None
+        self.dict_validator = DictValidator(
+            field_validators=field_validators,
+            required_fields=required_fields,
+            default_validator=default_validator,
+        )
+    
     @staticmethod
     def _get_field_validator(field: dataclasses.Field[Any]) -> Validator[Any]:
         # Parse field metadata to get Validator
@@ -242,13 +242,6 @@ class DataclassValidator(Validator[T_Dataclass]):
 
             # Filter input dictionary through __pre_validate__()
             input_data = pre_validate_func(input_data, **context_kwargs)
-
-        # Check for unknown fields if not allowed
-        if self.reject_unknown_fields:
-            self._ensure_type(input_data, dict)
-            unknown = sorted(set(input_data.keys()) - set(self.field_validators.keys()))
-            if unknown:
-                raise UnknownFieldsError(unknown_fields=unknown)
 
         # Validate raw dictionary using underlying DictValidator
         validated_dict = self.dict_validator.validate(input_data, **kwargs)

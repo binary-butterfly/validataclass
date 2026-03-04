@@ -14,7 +14,6 @@ from typing_extensions import override
 from tests.test_utils import UnitTestContextValidator
 from validataclass.dataclasses import Default, DefaultFactory, DefaultUnset, validataclass, validataclass_field
 from validataclass.exceptions import (
-    UnknownFieldsError,
     DataclassInvalidPreValidateSignatureException,
     DataclassPostValidationError,
     DataclassValidatorFieldException,
@@ -1180,26 +1179,28 @@ class DataclassValidatorTest:
 
     @staticmethod
     def test_strict_dataclass_with_additional_properties():
-        """ Test that a strict dataclass raises UnknownFieldsError for unknown keys. """
+        """ Test that a strict dataclass raises DictFieldsValidationError for unknown keys. """
         validator = DataclassValidator(UnitTestStrictDataclass)
 
-        with pytest.raises(UnknownFieldsError) as exception_info:
+        with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
                 'name': 'banana',
                 'unknown_field': 'unknown_value',
             })
 
         assert exception_info.value.to_dict() == {
-            'code': 'unknown_fields',
-            'unknown_fields': ['unknown_field'],
+            'code': 'field_errors',
+            'field_errors': {
+                'unknown_field': {'code': 'field_not_allowed', 'reason': 'Unknown field'},
+            },
         }
 
     @staticmethod
     def test_strict_dataclass_with_multiple_additional_fields():
-        """ Test that additional fields are sorted in the error. """
+        """ Test that each additional field gets its own error. """
         validator = DataclassValidator(UnitTestStrictDataclass)
 
-        with pytest.raises(UnknownFieldsError) as exception_info:
+        with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
                 'name': 'banana',
                 'zebra': 1,
@@ -1208,8 +1209,12 @@ class DataclassValidatorTest:
             })
 
         assert exception_info.value.to_dict() == {
-            'code': 'unknown_fields',
-            'unknown_fields': ['alpha', 'mango', 'zebra'],
+            'code': 'field_errors',
+            'field_errors': {
+                'alpha': {'code': 'field_not_allowed', 'reason': 'Unknown field'},
+                'mango': {'code': 'field_not_allowed', 'reason': 'Unknown field'},
+                'zebra': {'code': 'field_not_allowed', 'reason': 'Unknown field'},
+            },
         }
 
     @staticmethod
@@ -1250,7 +1255,7 @@ class DataclassValidatorTest:
         """ Test that reject_unknown_fields=True on DataclassValidator rejects unknown fields. """
         validator = DataclassValidator(UnitTestDataclass, reject_unknown_fields=True)
 
-        with pytest.raises(UnknownFieldsError) as exception_info:
+        with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
                 'name': 'banana',
                 'color': 'yellow',
@@ -1260,8 +1265,10 @@ class DataclassValidatorTest:
             })
 
         assert exception_info.value.to_dict() == {
-            'code': 'unknown_fields',
-            'unknown_fields': ['unknown_field'],
+            'code': 'field_errors',
+            'field_errors': {
+                'unknown_field': {'code': 'field_not_allowed', 'reason': 'Unknown field'},
+            },
         }
 
     @staticmethod
@@ -1301,7 +1308,7 @@ class DataclassValidatorTest:
         """
         validator = DataclassValidator(UnitTestDataclass, reject_unknown_fields=True)
 
-        with pytest.raises(UnknownFieldsError) as exception_info:
+        with pytest.raises(DictFieldsValidationError) as exception_info:
             validator.validate({
                 'name': 'banana',
                 'color': 'yellow',
@@ -1311,6 +1318,8 @@ class DataclassValidatorTest:
             })
 
         assert exception_info.value.to_dict() == {
-            'code': 'unknown_fields',
-            'unknown_fields': ['extra'],
+            'code': 'field_errors',
+            'field_errors': {
+                'extra': {'code': 'field_not_allowed', 'reason': 'Unknown field'},
+            },
         }

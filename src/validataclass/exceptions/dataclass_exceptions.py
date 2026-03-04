@@ -11,31 +11,8 @@ from typing_extensions import override
 from .base_exceptions import ValidationError
 
 __all__ = [
-    'UnknownFieldsError',
     'DataclassPostValidationError',
 ]
-
-
-class UnknownFieldsError(ValidationError):
-    """
-    Validation error raised by `DataclassValidator` when the input dictionary contains keys that do not correspond to
-    any field in the dataclass, and `reject_unknown_fields` is set to `True`.
-
-    The `unknown_fields` attribute contains a sorted list of the extra field names.
-
-    Example as dictionary:
-
-    ```
-    {
-        'code': 'unknown_fields',
-        'unknown_fields': ['unknown1', 'unknown2'],
-    }
-    ```
-    """
-    code = 'unknown_fields'
-
-    def __init__(self, *, unknown_fields: list[str], **kwargs: Any):
-        super().__init__(unknown_fields=sorted(unknown_fields), **kwargs)
 
 
 class DataclassPostValidationError(ValidationError):
