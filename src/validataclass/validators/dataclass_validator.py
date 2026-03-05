@@ -56,7 +56,7 @@ class DataclassValidator(Validator[T_Dataclass]):
 
         # Equivalent definition using validataclass_field():
         # example_field: str = validataclass_field(StringValidator())
-        # optional_field: str = validataclass_field(StringValidator(), default='')
+        # optional_field: str = validataclass_field(StringValidator(), default=Default(''))
 
         # "Behind the scenes": Equivalent definition using plain dataclass fields:
         # example_field: str = field(metadata={'validator': StringValidator()})

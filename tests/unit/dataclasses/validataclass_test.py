@@ -50,7 +50,7 @@ class ValidatorDataclassTest:
         class UnitTestValidatorDataclass:
             foo: int = IntegerValidator()
             bar: int = validataclass_field(IntegerValidator(), default=Default(0))
-            baz: str | None = validataclass_field(Noneable(StringValidator()), default=None)
+            baz: str | None = validataclass_field(Noneable(StringValidator()), default=Default(None))
 
         # Check that @validataclass actually created a dataclass (i.e. used @dataclass on the class)
         assert dataclasses.is_dataclass(UnitTestValidatorDataclass)

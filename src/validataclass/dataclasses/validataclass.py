@@ -75,7 +75,7 @@ def validataclass(
         # (Same as example_field1)
         example_field3: str = validataclass_field(StringValidator())
         # (Same as example_field2)
-        example_field4: str = validataclass_field(StringValidator(), default='not set')
+        example_field4: str = validataclass_field(StringValidator(), default=Default('not set'))
         # Post-init field without validator
         post_init_field: int = field(init=False, default=0)
     ```
