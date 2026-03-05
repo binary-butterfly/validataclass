@@ -7,7 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from typing import Any, cast
 
 from mypy.errorcodes import ErrorCode
-from mypy.nodes import Context, Expression, ListExpr, MemberExpr, StrExpr, TempNode
+from mypy.nodes import ArgKind, CallExpr, Context, Expression, ListExpr, MemberExpr, StrExpr, TempNode, RefExpr
 from mypy.plugin import CheckerPluginInterface, FunctionContext
 from mypy.typeops import make_simplified_union
 from mypy.types import (
@@ -27,6 +27,7 @@ from .constants import (
     ERROR_CODE_VALIDATACLASS,
     ERROR_CODE_VALIDATACLASS_EMPTY_TYPE,
     FIELD_DEFAULT_BASE_CLASS,
+    VALIDATACLASS_FIELD_FUNC,
     VALIDATOR_BASE_CLASS,
 )
 from .debug_logger import DebugLogger
@@ -181,6 +182,15 @@ class VirtualFieldResolver:
         (by retrieving the ParsedValidataclasFields from the parsed field cache), then analyzing the right-hand side
         expression of the current field assignment and merging the results.
         """
+        # First of all, check if the field was created explicitly using validataclass_field(), i.e. the right-hand side
+        # is a call to that function. Since this functions are not dependent on base classes (they always replace the
+        # entire field definition), we can shortcut the analysis here.
+        # (Fields created with dataclasses.field() are skipped by the ValidataclassTransformer.)
+        if isinstance(field_rhs_expr, CallExpr) and isinstance(field_rhs_expr.callee, RefExpr):
+            # Handle fields created explicitly using validataclass_field()
+            if field_rhs_expr.callee.fullname == VALIDATACLASS_FIELD_FUNC:
+                return self._parse_validataclass_field_callexpr(field_rhs_expr)
+
         # This will hold the end result that's returned at the end of the function
         fully_parsed_field = ParsedValidataclassField()
 
@@ -224,8 +234,6 @@ class VirtualFieldResolver:
         # Get type of field assignment RHS
         rhs_type = get_proper_type(self._api.get_expression_type(rhs_expr))
 
-        # TODO: Handle validataclass_field() calls properly.
-
         parsed_field = ParsedValidataclassField()
 
         if isinstance(rhs_type, TupleType):
@@ -259,7 +267,7 @@ class VirtualFieldResolver:
                     self._fail('Multiple validator instances found in field definition')
                     return
 
-                # Find out the output type of this validator
+                # Store type of validator for later
                 self._log_debug(f'  - Validator: {item_type}')
                 parsed_field.validator_type = item_type
                 return
@@ -272,7 +280,7 @@ class VirtualFieldResolver:
                     self._fail('Multiple default objects found in field definition')
                     return
 
-                # Find out the value type of this default object
+                # Store type of default object for later
                 self._log_debug(f'  - Default object: {item_type}')
                 parsed_field.default_type = item_type
                 return
@@ -298,6 +306,88 @@ class VirtualFieldResolver:
         # Fallback to unexpected type error
         parsed_field.error = True
         self._fail(f'Unexpected type "{item_type_str}" in field definition (expected Validator or BaseDefault)')
+
+    def _parse_validataclass_field_callexpr(self, call_expr: CallExpr) -> ParsedValidataclassField:
+        """
+        Analyze a `validataclass_field()` call expression to find validator and default objects.
+        """
+        parsed_field = ParsedValidataclassField()
+
+        # Iterate over call arguments, differentiate positional and named arguments, find validator and default
+        for i in range(len(call_expr.args)):
+            # Get argument expression, kind (positional/named) and name (None for positional arguments)
+            arg_expr = call_expr.args[i]
+            arg_kind = call_expr.arg_kinds[i]
+            arg_name = call_expr.arg_names[i]
+
+            # Get type of argument expression
+            arg_type = get_proper_type(self._api.get_expression_type(arg_expr))
+
+            # NOTE: We can ignore a lot of possible errors here that are already covered by mypy itself, e.g. too many
+            # arguments, duplicate arguments, incorrect argument types, etc. We still have to check for these errors
+            # (because it means the call is invalid and can't be parsed correctly), but we don't need to report them.
+
+            # The function has only a single positional argument, which is the validator. We can also assume that all
+            # positional arguments come first (otherwise it's a syntax error and we don't even reach this code).
+            if (arg_kind == ArgKind.ARG_POS and i == 0) or arg_name == 'validator':
+                # There can only be one validator (mypy will report an error for this)
+                if parsed_field.validator_type is not None:
+                    parsed_field.error = True
+                    break
+
+                # Ensure that argument is a Validator instance (mypy will report an error otherwise)
+                if not isinstance(arg_type, Instance) or not arg_type.type.has_base(VALIDATOR_BASE_CLASS):
+                    parsed_field.error = True
+                    break
+
+                # Store type of validator for later
+                parsed_field.validator_type = arg_type
+                continue
+
+            # Check for named arguments (unknown arguments can be ignored here)
+            match arg_name:
+                # Check for field default argument
+                case 'default':
+                    # There can only be one default (mypy will report an error for this)
+                    if parsed_field.default_type is not None:
+                        parsed_field.error = True
+                        break
+
+                    # Ensure that argument is a BaseDefault instance (mypy will report an error otherwise)
+                    # NOTE: Using raw default values and dataclasses.MISSING here has been deprecated, so we don't need to
+                    # support them. mypy will report a deprecation warning, we can just treat it as an error and return Any.
+                    if not isinstance(arg_type, Instance) or not arg_type.type.has_base(FIELD_DEFAULT_BASE_CLASS):
+                        parsed_field.error = True
+                        break
+
+                    # Store type of default object for later
+                    parsed_field.default_type = arg_type
+
+                # Validataclass fields are required to be init fields, so the argument isn't allowed
+                case 'init':
+                    # Report error but continue parsing, because this argument wouldn't influence the field type
+                    self._fail('Keyword argument "init" is not allowed in validataclass_field')
+
+                # Validataclass fields should use a DefaultFactory instead of the default_factory argument
+                case 'default_factory':
+                    # Report error and stop parsing, because the argument related to the field default
+                    self._fail(
+                        'Keyword argument "default_factory" is not allowed in validataclass_field; use '
+                        'default=DefaultFactory(...) instead'
+                    )
+                    parsed_field.error = True
+                    break
+
+        # Stop checking if there were errors parsing the arguments
+        if parsed_field.error:
+            return parsed_field
+
+        # Ensure that the field has a validator
+        if parsed_field.validator_type is None:
+            parsed_field.error = True
+            self._fail('No validator found in validataclass_field() call')
+
+        return parsed_field
 
     def _resolve_field_type(self, parsed_field: ParsedValidataclassField) -> ProperType:
         """

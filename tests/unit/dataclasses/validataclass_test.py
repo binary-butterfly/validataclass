@@ -138,7 +138,7 @@ class ValidatorDataclassTest:
             validated: int = IntegerValidator()
 
             # Non-init field
-            non_init: int = dataclasses.field(init=False, default=1)  # type: ignore[validataclass]  # TODO: Fix me!
+            non_init: int = dataclasses.field(init=False, default=1)
 
         # Get fields from dataclass
         fields = get_dataclass_fields(UnitTestValidatorDataclass)
@@ -377,7 +377,7 @@ class ValidatorDataclassTest:
             validated: int = IntegerValidator()
 
             # Non-init field
-            non_init: int = dataclasses.field(init=False, default=1)  # type: ignore[validataclass]  # TODO: Fix me!
+            non_init: int = dataclasses.field(init=False, default=1)
 
         @validataclass
         class SubClass(BaseClass):

@@ -500,3 +500,56 @@
     reveal_type(valid)            # N: Revealed type is "main.ActualValidataclass"
     reveal_type(valid.field1)     # N: Revealed type is "builtins.int | None"
     reveal_type(valid.field2)     # N: Revealed type is "builtins.str"
+
+# Validataclasses and subclasses with fields created using validataclass_field() or dataclasses.field()
+- case: validataclass_subclasses_with_explicit_field_function
+  main: |
+    import dataclasses
+    from validataclass.dataclasses import Default, validataclass, validataclass_field
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class Base:
+        # Fields created explicitly with validataclass_field
+        explicit1: int = validataclass_field(IntegerValidator())
+        explicit2: int | None = validataclass_field(IntegerValidator(), default=Default(None))
+        explicit3: int = validataclass_field(IntegerValidator())
+        explicit4: int | None = validataclass_field(IntegerValidator(), default=Default(None))
+
+        # Fields created with tuples
+        tuple1: int = IntegerValidator()
+        tuple2: int | None = IntegerValidator(), Default(None)
+
+    @validataclass
+    class GoodSubClass(Base):
+        # Override fields created with validataclass_field using validataclass_field
+        # (Should override the default even when not specified)
+        explicit1: str | None = validataclass_field(StringValidator(), default=Default(None))
+        explicit2: str = validataclass_field(StringValidator())
+
+        # Override fields created with validataclass_field using tuples
+        # (Should take base class into account)
+        explicit3: int | None = Default(None)
+        explicit4: str | None = StringValidator()
+
+        # Override fields created with tuples using validataclass_field
+        # (Should override the default even when not specified)
+        tuple1: str | None = validataclass_field(StringValidator(), default=Default(None))
+        tuple2: str = validataclass_field(StringValidator())
+
+    @validataclass
+    class BadSubClass(Base):
+        # Override fields created with validataclass_field using validataclass_field
+        # (Should override the default even when not specified)
+        explicit1: int = validataclass_field(StringValidator(), default=Default(None))  # E: Incompatible types in assignment (expression has type "str | None", variable has type "int")  [assignment]
+        explicit2: int = validataclass_field(StringValidator())                         # E: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+
+        # Override fields created with validataclass_field using tuples
+        # (Should take base class into account)
+        explicit3: None = Default(None)     # E: Incompatible types in assignment (expression has type "int | None", variable has type "None")  [assignment]
+        explicit4: str = StringValidator()  # E: Incompatible types in assignment (expression has type "str | None", variable has type "str")  [assignment]
+
+        # Override fields created with tuples using validataclass_field
+        # (Should override the default even when not specified)
+        tuple1: str = validataclass_field(StringValidator(), default=Default(None))  # E: Incompatible types in assignment (expression has type "str | None", variable has type "str")  [assignment]
+        tuple2: int = validataclass_field(StringValidator())                         # E: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]

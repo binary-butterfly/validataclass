@@ -20,6 +20,7 @@ from mypy.nodes import (
     GDEF,
     ListExpr,
     NameExpr,
+    RefExpr,
     StrExpr,
     TempNode,
     Var,
@@ -33,7 +34,6 @@ from typing_extensions import override
 from .constants import (
     ERROR_CODE_VALIDATACLASS,
     ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED,
-    VALIDATACLASS_FIELD_FUNC,
     VIRTUAL_FIELD_WRAPPER_FUNC,
     VIRTUAL_FIELD_WRAPPER_FUNC_NAME,
 )
@@ -308,27 +308,19 @@ class ValidataclassTransformer:
                 )
                 continue
 
-            # Handle fields that are already wrapped or created with field specifier functions
-            if isinstance(stmt.rvalue, CallExpr) and isinstance(stmt.rvalue.callee, NameExpr):
+            # Handle fields that are already wrapped or created with special functions.
+            # (Fields created with validataclass_field() are wrapped normally.)
+            if isinstance(stmt.rvalue, CallExpr) and isinstance(stmt.rvalue.callee, RefExpr):
                 callee_name = stmt.rvalue.callee.fullname
+
+                # Skip field if it has already been wrapped in a previous pass (this probably shouldn't happen though)
+                if callee_name == VIRTUAL_FIELD_WRAPPER_FUNC:
+                    self._log_debug(stmt, f'Skip already wrapped field "{lvalue.name}"')
+                    continue
 
                 # Ignore fields that have been created with the regular dataclasses.field() or similar
                 if callee_name in DATACLASS_FIELD_SPECIFIERS:
-                    # TODO: Handle these properly.
                     self._log_debug(stmt, f'Skip field "{lvalue.name}" with {callee_name}')
-                    continue
-
-                # Skip fields that have been created with validataclass_field()
-                # TODO: I think we need to wrap these too actually :/
-                if callee_name == VALIDATACLASS_FIELD_FUNC:
-                    # TODO: Normalize `default` - if it's NoDefault, remove the default instead?
-                    # TODO: (Can probably be ignored because we'll have to fix __init__ manually anyway.)
-                    self._log_debug(stmt, f'Skip field "{lvalue.name}" with validataclass_field()')
-                    continue
-
-                # Skip field if it has already been wrapped in a previous pass
-                if callee_name == VIRTUAL_FIELD_WRAPPER_FUNC:
-                    self._log_debug(stmt, f'Skip already wrapped field "{lvalue.name}"')
                     continue
 
             # If we're still here, we might actually have a validataclass field definition that we care about!

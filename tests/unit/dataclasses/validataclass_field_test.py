@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
+from typing import Any
 
 import pytest
 from typing_extensions import override
@@ -12,7 +13,22 @@ from typing_extensions import override
 from tests.unit.dataclasses._helpers import assert_field_default, assert_field_no_default, get_dataclass_fields
 from validataclass.dataclasses import BaseDefault, Default, DefaultFactory, DefaultUnset, NoDefault, validataclass_field
 from validataclass.helpers import UnsetValue
-from validataclass.validators import IntegerValidator
+from validataclass.validators import IntegerValidator, Validator
+
+
+# Here we are testing the validataclass_field() function on its own. It usually doesn't make sense to use this function
+# outside the context of a dataclass, which is why the annotated return type doesn't match what it actually returns
+# (see note in validataclass_field module).
+# However, for testing, we need the actual return type (otherwise type checkers will be very unhappy about this file),
+# so we're actually using a wrapper here that fixes the type. I know it's ugly, but it's just for testing.
+# (We'll keep the typing as simple as possible and skip the overloads, though.)
+def typed_validataclass_field(
+    validator: Validator[Any],
+    *,
+    default: Any = NoDefault,
+    **kwargs: Any,
+) -> dataclasses.Field[Any]:
+    return validataclass_field(validator, default=default, **kwargs)  # type: ignore[no-any-return]
 
 
 class ValidataclassFieldTest:
@@ -24,9 +40,9 @@ class ValidataclassFieldTest:
         """ Test validataclass_field function on its own, without a default value (implicitly and explicitly). """
         # Create field
         if explicit_no_default:
-            field = validataclass_field(IntegerValidator(), default=NoDefault)
+            field = typed_validataclass_field(IntegerValidator(), default=NoDefault)
         else:
-            field = validataclass_field(IntegerValidator())
+            field = typed_validataclass_field(IntegerValidator())
 
         # Check field metadata
         assert type(field.metadata.get('validator')) is IntegerValidator
@@ -56,7 +72,7 @@ class ValidataclassFieldTest:
     def test_validataclass_field_with_default(param_default, expected_default, needs_factory):
         """ Test validataclass_field function on its own, with various static default values and default factories. """
         # Create field
-        field = validataclass_field(IntegerValidator(), default=param_default)
+        field = typed_validataclass_field(IntegerValidator(), default=param_default)
 
         # Check field metadata
         metadata_validator = field.metadata.get('validator')
@@ -95,7 +111,7 @@ class ValidataclassFieldTest:
                 return True
 
         # Create field
-        field = validataclass_field(IntegerValidator(), default=CustomDefault())
+        field = typed_validataclass_field(IntegerValidator(), default=CustomDefault())
 
         # Check field metadata
         metadata_validator = field.metadata.get('validator')
@@ -117,7 +133,7 @@ class ValidataclassFieldTest:
     def test_validataclass_field_with_metadata():
         """ Test validataclass_field function on its own, with custom metadata. """
         # Create field with custom metadata (validataclass metadata will be overwritten by the function)
-        field = validataclass_field(
+        field = typed_validataclass_field(
             IntegerValidator(),
             default=Default(42),
             metadata={
@@ -172,7 +188,7 @@ class ValidataclassFieldTest:
         with pytest.raises(ValueError) as exception_info:
             validataclass_field(IntegerValidator(), init=False)
 
-        assert str(exception_info.value) == 'Keyword argument "init" is not allowed in validator field.'
+        assert str(exception_info.value) == 'Keyword argument "init" is not allowed in validataclass_field.'
 
     @staticmethod
     def test_validataclass_field_with_default_factory_kwarg_raises_exception():
@@ -182,8 +198,8 @@ class ValidataclassFieldTest:
 
         assert (
             str(exception_info.value)
-            == 'Keyword argument "default_factory" is not allowed in validator field (use default=DefaultFactory(...) '
-               'instead).'
+            == 'Keyword argument "default_factory" is not allowed in validataclass_field (use '
+                'default=DefaultFactory(...) instead).'
         )
 
     @staticmethod
@@ -192,7 +208,7 @@ class ValidataclassFieldTest:
         """ Test that validataclass_field() with raw default values is deprecated. """
         # Create field and test that it generates a deprecation warning
         with pytest.deprecated_call(match='Please use default objects instead'):
-            field = validataclass_field(IntegerValidator(), default=param_default)  # type: ignore[deprecated]
+            field = typed_validataclass_field(IntegerValidator(), default=param_default)
 
         # Check field metadata
         metadata_validator = field.metadata.get('validator')
@@ -211,7 +227,7 @@ class ValidataclassFieldTest:
         """ Test that validataclass_field() with `default=dataclasses.MISSING` is deprecated. """
         # Create field and test that it generates a deprecation warning
         with pytest.deprecated_call(match='Please use `default=NoDefault` instead'):
-            field = validataclass_field(IntegerValidator(), default=dataclasses.MISSING)  # type: ignore[deprecated]
+            field = typed_validataclass_field(IntegerValidator(), default=dataclasses.MISSING)
 
         # Check field metadata
         assert type(field.metadata.get('validator')) is IntegerValidator

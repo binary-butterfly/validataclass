@@ -21,6 +21,11 @@ T_Validated = TypeVar('T_Validated')
 T_Default = TypeVar('T_Default')
 
 
+# NOTE: Actual return type of this function is `Field[T_Validated | T_Default]`. However, we will pretend here that it
+# returns `T_Validated | T_Default` instead, to help type checkers understand what happens within the context of a
+# dataclass. This is the same thing that typeshed does.
+# (Using this function outside the context of a dataclass usually doesn't make a lot of sense.)
+
 @overload
 def validataclass_field(
     validator: Validator[T_Validated],
@@ -28,7 +33,7 @@ def validataclass_field(
     default: _NoDefaultType = NoDefault,
     metadata: dict[str, Any] | None = None,
     **kwargs: Any,
-) -> dataclasses.Field[T_Validated]:
+) -> T_Validated:
     ...
 
 
@@ -39,7 +44,7 @@ def validataclass_field(
     default: BaseDefault[T_Default],
     metadata: dict[str, Any] | None = None,
     **kwargs: Any,
-) -> dataclasses.Field[T_Validated | T_Default]:
+) -> T_Validated | T_Default:
     ...
 
 
@@ -51,7 +56,7 @@ def validataclass_field(
     default: Any,
     metadata: dict[str, Any] | None = None,
     **kwargs: Any,
-) -> dataclasses.Field[Any]:
+) -> Any:
     ...
 
 
@@ -61,7 +66,7 @@ def validataclass_field(
     default: BaseDefault[T_Default] | Any = NoDefault,
     metadata: dict[str, Any] | None = None,
     **kwargs: Any,
-) -> dataclasses.Field[Any]:
+) -> Any:
     """
     Defines a dataclass field compatible with DataclassValidator.
 
@@ -87,10 +92,10 @@ def validataclass_field(
 
     # Check for incompatible keyword arguments
     if 'init' in kwargs:
-        raise ValueError('Keyword argument "init" is not allowed in validator field.')
+        raise ValueError('Keyword argument "init" is not allowed in validataclass_field.')
     if 'default_factory' in kwargs:
         raise ValueError(
-            'Keyword argument "default_factory" is not allowed in validator field (use default=DefaultFactory(...) '
+            'Keyword argument "default_factory" is not allowed in validataclass_field (use default=DefaultFactory(...) '
             'instead).'
         )
 
@@ -126,5 +131,4 @@ def validataclass_field(
             kwargs['default'] = default.get_value()
 
     # Create a dataclass field with our metadata
-    # NOTE: typeshed types the field() function as 'T' rather than 'Field[T]', but the actual return type is a Field.
-    return dataclasses.field(metadata=metadata, **kwargs)  # type: ignore[no-any-return]
+    return dataclasses.field(metadata=metadata, **kwargs)

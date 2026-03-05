@@ -1,19 +1,24 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
 
 # Check the inference of the return type of validataclass_field()
+# NOTE: The annotated return type of this function is just T rather than dataclasses.Field[T], for reasons (see code).
 - case: validataclass_field_return_type
   main: |
     from validataclass.dataclasses import Default, NoDefault, validataclass_field
     from validataclass.validators import RejectValidator, StringValidator
 
-    reveal_type(validataclass_field(StringValidator()))                                         # N: Revealed type is "dataclasses.Field[builtins.str]"
-    reveal_type(validataclass_field(StringValidator(), default=NoDefault))                      # N: Revealed type is "dataclasses.Field[builtins.str]"
-    reveal_type(validataclass_field(StringValidator(), default=Default(None)))                  # N: Revealed type is "dataclasses.Field[builtins.str | None]"
-    reveal_type(validataclass_field(StringValidator(), default=Default(0), repr=False))         # N: Revealed type is "dataclasses.Field[builtins.str | builtins.int]"
-    reveal_type(validataclass_field(StringValidator(), default=Default(0), metadata={'a': 1}))  # N: Revealed type is "dataclasses.Field[builtins.str | builtins.int]"
+    reveal_type(validataclass_field(StringValidator()))                                         # N: Revealed type is "builtins.str"
+    reveal_type(validataclass_field(StringValidator(), default=NoDefault))                      # N: Revealed type is "builtins.str"
+    reveal_type(validataclass_field(StringValidator(), default=Default(None)))                  # N: Revealed type is "builtins.str | None"
+    reveal_type(validataclass_field(StringValidator(), default=Default(0), repr=False))         # N: Revealed type is "builtins.str | builtins.int"
+    reveal_type(validataclass_field(StringValidator(), default=Default(0), metadata={'a': 1}))  # N: Revealed type is "builtins.str | builtins.int"
 
-    reveal_type(validataclass_field(RejectValidator()))                         # N: Revealed type is "dataclasses.Field[Never]"
-    reveal_type(validataclass_field(RejectValidator(), default=Default(None)))  # N: Revealed type is "dataclasses.Field[None]"
+    # Validator with Never type (but the result is not Never)
+    reveal_type(validataclass_field(RejectValidator(), default=Default(None)))  # N: Revealed type is "None"
+
+    # Resulting type is Never (this needs to be the last line or wrapped in a try-except block because mypy considers
+    # all code after it as unreachable)
+    reveal_type(validataclass_field(RejectValidator()))  # N: Revealed type is "Never"
 
 # Check that using validataclass_field() with raw default values or dataclasses.MISSING is reported as deprecated.
 - case: validataclass_field_with_raw_defaults_deprecated
