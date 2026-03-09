@@ -199,7 +199,7 @@ class ValidataclassFieldTest:
         assert (
             str(exception_info.value)
             == 'Keyword argument "default_factory" is not allowed in validataclass_field (use '
-                'default=DefaultFactory(...) instead).'
+               'default=DefaultFactory(...) instead).'
         )
 
     @staticmethod
