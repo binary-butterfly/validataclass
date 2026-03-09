@@ -192,9 +192,21 @@ class ValidataclassTransformer:
 
         Called for every class that is decorated with `@validataclass` (or an equivalent decorator).
         """
+        # Plugin hooks may be called several times, so we need to check if we have already processed this class.
+        # TODO: I'm not sure how to test this. There is a comment in the mypy.plugin module that recommends using a
+        #   forward reference to a class which should force the module to be processed multiple times, but this doesn't
+        #   seem to work. It should be fine though, we're just skipping the class if we've already processed it.
+        if 'validataclass' in self._class_def.info.metadata:  # pragma: nocover
+            # If we've processed this class, the dataclass plugin probably has too. But we can't be sure, so let the
+            # dataclass plugin handle this for itself.
+            return dataclass_class_maker_callback(self._ctx)
+
         # Collect all validataclass fields in this class, including fields defined in base classes
         current_fields = self._collect_fields()
-        if current_fields is None:
+
+        # If collecting the fields failed, we need another pass
+        # TODO: No idea how to enforce this in a test case. Add a test if you ever find out.
+        if current_fields is None:  # pragma: nocover
             return False
 
         # Iterate over all fields and modify the assignment statements
@@ -244,7 +256,8 @@ class ValidataclassTransformer:
                 continue
 
             # Ensure base class has already been processed by this plugin, otherwise we need another pass
-            if 'validataclass' not in base_typeinfo.metadata:
+            # TODO: No idea how to enforce this in a test case. Add a test if you ever find out.
+            if 'validataclass' not in base_typeinfo.metadata:  # pragma: nocover
                 self._log_debug(None, f'Base class "{base_fullname}" not processed yet, need another pass')
                 return None
 
@@ -313,8 +326,10 @@ class ValidataclassTransformer:
             if isinstance(stmt.rvalue, CallExpr) and isinstance(stmt.rvalue.callee, RefExpr):
                 callee_name = stmt.rvalue.callee.fullname
 
-                # Skip field if it has already been wrapped in a previous pass (this probably shouldn't happen though)
-                if callee_name == VIRTUAL_FIELD_WRAPPER_FUNC:
+                # Skip field if it has already been wrapped in a previous pass
+                # (This probably should never happen because it's avoided by the initial check whether the class has
+                # already been processed, but we keep this check to be safe.)
+                if callee_name == VIRTUAL_FIELD_WRAPPER_FUNC:  # pragma: nocover
                     self._log_debug(stmt, f'Skip already wrapped field "{lvalue.name}"')
                     continue
 
