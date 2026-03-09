@@ -23,18 +23,13 @@ from mypy.types import (
     get_proper_type,
 )
 
-from .constants import (
-    ERROR_CODE_VALIDATACLASS,
-    ERROR_CODE_VALIDATACLASS_EMPTY_TYPE,
-    FIELD_DEFAULT_BASE_CLASS,
-    VALIDATACLASS_FIELD_FUNC,
-    VALIDATOR_BASE_CLASS,
-)
+from .constants import FIELD_DEFAULT_BASE_CLASS, VALIDATACLASS_FIELD_FUNCS, VALIDATOR_BASE_CLASS
+from .error_codes import ERROR_CODE_VALIDATACLASS, ERROR_CODE_VALIDATACLASS_EMPTY_TYPE
 from .debug_logger import DebugLogger
 from .parsed_field_cache import ParsedFieldCache, ParsedValidataclassField
 
 
-class VirtualFieldResolver:
+class FieldTypeResolver:
     """
     Handler for function hook to analyse the wrapped expression in virtual field wrapper calls, i.e. the right-hand side
     expressions of assignments in a validataclass.
@@ -112,7 +107,7 @@ class VirtualFieldResolver:
 
         # Get the combined type of the field (union of validated type and default type)
         resolved_type = self._resolve_field_type(parsed_field)
-        self._log_debug('  => Resolved and combined field type', resolved_type)
+        self._log_debug('Resolved type of field "{field_name}"', resolved_type)
 
         # Handle edge case where resolved type is the empty type (i.e. Never). The most likely cause for this (which is
         # not "user does weird stuff") is that the field uses a RejectValidator (or similar, anything where validate()
@@ -188,7 +183,7 @@ class VirtualFieldResolver:
         # (Fields created with dataclasses.field() are skipped by the ValidataclassTransformer.)
         if isinstance(field_rhs_expr, CallExpr) and isinstance(field_rhs_expr.callee, RefExpr):
             # Handle fields created explicitly using validataclass_field()
-            if field_rhs_expr.callee.fullname == VALIDATACLASS_FIELD_FUNC:
+            if field_rhs_expr.callee.fullname in VALIDATACLASS_FIELD_FUNCS:
                 return self._parse_validataclass_field_callexpr(field_rhs_expr)
 
         # This will hold the end result that's returned at the end of the function
@@ -196,7 +191,6 @@ class VirtualFieldResolver:
 
         # First, retrieve the parsed field of all base classes from our cache, starting with the "oldest" class
         for base_class in base_classes:
-            self._log_debug(f'Retrieve parsed field of base class"{base_class}" from cache')
             base_parsed_field = self._parsed_field_cache.get_field(base_class, field_name)
 
             # If there was an error when the field in the base class was parsed, set the error flag for later, then
@@ -215,7 +209,7 @@ class VirtualFieldResolver:
             self._fail('Field cannot be fully parsed because of a prior error in one of the base classes')
 
         # Now, parse the right-hand side expression of the assignment in the current class and merge the result
-        self._log_debug('Parse RHS of assignment', field_rhs_expr)
+        self._log_debug(f'Parse field "{field_name}" with RHS expression', field_rhs_expr)
         assignment_parsed_field = self._parse_rhs_expression(field_rhs_expr)
         fully_parsed_field.merge(assignment_parsed_field)
 
@@ -268,7 +262,7 @@ class VirtualFieldResolver:
                     return
 
                 # Store type of validator for later
-                self._log_debug(f'  - Validator: {item_type}')
+                self._log_debug(f'  - Validator type: {item_type}')
                 parsed_field.validator_type = item_type
                 return
 
@@ -281,7 +275,7 @@ class VirtualFieldResolver:
                     return
 
                 # Store type of default object for later
-                self._log_debug(f'  - Default object: {item_type}')
+                self._log_debug(f'  - Default type: {item_type}')
                 parsed_field.default_type = item_type
                 return
 
@@ -354,8 +348,8 @@ class VirtualFieldResolver:
                         break
 
                     # Ensure that argument is a BaseDefault instance (mypy will report an error otherwise)
-                    # NOTE: Using raw default values and dataclasses.MISSING here has been deprecated, so we don't need to
-                    # support them. mypy will report a deprecation warning, we can just treat it as an error and return Any.
+                    # NOTE: Using raw defaults and dataclasses.MISSING here has been deprecated, so we don't need to
+                    # support them. mypy will report a deprecation warning, we just treat it as an error and return Any.
                     if not isinstance(arg_type, Instance) or not arg_type.type.has_base(FIELD_DEFAULT_BASE_CLASS):
                         parsed_field.error = True
                         break

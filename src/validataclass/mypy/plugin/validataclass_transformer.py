@@ -31,12 +31,8 @@ from mypy.server.trigger import make_wildcard_trigger
 from mypy.types import AnyType, CallableType, TypeOfAny, UnboundType
 from typing_extensions import override
 
-from .constants import (
-    ERROR_CODE_VALIDATACLASS,
-    ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED,
-    VIRTUAL_FIELD_WRAPPER_FUNC,
-    VIRTUAL_FIELD_WRAPPER_FUNC_NAME,
-)
+from .constants import VIRTUAL_FIELD_WRAPPER_FUNC, VIRTUAL_FIELD_WRAPPER_FUNC_NAME
+from .error_codes import ERROR_CODE_VALIDATACLASS, ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED
 from .debug_logger import DebugLogger
 
 

@@ -38,7 +38,7 @@ class ParsedFieldCache:
     """
     Cache for ParsedValidataclassFields, i.e. the parsed validator and default types of a validataclass field.
 
-    This cache is globally shared for the entire plugin, meaning that all VirtualFieldResolver instances can access it.
+    This cache is globally shared for the entire plugin, meaning that all FieldTypeResolver instances can access it.
     It's used to store the result of the field resolver, so that later instances can access the parsed types of a field
     in a base class.
 

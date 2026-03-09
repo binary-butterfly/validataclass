@@ -16,9 +16,9 @@ from typing_extensions import override
 
 from .constants import VALIDATACLASS_DECORATORS, VIRTUAL_FIELD_WRAPPER_FUNC
 from .debug_logger import DebugLogger
+from .field_type_resolver import FieldTypeResolver
 from .parsed_field_cache import ParsedFieldCache
 from .validataclass_transformer import ValidataclassTransformer
-from .virtual_field_resolver import VirtualFieldResolver
 
 
 def _is_debug_mode() -> bool:
@@ -33,7 +33,7 @@ class ValidataclassPlugin(Plugin):
     # Logger class for easier debugging
     _logger: DebugLogger
 
-    # Internal cache for parsed validataclass fields, shared between all instances of VirtualFieldResolver
+    # Internal cache for parsed validataclass fields, shared between all instances of FieldTypeResolver
     _parsed_field_cache: ParsedFieldCache
 
     def __init__(self, options: Options):
@@ -170,7 +170,7 @@ class ValidataclassPlugin(Plugin):
 
         Analyze type of field definition and adjust function return type.
         """
-        resolver = VirtualFieldResolver(ctx, self._logger, self._parsed_field_cache)
+        resolver = FieldTypeResolver(ctx, self._logger, self._parsed_field_cache)
         return resolver.resolve()
 
 
