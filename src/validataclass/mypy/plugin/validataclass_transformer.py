@@ -130,7 +130,7 @@ class ValidataclassTransformer:
     # FuncDef for the virtual field wrapper function. Created on first use and cached here as a class variable.
     _virtual_field_wrapper_funcdef: FuncDef | None = None
 
-    def __init__(self, ctx: ClassDefContext, logger: DebugLogger):
+    def __init__(self, *, ctx: ClassDefContext, logger: DebugLogger):
         self._ctx = ctx
         self._class_def = ctx.cls
         self._decorator = ctx.reason

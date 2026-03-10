@@ -190,7 +190,10 @@ class ValidataclassPlugin(Plugin):
 
         Transform all `@validataclass`-decorated classes for later analysis.
         """
-        transformer = ValidataclassTransformer(ctx, self._logger)
+        transformer = ValidataclassTransformer(
+            ctx=ctx,
+            logger=self._logger,
+        )
         return transformer.transform()
 
     def _virtual_field_wrapper_callback(self, ctx: FunctionContext) -> Type:
@@ -199,7 +202,12 @@ class ValidataclassPlugin(Plugin):
 
         Analyze type of field definition and adjust function return type.
         """
-        resolver = FieldTypeResolver(ctx, self._logger, self._parsed_field_cache)
+        resolver = FieldTypeResolver(
+            ctx=ctx,
+            plugin_config=self._plugin_config,
+            logger=self._logger,
+            parsed_field_cache=self._parsed_field_cache,
+        )
         return resolver.resolve()
 
 

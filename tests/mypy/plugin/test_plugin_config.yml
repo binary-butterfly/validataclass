@@ -9,18 +9,21 @@
   main: |
     pass
 
-# Test plugin config with a custom validataclass-like decorator
-- case: custom_validataclass_decorator
+# Test plugin config with a custom validataclass-like decorator and custom validataclass field functions
+- case: custom_validataclass_decorator_and_field_functions
   mypy_config: |
     [tool.mypy.x_validataclass]
     custom_validataclass_decorators = [
         "main.custom_validataclass_decorator",
     ]
+    custom_field_functions = [
+        "main.custom_validataclass_field",
+    ]
   main: |
     from typing import Any, TypeVar
     from typing_extensions import dataclass_transform
-    from validataclass.dataclasses import Default, validataclass
-    from validataclass.validators import IntegerValidator
+    from validataclass.dataclasses import Default, validataclass, validataclass_field
+    from validataclass.validators import IntegerValidator, Validator
 
     T = TypeVar('T')
 
@@ -31,14 +34,19 @@
     def custom_other_decorator(cls: type[T]) -> type[T]:
         return cls
 
+    def custom_validataclass_field(validator: Validator[Any], **kwargs: Any) -> Any:
+        return validataclass_field(validator)
+
     @custom_validataclass_decorator
     class CustomValidataclass:
         # Valid fields
         field1: int = IntegerValidator()
         field2: int | None = IntegerValidator(), Default(None)
+        explicit_field: int = custom_validataclass_field(IntegerValidator())
 
         # Validataclass field with incorrect type
         invalid_type: str = IntegerValidator(), Default(None)  # E: Incompatible types in assignment (expression has type "int | None", variable has type "str")  [assignment]
+        invalid_explicit: str = custom_validataclass_field(IntegerValidator())  # E: Incompatible types in assignment (expression has type "int", variable has type "str")  [assignment]
 
         # Not a valid validataclass field
         invalid_field: int = 42  # E: Unexpected type "Literal[42]?" in field definition (expected Validator or BaseDefault)  [validataclass]
@@ -86,4 +94,38 @@
         field2: int | None = IntegerValidator(), Default(None)
         invalid_type: str = IntegerValidator(), Default(None)  # E: Incompatible types in assignment (expression has type "int | None", variable has type "str")  [assignment]
 
-# TODO: Tests for "extra objects" like SearchParams
+# Test plugin config with custom user-defined types that should be ignored in field definitions
+- case: validataclass_with_custom_types_in_fields
+  mypy_config: |
+    [tool.mypy.x_validataclass]
+    custom_validataclass_decorators = [
+        "main.custom_validataclass_decorator",
+    ]
+    ignore_custom_types_in_fields = [
+        "main.BaseCustomType",
+    ]
+  main: |
+    from typing import Any, TypeVar
+    from typing_extensions import dataclass_transform
+    from validataclass.dataclasses import Default, validataclass
+    from validataclass.validators import IntegerValidator
+
+    T = TypeVar('T')
+
+    @dataclass_transform(kw_only_default=True)
+    def custom_validataclass_decorator(cls: type[T]) -> type[T]:
+        return validataclass(cls)
+
+    class BaseCustomType:
+        value: str
+        def __init__(self, value: str):
+            self.value = value
+
+    class ExampleCustomType(BaseCustomType):
+        pass
+
+    @custom_validataclass_decorator
+    class CustomValidataclass:
+        field1: int = IntegerValidator()
+        field2: int = IntegerValidator(), BaseCustomType('banana')
+        field3: int | None = ExampleCustomType('banana'), IntegerValidator(), Default(None)

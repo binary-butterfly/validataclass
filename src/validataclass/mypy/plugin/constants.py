@@ -12,8 +12,9 @@ VALIDATACLASS_DECORATORS: Final = {
     'validataclass.dataclasses.validataclass.validataclass',
 }
 
-# Functions that create validataclass fields (must have similar signature as validataclass_field)
-VALIDATACLASS_FIELD_FUNCS = {
+# Built-in functions that create validataclass fields.
+# Use `PluginConfig.custom_field_functions` to get user-defined field functions from the plugin config.
+VALIDATACLASS_FIELD_FUNCS: Final = {
     'validataclass.dataclasses.validataclass_field.validataclass_field',
 }
 

@@ -29,14 +29,25 @@ class PluginConfig:
     # Custom decorators that turn a class into a validataclass (see also .constants.VALIDATACLASS_DECORATORS)
     custom_validataclass_decorators: set[str]
 
+    # Custom functions that create validataclass fields, must have a signature compatible to validataclass_field()
+    custom_field_functions: set[str]
+
+    # Custom types of objects that are allowed (read: ignored) in a field definition. This can be used in combination
+    # with the custom decorators to allow additional options in a field.
+    ignore_custom_types_in_fields: set[str]
+
     def __init__(
         self,
         *,
         debug_mode: bool = False,
-        custom_validataclass_decorators: list[str] | set[str] | None = None,
+        custom_validataclass_decorators: set[str] | list[str] | None = None,
+        custom_field_functions: set[str] | list[str] | None = None,
+        ignore_custom_types_in_fields: set[str] | list[str] | None = None,
     ):
         self.debug_mode = debug_mode
         self.custom_validataclass_decorators = set(custom_validataclass_decorators or [])
+        self.custom_field_functions = set(custom_field_functions or [])
+        self.ignore_custom_types_in_fields = set(ignore_custom_types_in_fields or [])
 
 
 class PluginConfigParseError(Exception):
@@ -105,6 +116,8 @@ class PluginConfigParser:
         return PluginConfig(
             debug_mode=self._parse_as_bool(raw_config, 'debug_mode', False),
             custom_validataclass_decorators=self._parse_as_str_list(raw_config, 'custom_validataclass_decorators'),
+            custom_field_functions=self._parse_as_str_list(raw_config, 'custom_field_functions'),
+            ignore_custom_types_in_fields=self._parse_as_str_list(raw_config, 'ignore_custom_types_in_fields'),
         )
 
     @staticmethod
