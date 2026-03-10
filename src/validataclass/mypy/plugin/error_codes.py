@@ -15,6 +15,13 @@ ERROR_CODE_VALIDATACLASS: Final = ErrorCode(
     'Plugin',
 )
 
+ERROR_CODE_VALIDATACLASS_DECORATOR: Final = ErrorCode(
+    'validataclass-decorator',
+    'Check that validataclass is decorated correctly',
+    'Plugin',
+    sub_code_of=ERROR_CODE_VALIDATACLASS,
+)
+
 ERROR_CODE_VALIDATACLASS_EMPTY_TYPE: Final = ErrorCode(
     'validataclass-empty-type',
     'Check that validataclass field has a validator or default that can return a value',

@@ -27,12 +27,17 @@ from mypy.nodes import (
 )
 from mypy.plugin import ClassDefContext, SemanticAnalyzerPluginInterface
 from mypy.plugins.dataclasses import dataclass_class_maker_callback, DATACLASS_FIELD_SPECIFIERS
+from mypy.semanal_shared import find_dataclass_transform_spec
 from mypy.server.trigger import make_wildcard_trigger
 from mypy.types import AnyType, CallableType, TypeOfAny, UnboundType
 from typing_extensions import override
 
 from .constants import VIRTUAL_FIELD_WRAPPER_FUNC, VIRTUAL_FIELD_WRAPPER_FUNC_NAME
-from .error_codes import ERROR_CODE_VALIDATACLASS, ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED
+from .error_codes import (
+    ERROR_CODE_VALIDATACLASS,
+    ERROR_CODE_VALIDATACLASS_DECORATOR,
+    ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED,
+)
 from .debug_logger import DebugLogger
 
 
@@ -188,6 +193,11 @@ class ValidataclassTransformer:
 
         Called for every class that is decorated with `@validataclass` (or an equivalent decorator).
         """
+        # For custom validataclass decorators (see config), we need to ensure that they are properly defined with the
+        # `@typing.dataclass_transform()` decorator, otherwise the dataclass plugin will raise an exception later.
+        if not self._ensure_valid_decorator():
+            return True
+
         # Plugin hooks may be called several times, so we need to check if we have already processed this class.
         # TODO: I'm not sure how to test this. There is a comment in the mypy.plugin module that recommends using a
         #   forward reference to a class which should force the module to be processed multiple times, but this doesn't
@@ -225,6 +235,35 @@ class ValidataclassTransformer:
         #   a right-hand side. We either need to hook into the dataclass plugin, or modify the generated __init__
         #   function, or generate the __init__ function all by ourselves.
         return dataclass_class_maker_callback(self._ctx)
+
+    def _ensure_valid_decorator(self) -> bool:
+        """
+        Ensure that the decorator used on the class is a valid validataclass decorator.
+        This means the decorator must be decorated itself with `@typing.dataclass_transform(kw_only_default=True)`.
+
+        Return False if the decorator is not decorated with `dataclass_transform`, which means the class will not be
+        further processed. Return True if processing can be continued (even if errors are reported).
+        """
+        # Get the dataclass transform spec (see `@dataclass_transform()`) for the decorator used on the class
+        spec = find_dataclass_transform_spec(self._ctx.reason)
+
+        # Ensure that the decorator was itself decorated with `@dataclass_transform`
+        if spec is None:
+            self._fail(
+                'Custom validataclass decorator was not decorated with typing.dataclass_transform',
+                self._ctx.reason, code=ERROR_CODE_VALIDATACLASS_DECORATOR,
+            )
+            # Cannot continue processing the class
+            return False
+
+        # Ensure that `@dataclass_transform` was used with `kw_only_default=True` (not a critical error, continue)
+        if spec.kw_only_default is not True:
+            self._fail(
+                'Custom validataclass decorator should be defined with kw_only_default=True',
+                self._ctx.reason, code=ERROR_CODE_VALIDATACLASS_DECORATOR,
+            )
+
+        return True
 
     def _get_assignment_statements_from_block(self, block: Block) -> Iterator[AssignmentStmt]:
         """

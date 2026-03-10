@@ -1,0 +1,25 @@
+# This mypy config is used exclusively by the pytest-mypy-plugins plugin.
+[tool.mypy]
+strict = true
+
+# Enable further checks that are not included in strict mode
+disallow_any_unimported = true
+strict_equality_for_none = true
+warn_unreachable = true
+enable_error_code = [
+    "deprecated",
+    "explicit-override",
+    "ignore-without-code",
+    "mutable-override",
+    "possibly-undefined",
+    "redundant-expr",
+    "redundant-self",
+    "truthy-bool",
+    "truthy-iterable",
+    "unused-awaitable",
+]
+
+# Enable validataclass mypy plugin
+plugins = [
+    "validataclass.mypy.plugin",
+]

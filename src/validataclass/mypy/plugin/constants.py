@@ -6,9 +6,9 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Final
 
-# Decorators that turn a class to a validataclass
-# (Not Final so it can be modified by other plugins that add their own validataclass-style decorators.)
-VALIDATACLASS_DECORATORS = {
+# Built-in decorators that turn a class into a validataclass.
+# Use `PluginConfig.custom_validataclass_decorators` to get user-defined decorators from the plugin config.
+VALIDATACLASS_DECORATORS: Final = {
     'validataclass.dataclasses.validataclass.validataclass',
 }
 

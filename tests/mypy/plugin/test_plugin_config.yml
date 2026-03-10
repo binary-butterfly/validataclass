@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Test parsing a complete plugin config without errors
+- case: complete_plugin_config
+  mypy_config: |
+    [tool.mypy.x_validataclass]
+    debug_mode = true
+    custom_validataclass_decorators = []
+  main: |
+    pass
+
+# Test plugin config with a custom validataclass-like decorator
+- case: custom_validataclass_decorator
+  mypy_config: |
+    [tool.mypy.x_validataclass]
+    custom_validataclass_decorators = [
+        "main.custom_validataclass_decorator",
+    ]
+  main: |
+    from typing import Any, TypeVar
+    from typing_extensions import dataclass_transform
+    from validataclass.dataclasses import Default, validataclass
+    from validataclass.validators import IntegerValidator
+
+    T = TypeVar('T')
+
+    @dataclass_transform(kw_only_default=True)
+    def custom_validataclass_decorator(cls: type[T]) -> type[T]:
+        return validataclass(cls)
+
+    def custom_other_decorator(cls: type[T]) -> type[T]:
+        return cls
+
+    @custom_validataclass_decorator
+    class CustomValidataclass:
+        # Valid fields
+        field1: int = IntegerValidator()
+        field2: int | None = IntegerValidator(), Default(None)
+
+        # Validataclass field with incorrect type
+        invalid_type: str = IntegerValidator(), Default(None)  # E: Incompatible types in assignment (expression has type "int | None", variable has type "str")  [assignment]
+
+        # Not a valid validataclass field
+        invalid_field: int = 42  # E: Unexpected type "Literal[42]?" in field definition (expected Validator or BaseDefault)  [validataclass]
+
+    @custom_other_decorator
+    class DecoratedRegularClass:
+        # Regular class attribute (valid, this is not a validataclass!)
+        regular_attr: int = 42
+
+        # Validataclass field in a class that's not a validataclass
+        invalid_field: int = IntegerValidator()  # E: Incompatible types in assignment (expression has type "IntegerValidator", variable has type "int")  [assignment]
+
+# Test plugin config with incorrectly defined custom validataclass-like decorators
+- case: invalid_custom_validataclass_decorators
+  mypy_config: |
+    [tool.mypy.x_validataclass]
+    custom_validataclass_decorators = [
+        "main.custom_validataclass_decorator1",
+        "main.custom_validataclass_decorator2",
+    ]
+  main: |
+    from typing import Any, TypeVar
+    from typing_extensions import dataclass_transform
+    from validataclass.dataclasses import Default, validataclass
+    from validataclass.validators import IntegerValidator
+
+    T = TypeVar('T')
+
+    # No @dataclass_transform!
+    def custom_validataclass_decorator1(cls: type[T]) -> type[T]:
+        return validataclass(cls)
+
+    # Missing kw_only_default=True
+    @dataclass_transform()
+    def custom_validataclass_decorator2(cls: type[T]) -> type[T]:
+        return validataclass(cls)
+
+    @custom_validataclass_decorator1  # E: Custom validataclass decorator was not decorated with typing.dataclass_transform  [validataclass-decorator]
+    class CustomValidataclass1:
+        field1: int = IntegerValidator()  # E: Incompatible types in assignment (expression has type "IntegerValidator", variable has type "int")  [assignment]
+
+    @custom_validataclass_decorator2  # E: Custom validataclass decorator should be defined with kw_only_default=True  [validataclass-decorator]
+    class CustomValidataclass2:
+        field1: int = IntegerValidator()
+        field2: int | None = IntegerValidator(), Default(None)
+        invalid_type: str = IntegerValidator(), Default(None)  # E: Incompatible types in assignment (expression has type "int | None", variable has type "str")  [assignment]
+
+# TODO: Tests for "extra objects" like SearchParams
