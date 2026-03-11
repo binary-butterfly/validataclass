@@ -9,6 +9,66 @@
   main: |
     pass
 
+# Test plugin config with allow_incompatible_field_overrides=false (i.e. strict rules for field type overrides)
+- case: disallow_incompatible_field_overrides
+  mypy_config: |
+    [tool.mypy.x_validataclass]
+    allow_incompatible_field_overrides = false
+  main: |
+    from validataclass.dataclasses import validataclass, Default, DefaultUnset
+    from validataclass.helpers import UnsetValueType
+    from validataclass.validators import IntegerValidator, RejectValidator, StringValidator
+
+    @validataclass
+    class Base:
+        field1: int = IntegerValidator()
+        field2: int = IntegerValidator(), Default(0)
+        field3: str | None = StringValidator(), Default(None)
+        field4: int | UnsetValueType = IntegerValidator()
+
+    @validataclass
+    class GoodSub(Base):
+        # Unchanged field type, default with same type
+        field1: int = Default(0)
+
+        # Unchanged field type, compatible validator (default is still 0): `Never | int` is the same as `int`
+        field2: int = RejectValidator()
+
+        # Unchanged field type, compatible default: `str` is contained in `str | None`
+        field3: str | None = Default('')
+
+        # Unchanged field type, compatible validator and default: `UnsetValueType` is contained in `int | UnsetValueType`
+        field4: int | UnsetValueType = RejectValidator(), DefaultUnset
+
+    # NOTE: The following sub class is "good" in terms of the assignment check, but violate the mutable-override check.
+    # Those are optional rules in mypy (not even included in strict mode), so we're checking them separately.
+    # Unless you enable that rule, the following class is "good".
+
+    @validataclass
+    class MostlyGoodSub(Base):
+        # Type change: `str` is contained in `str | None`
+        field3: str = Default('')                                 # E: Covariant override of a mutable attribute (base class "Base" defined the type as "str | None", expression has type "str")  [mutable-override]
+
+        # Type change: `UnsetValueType` is contained in `int | UnsetValueType`
+        field4: UnsetValueType = RejectValidator(), DefaultUnset  # E: Covariant override of a mutable attribute (base class "Base" defined the type as "int | UnsetValueType", expression has type "UnsetValueType")  [mutable-override]
+
+    @validataclass
+    class BadSub(Base):
+        # Incompatible type change: Base class does not allow `None`
+        field1: int | None = Default(None)                        # E: Incompatible types in assignment (expression has type "int | None", base class "Base" defined the type as "int")  [assignment]
+
+        # Incompatible type change: Base class is `int`, does not allow `UnsetValueType`
+        field2: UnsetValueType = RejectValidator(), DefaultUnset  # E: Incompatible types in assignment (expression has type "UnsetValueType", base class "Base" defined the type as "int")  [assignment]
+
+        # Incompatible type change: Base class is `str | None`, does not allow `int`
+        field3: int | None = IntegerValidator()                   # E: Incompatible types in assignment (expression has type "int | None", base class "Base" defined the type as "str | None")  [assignment]
+
+        # Compatible type change, but incompatible validator: Field still has `IntegerValidator` but does not allow `int`
+        field4: UnsetValueType = DefaultUnset                     # (line 50, multiple errors see below)
+  out: |
+    main:50: error: Incompatible types in assignment (expression has type "int | UnsetValueType", variable has type "UnsetValueType")  [assignment]
+    main:50: error: Covariant override of a mutable attribute (base class "Base" defined the type as "int | UnsetValueType", expression has type "UnsetValueType")  [mutable-override]
+
 # Test plugin config with a custom validataclass-like decorator and custom validataclass field functions
 - case: custom_validataclass_decorator_and_field_functions
   mypy_config: |

@@ -22,9 +22,15 @@ class PluginConfig:
     Plugin configuration for the validataclass mypy plugin.
     """
 
-    # Whether debug mode is enabled, which results in a lot of debug log messages.
+    # Whether debug mode is enabled, which results in a lot of debug log messages. (default: false)
     # Can also be set via environment variable VALIDATACLASS_MYPY_DEBUG.
     debug_mode: bool
+
+    # Whether to allow incompatible overrides for fields in validataclass sub classes. For example, the base class could
+    # have a field typed as `int`, but the subclass adds a `Default(None)` and therefore changes the field type to
+    # `int | None`. This is technically an incompatible override. However, it's also commonly done in validataclasses,
+    # so this option exists for compatibility to allow these overrides. (default: true, might be changed in the future)
+    allow_incompatible_field_overrides: bool
 
     # Custom decorators that turn a class into a validataclass (see also .constants.VALIDATACLASS_DECORATORS)
     custom_validataclass_decorators: set[str]
@@ -40,11 +46,13 @@ class PluginConfig:
         self,
         *,
         debug_mode: bool = False,
+        allow_incompatible_field_overrides: bool = True,
         custom_validataclass_decorators: set[str] | list[str] | None = None,
         custom_field_functions: set[str] | list[str] | None = None,
         ignore_custom_types_in_fields: set[str] | list[str] | None = None,
     ):
         self.debug_mode = debug_mode
+        self.allow_incompatible_field_overrides = allow_incompatible_field_overrides
         self.custom_validataclass_decorators = set(custom_validataclass_decorators or [])
         self.custom_field_functions = set(custom_field_functions or [])
         self.ignore_custom_types_in_fields = set(ignore_custom_types_in_fields or [])
@@ -115,6 +123,9 @@ class PluginConfigParser:
         """
         return PluginConfig(
             debug_mode=self._parse_as_bool(raw_config, 'debug_mode', False),
+            allow_incompatible_field_overrides=self._parse_as_bool(
+                raw_config, 'allow_incompatible_field_overrides', True
+            ),
             custom_validataclass_decorators=self._parse_as_str_list(raw_config, 'custom_validataclass_decorators'),
             custom_field_functions=self._parse_as_str_list(raw_config, 'custom_field_functions'),
             ignore_custom_types_in_fields=self._parse_as_str_list(raw_config, 'ignore_custom_types_in_fields'),

@@ -192,6 +192,7 @@ class ValidataclassPlugin(Plugin):
         """
         transformer = ValidataclassTransformer(
             ctx=ctx,
+            plugin_config=self._plugin_config,
             logger=self._logger,
         )
         return transformer.transform()

@@ -39,6 +39,7 @@ from .error_codes import (
     ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED,
 )
 from .debug_logger import DebugLogger
+from .plugin_config import PluginConfig
 
 
 class ValidataclassField:
@@ -124,17 +125,21 @@ class ValidataclassTransformer:
     # Interface to mypy's semantic analyzer
     _api: SemanticAnalyzerPluginInterface
 
+    # Plugin configuration
+    _plugin_config: PluginConfig
+
     # Logger for plugin development and debugging
     _logger: DebugLogger
 
     # FuncDef for the virtual field wrapper function. Created on first use and cached here as a class variable.
     _virtual_field_wrapper_funcdef: FuncDef | None = None
 
-    def __init__(self, *, ctx: ClassDefContext, logger: DebugLogger):
+    def __init__(self, *, ctx: ClassDefContext, plugin_config: PluginConfig, logger: DebugLogger):
         self._ctx = ctx
         self._class_def = ctx.cls
         self._decorator = ctx.reason
         self._api = ctx.api
+        self._plugin_config = plugin_config
         self._logger = logger
 
     def _get_logger_context(self, context: Context | None) -> str:
@@ -390,11 +395,14 @@ class ValidataclassTransformer:
         """
         assert field.assignment_stmt is not None
 
-        # Allow incompatible overrides of fields in validataclasses
-        # TODO: This is necessary because historically we've allowed to override the type of a field in an incompatible
-        #   way in a subclass. This actually isn't very type-safe, though. We probably should discourage this and
-        #   provide an option to allow incompatible overrides for compatibility. (Maybe a strict mode for this plugin?)
-        field.lvalue_var.allow_incompatible_override = True
+        # Allow incompatible overrides of fields in validataclasses (unless disabled via plugin config).
+        # This is necessary because historically we've allowed to override the type of a field in an incompatible way
+        # in a subclass. This actually isn't very type-safe, though. We may change the default behaviour in the future,
+        # but we should also provide a way to achieve the same thing (easily reusing and extending validataclasses)
+        # without misusing class inheritance (e.g. by allowing to "decouple" subclasses from their base class by
+        # modifying the class MROs).
+        if self._plugin_config.allow_incompatible_field_overrides:
+            field.lvalue_var.allow_incompatible_override = True
 
         # Wrap the right-hand side of the assignment in a call to the virtual field wrapper function, changing the
         # assignment statement in the class body in-place.
