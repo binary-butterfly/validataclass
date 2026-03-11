@@ -32,3 +32,7 @@ This is the index of the documentation.
 
 6. [Building new validators](06-build-your-own.md)
     - (To be written...)
+
+7. [Type checking with mypy](07-mypy-plugin.md)
+    - How to use the validataclass mypy plugin
+    - Common mistakes and how to fix them
