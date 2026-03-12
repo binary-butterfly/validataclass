@@ -112,6 +112,88 @@ All error codes are sub codes of `validataclass`, so disabling `validataclass` w
   cause an edge case that we thought can never happen.
 
 
+## Common mistakes / migration guide
+
+### Incompatible return type in custom validators
+
+validataclass is designed with extensibility in mind: You can easily write your own validators or extend existing ones
+to build on their existing functionality.
+
+A common use case for this are validators that accept input of a basic type (like strings) and convert them to objects.
+Examples of built-in validators are the `DecimalValidator` or `DateValidator`: They use the `StringValidator` for the
+first step to validate input as a valid string, then they try to create a `Decimal` or `date` object from that string.
+
+Before validataclass 0.12, the common way to do that was to inherit from a base validator (e.g. the `StringValidator`)
+and extend its `validate()` method. See the following example:
+
+```python
+from datetime import date
+from typing import Any, override
+from validataclass.exceptions import ValidationError
+from validataclass.validators import StringValidator
+
+class DateValidator(StringValidator):
+    def __init__(self) -> None:
+        # Initialize base validator with some parameters
+        super().__init__(min_length=1, max_length=10)
+
+    @override
+    def validate(self, input_data: Any, **kwargs: Any) -> date:
+        # Use base validator to validate input as a string
+        date_string = super().validate(input_data, **kwargs)
+
+        try:
+            # Convert string to a date object
+            return date.fromisoformat(date_string)
+        except ValueError:
+            raise ValidationError(code='invalid_date')
+```
+
+This works as intended at runtime, but type checkers will complain about the return type of the `validate()` method:
+
+```
+error: Return type "date" of "validate" incompatible with return type "str" in supertype
+  "validataclass.validators.string_validator.StringValidator"  [override]
+```
+
+The reason for this is called the Liskov substitution principle (LSP): Basically, if you override a method in a
+subclass, the return type of the method must be the same or a subtype of the return type in the base class. The
+`StringValidator` returns a `str`, but `date` is not a subtype of `str`.
+
+Luckily, the solution to this problem is really simple in the case of our validators: Composition over inheritance.
+Instead of subclassing the `StringValidator`, you can create an instance of `StringValidator` within your custom
+validator (that is solely based on the abstract base class `Validator`) and use it as a helper in your validate method:
+
+```python
+from datetime import date
+from typing import Any, override
+from validataclass.exceptions import ValidationError
+from validataclass.validators import StringValidator, Validator
+
+class DateValidator(Validator[date]):  # Note the type parameter here
+    # Base validator for validating strings
+    string_validator: StringValidator
+
+    def __init__(self) -> None:
+        # Initialize string validator with some parameters
+        self.string_validator = StringValidator(min_length=1, max_length=10)
+
+    @override
+    def validate(self, input_data: Any, **kwargs: Any) -> date:
+        # Use string validator to validate input as a string
+        date_string = self.string_validator.validate(input_data, **kwargs)
+
+        try:
+            # Convert string to a date object
+            return date.fromisoformat(date_string)
+        except ValueError:
+            raise ValidationError(code='invalid_date')
+```
+
+Now from a typing perspective, the `DateValidator` is simply a `Validator[date]`, i.e. a validator that returns a `date`
+object. It just outsources the first part of the validation to a different validator to reuse its functionality.
+
+
 ## How the mypy plugin works
 
 The mypy plugin works in mysterious ways.
