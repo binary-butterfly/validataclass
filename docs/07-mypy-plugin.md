@@ -57,6 +57,10 @@ plugins = ["validataclass.mypy.plugin"]
 There are some advanced settings for configuring the plugin itself. The plugin configuration currently only supports
 `pyproject.toml` and should be defined in the section `[tool.validataclass_mypy]`.
 
+The configuration is expected to be in the same `pyproject.toml` file that is used to configure mypy. The plugin does
+not have any discovery mechanisms for config files, it simply looks up which config file was read by mypy during
+initialization, and if it's a `.toml` file, it reads the same file to get its configuration.
+
 #### Strictness / optional rules
 
 - `allow_incompatible_field_overrides` (bool, default `true`): Allow incompatible overrides of fields in validataclass
