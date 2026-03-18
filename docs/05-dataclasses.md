@@ -299,7 +299,7 @@ being applied to the class.
 
 ## Reject unknown fields
 
-Per default, validataclass just ignores any unknown fields in the input dictionary when validating an object.
+By default, validataclass just ignores any unknown fields in the input dictionary when validating an object.
 This makes sense for normal APIs, as additional fields are just filtered out, and it makes validataclass more robust to
 changes in the API. There might be situations where one needs to have a strict validation of additional fields,
 for example, to match an OpenAPI validation.

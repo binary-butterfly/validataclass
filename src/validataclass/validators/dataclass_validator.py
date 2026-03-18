@@ -143,7 +143,7 @@ class DataclassValidator(Validator[T_Dataclass]):
 
         # Use the explicit parameter if given, otherwise fall back to the dataclass setting
         if reject_unknown_fields is None:
-            reject_unknown_fields = getattr(dataclass_cls, '__reject_unknown_fields__', None)
+            reject_unknown_fields = getattr(dataclass_cls, '__reject_unknown_fields__', False)
         self.field_defaults = {}
 
         # Collect field validators and required fields for the DictValidator by examining the dataclass fields

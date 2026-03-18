@@ -86,11 +86,27 @@ def validataclass(
 
     Optional parameters to the decorator will be passed directly to the `@dataclass` decorator. In most cases no
     parameters are necessary. By default, the argument `kw_only=True` will be used for validataclasses.
+
+    Additionally, the following validataclass-specific parameter is supported:
+
+    `reject_unknown_fields`: If set to `True`, the `DataclassValidator` will reject any input fields that are not
+    defined in the validataclass, raising a validation error for each unknown field.
+
+    Example with `reject_unknown_fields`:
+
+    ```
+    @validataclass(reject_unknown_fields=True)
+    class StrictDataclass:
+        example_field1: str = StringValidator()
+    ```
+
+    In this example, validating `{'example_field1': 'cookie', 'unknown': 'value'}` would raise a
+    `DictFieldsValidationError` with an error for the `unknown` field.
     """
 
     def decorator(_cls: type[_T]) -> type[_T]:
         # Pop validataclass-specific options before passing kwargs to @dataclass
-        reject_unknown_fields = kwargs.pop('reject_unknown_fields', False)
+        reject_unknown_fields = kwargs.pop('reject_unknown_fields', None)
 
         # Set kw_only=True as the default to allow required and optional fields in any order
         kwargs.setdefault('kw_only', True)
