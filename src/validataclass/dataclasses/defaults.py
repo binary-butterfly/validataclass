@@ -20,6 +20,7 @@ __all__ = [
     'DefaultFactory',
     'DefaultUnset',
     'NoDefault',
+    '_NoDefaultType',
 ]
 
 # Helper objects for setting default values for validator fields
@@ -189,7 +190,7 @@ DefaultUnset: Default[UnsetValueType] = Default(UnsetValue)
 
 
 # Temporary class to create the NoDefault sentinel, class will be deleted afterwards
-class _NoDefault(BaseDefault[Never]):
+class _NoDefaultType(BaseDefault[Never]):
     """
     Class for creating the sentinel object `NoDefault` which specifies that a field has no default value, i.e. the field
     is required.
@@ -227,6 +228,5 @@ class _NoDefault(BaseDefault[Never]):
 
 
 # Create sentinel object NoDefault, redefine __new__ to always return the same instance, and delete temporary class
-NoDefault = _NoDefault()
-_NoDefault.__new__ = lambda cls: NoDefault  # type: ignore[assignment, method-assign, return-value]
-del _NoDefault
+NoDefault = _NoDefaultType()
+_NoDefaultType.__new__ = lambda cls: NoDefault  # type: ignore[assignment, method-assign, return-value]

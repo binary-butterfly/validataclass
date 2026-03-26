@@ -625,7 +625,7 @@ class DictValidatorTest:
         """ Create a subclassed DictValidator that sets default_validator and test it with valid data. """
 
         class UnitTestDefaultDictValidator(DictValidator[Decimal]):
-            default_validator = DecimalValidator()
+            default_validator = DecimalValidator()  # type: ignore[mutable-override]
 
         validator = UnitTestDefaultDictValidator()
 
@@ -646,7 +646,7 @@ class DictValidatorTest:
         """ Create a subclassed DictValidator that sets default_validator and test it with invalid data. """
 
         class UnitTestDefaultDictValidator(DictValidator[Decimal]):
-            default_validator = DecimalValidator()
+            default_validator = DecimalValidator()  # type: ignore[mutable-override]
 
         validator = UnitTestDefaultDictValidator()
 

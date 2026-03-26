@@ -342,8 +342,10 @@ default values for fields.
 
 ### Setting defaults with `validataclass_field()`
 
-To set a default value with `validataclass_field()`, you simply specify the `default` parameter. This parameter can be
-set either to a special validataclass "default object" (which we will explain in a moment) or directly to a value.
+To set a default value with `validataclass_field()`, you need to set the `default` parameter to a "default object".
+These are special validataclass objects that will be explained in more detail in a moment.
+
+Using raw default values instead of default objects has been deprecated in version 0.12.0.
 
 **Example:**
 
@@ -355,9 +357,11 @@ from validataclass.validators import IntegerValidator
 
 @dataclass
 class ExampleDataclass:
-    # The following fields are equivalent
-    field_a: int = validataclass_field(IntegerValidator(), default=42)           # Specify default as direct value
-    field_b: int = validataclass_field(IntegerValidator(), default=Default(42))  # Specify default using a Default object
+    # Field with integer default
+    field1: int = validataclass_field(IntegerValidator(), default=Default(42))
+    
+    # Field that defaults to None
+    field2: int | None = validataclass_field(IntegerValidator(), default=Default(None))
 ```
 
 

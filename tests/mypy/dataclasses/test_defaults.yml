@@ -76,6 +76,6 @@
     var1: BaseDefault[Never] = NoDefault  # correct
     var2: BaseDefault[str] = NoDefault    # error (9)
   out: |
-    main:3: note: Revealed type is "validataclass.dataclasses.defaults._NoDefault"
+    main:3: note: Revealed type is "validataclass.dataclasses.defaults._NoDefaultType"
     main:5: note: Revealed type is "Never"
-    main:9: error: Incompatible types in assignment (expression has type "_NoDefault", variable has type "BaseDefault[str]")  [assignment]
+    main:9: error: Incompatible types in assignment (expression has type "_NoDefaultType", variable has type "BaseDefault[str]")  [assignment]

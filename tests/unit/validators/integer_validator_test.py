@@ -4,6 +4,8 @@ Copyright (c) 2021, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
+from typing import Any
+
 import pytest
 
 from tests.test_utils import UNSET_PARAMETER
@@ -265,7 +267,7 @@ class IntegerValidatorTest:
         validator = IntegerValidator(**validator_args)
 
         # Construct error dict with min_value and/or max_value, depending on which is specified
-        expected_error_dict = {'code': 'number_range_error'}
+        expected_error_dict: dict[str, Any] = {'code': 'number_range_error'}
         if min_value is not None:
             expected_error_dict['min_value'] = min_value if min_value is not UNSET_PARAMETER else -2147483648
         if max_value is not None:

@@ -2,13 +2,16 @@
 
 name: Unit tests
 
+# TODO: Remove dev-mypy after merging it into main.
 on:
   push:
     branches:
       - main
+      - dev-mypy
   pull_request:
     branches:
       - main
+      - dev-mypy
 
 jobs:
   test:

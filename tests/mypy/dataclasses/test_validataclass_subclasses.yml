@@ -1,0 +1,555 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Create a trivial subclassed validataclass without any fields
+- case: empty_validataclass_subclasses
+  main: |
+    from validataclass.dataclasses import validataclass
+
+    @validataclass
+    class EmptyBase:
+        pass
+
+    @validataclass
+    class EmptySubClass(EmptyBase):
+        pass
+
+    base = EmptyBase()
+    sub = EmptySubClass()
+    reveal_type(base)  # N: Revealed type is "main.EmptyBase"
+    reveal_type(sub)   # N: Revealed type is "main.EmptySubClass"
+
+    # Test polymorphy
+    base_var: EmptyBase = sub      # ok
+    sub_var: EmptySubClass = base  # E: Incompatible types in assignment (expression has type "EmptyBase", variable has type "EmptySubClass")  [assignment]
+
+# Create different subclasses of a validataclass, modifying the fields in various ways
+# TODO: Missing init parameters aren't reported as errors yet.
+- case: validataclass_with_subclasses
+  main: |
+    from validataclass.dataclasses import validataclass, Default, DefaultUnset, NoDefault
+    from validataclass.helpers import UnsetValue, UnsetValueType
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    # -- BASE CLASS --
+
+    @validataclass
+    class BaseClass:
+        required1: int = IntegerValidator()
+        required2: int = IntegerValidator()
+        optional1: int = IntegerValidator(), Default(0)
+        optional2: str | None = StringValidator(), Default(None)
+
+    # -- SUB CLASS A --
+
+    @validataclass
+    class SubClassA(BaseClass):
+        # Don't change existing fields, but add a new one
+        new_field: str = StringValidator()
+
+    # Valid initializations
+    valid_a1 = SubClassA(
+        required1=1,
+        required2=2,
+        new_field='example',
+    )
+    valid_a2 = SubClassA(
+        required1=1,
+        required2=2,
+        new_field='example',
+        optional1=42,
+        optional2=None,
+    )
+    reveal_type(valid_a1)            # N: Revealed type is "main.SubClassA"
+    reveal_type(valid_a2)            # N: Revealed type is "main.SubClassA"
+    reveal_type(valid_a1.required1)  # N: Revealed type is "builtins.int"
+    reveal_type(valid_a1.new_field)  # N: Revealed type is "builtins.str"
+
+    # Invalid initializations
+    invalid_a1 = SubClassA()  # TODO: This should be an error!
+    invalid_a2 = SubClassA(
+        required1='foo',  # E: Argument "required1" to "SubClassA" has incompatible type "str"; expected "int"  [arg-type]
+        required2=None,   # E: Argument "required2" to "SubClassA" has incompatible type "None"; expected "int"  [arg-type]
+        new_field=123,    # E: Argument "new_field" to "SubClassA" has incompatible type "int"; expected "str"  [arg-type]
+        optional1='foo',  # E: Argument "optional1" to "SubClassA" has incompatible type "str"; expected "int"  [arg-type]
+        optional2=42,     # E: Argument "optional2" to "SubClassA" has incompatible type "int"; expected "str | None"  [arg-type]
+    )
+
+    # -- SUB CLASS B --
+
+    @validataclass
+    class SubClassB(BaseClass):
+        # Make required field optional, keep the type
+        required1: int = Default(0)
+
+        # Make required field optional, expanding the type: int -> int | UnsetValueType
+        required2: int | UnsetValueType = DefaultUnset
+
+        # Change default of optional field, expanding the type: int -> int | None
+        optional1: int | None = Default(None)
+
+        # Make optional field required, narrowing the type: str | None -> str
+        optional2: str = NoDefault
+
+    # Valid initializations
+    valid_b1 = SubClassB(
+        optional1=42,
+        optional2='foo',
+    )
+    valid_b2 = SubClassB(
+        required1=1,
+        required2=UnsetValue,
+        optional1=None,
+        optional2='foo',
+    )
+    reveal_type(valid_b1)            # N: Revealed type is "main.SubClassB"
+    reveal_type(valid_b2)            # N: Revealed type is "main.SubClassB"
+    reveal_type(valid_b1.required1)  # N: Revealed type is "builtins.int"
+    reveal_type(valid_b1.required2)  # N: Revealed type is "builtins.int | validataclass.helpers.unset_value.UnsetValueType"
+    reveal_type(valid_b1.optional1)  # N: Revealed type is "builtins.int | None"
+    reveal_type(valid_b1.optional2)  # N: Revealed type is "builtins.str"
+
+    # Invalid initializations
+    invalid_b1 = SubClassB()  # TODO: This should be an error!
+    invalid_b2 = SubClassB(
+        required1='foo',       # E: Argument "required1" to "SubClassB" has incompatible type "str"; expected "int"  [arg-type]
+        required2='foo',       # E: Argument "required2" to "SubClassB" has incompatible type "str"; expected "int | UnsetValueType"  [arg-type]
+        optional1=UnsetValue,  # E: Argument "optional1" to "SubClassB" has incompatible type "UnsetValueType"; expected "int | None"  [arg-type]
+        optional2=None,        # E: Argument "optional2" to "SubClassB" has incompatible type "None"; expected "str"  [arg-type]
+    )
+
+    # -- SUB CLASS C --
+
+    @validataclass
+    class SubClassC(BaseClass):
+        # Change validator: same type
+        required1: int = IntegerValidator(min_value=0)
+
+        # Change validator and default, expanding the type
+        required2: int | None = IntegerValidator(min_value=0), Default(None)
+
+        # Change validator: different type, implicitly keep Default(0)
+        optional1: int | str = StringValidator()
+
+        # Keep validator, change default to different type
+        optional2: str | UnsetValueType = DefaultUnset
+
+    # Valid initializations
+    valid_c1 = SubClassC(
+        required1=1,
+    )
+    valid_c2 = SubClassC(
+        required1=1,
+        required2=2,
+        optional1=3,
+        optional2='foo',
+    )
+    valid_c3 = SubClassC(
+        required1=1,
+        required2=None,
+        optional1='foo',
+        optional2=UnsetValue,
+    )
+    reveal_type(valid_c1)            # N: Revealed type is "main.SubClassC"
+    reveal_type(valid_c2)            # N: Revealed type is "main.SubClassC"
+    reveal_type(valid_c3)            # N: Revealed type is "main.SubClassC"
+    reveal_type(valid_c1.required1)  # N: Revealed type is "builtins.int"
+    reveal_type(valid_c1.required2)  # N: Revealed type is "builtins.int | None"
+    reveal_type(valid_c1.optional1)  # N: Revealed type is "builtins.int | builtins.str"
+    reveal_type(valid_c1.optional2)  # N: Revealed type is "builtins.str | validataclass.helpers.unset_value.UnsetValueType"
+
+    # Invalid initializations
+    invalid_c1 = SubClassC()  # TODO: This should be an error!
+    invalid_c2 = SubClassC(
+        required1='foo',  # E: Argument "required1" to "SubClassC" has incompatible type "str"; expected "int"  [arg-type]
+        required2='foo',  # E: Argument "required2" to "SubClassC" has incompatible type "str"; expected "int | None"  [arg-type]
+        optional1=None,   # E: Argument "optional1" to "SubClassC" has incompatible type "None"; expected "int | str"  [arg-type]
+        optional2=42,     # E: Argument "optional2" to "SubClassC" has incompatible type "int"; expected "str | UnsetValueType"  [arg-type]
+    )
+
+# Create a subclass of a subclass of a validataclass
+# TODO: Missing init parameters aren't reported as errors yet.
+- case: validataclass_with_subclasses_of_subclasses
+  main: |
+    from validataclass.dataclasses import validataclass, Default, DefaultUnset, NoDefault
+    from validataclass.helpers import UnsetValue, UnsetValueType
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class A:
+        unmodified: int = IntegerValidator()
+        once_modified1: int = IntegerValidator()
+        once_modified2: int = IntegerValidator()
+        twice_modified1: int = IntegerValidator()
+        twice_modified2: int | None = IntegerValidator(), Default(None)
+
+    @validataclass
+    class B(A):
+        additional: str | None = StringValidator(), Default(None)
+        once_modified1: int | None = Default(None)
+        twice_modified1: str = StringValidator()
+        twice_modified2: int = NoDefault
+
+    @validataclass
+    class C(B):
+        once_modified2: int | UnsetValueType = DefaultUnset
+        twice_modified1: str | UnsetValueType = DefaultUnset
+        twice_modified2: int | UnsetValueType = DefaultUnset
+
+    # Valid initializations
+    valid1 = C(
+        unmodified=1,
+    )
+    valid2 = C(
+        unmodified=1,
+        additional='foo',
+        once_modified1=2,
+        once_modified2=3,
+        twice_modified1='foo',
+        twice_modified2=4,
+    )
+    valid3 = C(
+        unmodified=1,
+        additional=None,
+        once_modified1=None,
+        once_modified2=UnsetValue,
+        twice_modified1=UnsetValue,
+        twice_modified2=UnsetValue,
+    )
+    reveal_type(valid1)                  # N: Revealed type is "main.C"
+    reveal_type(valid2)                  # N: Revealed type is "main.C"
+    reveal_type(valid3)                  # N: Revealed type is "main.C"
+    reveal_type(valid1.unmodified)       # N: Revealed type is "builtins.int"
+    reveal_type(valid1.additional)       # N: Revealed type is "builtins.str | None"
+    reveal_type(valid1.once_modified1)   # N: Revealed type is "builtins.int | None"
+    reveal_type(valid1.once_modified2)   # N: Revealed type is "builtins.int | validataclass.helpers.unset_value.UnsetValueType"
+    reveal_type(valid1.twice_modified1)  # N: Revealed type is "builtins.str | validataclass.helpers.unset_value.UnsetValueType"
+    reveal_type(valid1.twice_modified2)  # N: Revealed type is "builtins.int | validataclass.helpers.unset_value.UnsetValueType"
+
+    # Invalid initializations
+    invalid1 = C()  # TODO: This should be an error!
+    invalid2 = C(
+        unmodified='foo',      # E: Argument "unmodified" to "C" has incompatible type "str"; expected "int"  [arg-type]
+        additional=42,         # E: Argument "additional" to "C" has incompatible type "int"; expected "str | None"  [arg-type]
+        once_modified1='foo',  # E: Argument "once_modified1" to "C" has incompatible type "str"; expected "int | None"  [arg-type]
+        once_modified2=None,   # E: Argument "once_modified2" to "C" has incompatible type "None"; expected "int | UnsetValueType"  [arg-type]
+        twice_modified1=None,  # E: Argument "twice_modified1" to "C" has incompatible type "None"; expected "str | UnsetValueType"  [arg-type]
+        twice_modified2=None,  # E: Argument "twice_modified2" to "C" has incompatible type "None"; expected "int | UnsetValueType"  [arg-type]
+    )
+
+# Create validataclasses with multiple inheritance
+# TODO: Missing init parameters aren't reported as errors yet.
+- case: validataclass_with_multiple_inheritance
+  main: |
+    from validataclass.dataclasses import validataclass, Default, DefaultUnset
+    from validataclass.helpers import UnsetValue, UnsetValueType
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class A:
+        unmodified_a: int = IntegerValidator()
+        unmodified_both: int | None = IntegerValidator(), Default(None)
+        modified_a: int = IntegerValidator()
+        modified_both: int = IntegerValidator(), Default(1)
+
+    @validataclass
+    class B:
+        unmodified_b: str = StringValidator()
+        unmodified_both: str = StringValidator()
+        modified_b: str = StringValidator()
+        modified_both: str = StringValidator(), Default('')
+
+    @validataclass
+    class C(B, A):
+        modified_a: int = Default(0)
+        modified_b: str | None = Default(None)
+        modified_both: str | UnsetValueType = DefaultUnset
+
+        # TODO: Currently this requires an explicit type to be correct (otherwise it's just `str` from B). We cannot
+        #   have an assignment without RHS though, so we need to define at least a validator or default. Should we
+        #   handle this in the library and/or plugin somehow?
+        unmodified_both: str | None = StringValidator()
+
+    # Valid initializations
+    valid1 = C(
+        unmodified_a=1,
+        unmodified_b='example',
+    )
+    valid2 = C(
+        unmodified_a=1,
+        unmodified_b='example',
+        unmodified_both='example',
+        modified_a=1,
+        modified_b='example',
+        modified_both='example',
+    )
+    valid3 = C(
+        unmodified_a=1,
+        unmodified_b='example',
+        unmodified_both=None,
+        modified_a=1,
+        modified_b=None,
+        modified_both=UnsetValue,
+    )
+    reveal_type(valid1)                  # N: Revealed type is "main.C"
+    reveal_type(valid2)                  # N: Revealed type is "main.C"
+    reveal_type(valid3)                  # N: Revealed type is "main.C"
+    reveal_type(valid1.unmodified_a)     # N: Revealed type is "builtins.int"
+    reveal_type(valid1.unmodified_b)     # N: Revealed type is "builtins.str"
+    reveal_type(valid1.unmodified_both)  # N: Revealed type is "builtins.str | None"
+    reveal_type(valid1.modified_a)       # N: Revealed type is "builtins.int"
+    reveal_type(valid1.modified_b)       # N: Revealed type is "builtins.str | None"
+    reveal_type(valid1.modified_both)    # N: Revealed type is "builtins.str | validataclass.helpers.unset_value.UnsetValueType"
+
+    # Invalid initializations
+    invalid_c1 = C()  # TODO: This should be an error!
+    invalid_c2 = C(
+        unmodified_a='foo',  # E: Argument "unmodified_a" to "C" has incompatible type "str"; expected "int"  [arg-type]
+        unmodified_b=42,     # E: Argument "unmodified_b" to "C" has incompatible type "int"; expected "str"  [arg-type]
+        unmodified_both=42,  # E: Argument "unmodified_both" to "C" has incompatible type "int"; expected "str | None"  [arg-type]
+        modified_a='foo',    # E: Argument "modified_a" to "C" has incompatible type "str"; expected "int"  [arg-type]
+        modified_b=42,       # E: Argument "modified_b" to "C" has incompatible type "int"; expected "str | None"  [arg-type]
+        modified_both=42,    # E: Argument "modified_both" to "C" has incompatible type "int"; expected "str | UnsetValueType"  [arg-type]
+    )
+
+# Define base class and subclasses in separate modules/files.
+# This test case is important to prevent issues related to the (module-based) mypy cache.
+- case: validataclass_subclasses_in_other_modules
+  main: |
+    from test_files.x_sub_class_b import SubClassB
+
+    # Valid initializations
+    valid1 = SubClassB(
+        field1=1,
+        field2='test',
+        field3=2,
+    )
+    valid2 = SubClassB(
+        field1=None,
+        field2=None,
+        field3=0,
+    )
+    reveal_type(valid1)         # N: Revealed type is "test_files.x_sub_class_b.SubClassB"
+    reveal_type(valid1.field1)  # N: Revealed type is "builtins.int | None"
+    reveal_type(valid1.field2)  # N: Revealed type is "builtins.str | None"
+    reveal_type(valid1.field3)  # N: Revealed type is "builtins.int"
+
+    # Invalid initializations
+    invalid1 = SubClassB(
+        field1='foo',  # E: Argument "field1" to "SubClassB" has incompatible type "str"; expected "int | None"  [arg-type]
+        field2=42,     # E: Argument "field2" to "SubClassB" has incompatible type "int"; expected "str | None"  [arg-type]
+        field3=None,   # E: Argument "field3" to "SubClassB" has incompatible type "None"; expected "int"  [arg-type]
+    )
+  files:
+    # Use letter prefixes to make sure the alphabetical order is irrelevant
+    - path: test_files/z_base_class.py
+      content: |
+        from validataclass.dataclasses import validataclass
+        from validataclass.validators import IntegerValidator
+
+        @validataclass
+        class Base:
+            field1: int = IntegerValidator()
+
+    - path: test_files/y_sub_class_a.py
+      content: |
+        from validataclass.dataclasses import validataclass, Default
+        from validataclass.validators import StringValidator
+        from test_files.z_base_class import Base
+
+        @validataclass
+        class SubClassA(Base):
+            field1: int | None = Default(None)
+            field2: str = StringValidator()
+
+    - path: test_files/x_sub_class_b.py
+      content: |
+        from validataclass.dataclasses import validataclass, Default
+        from validataclass.validators import IntegerValidator
+        from test_files.y_sub_class_a import SubClassA
+
+        @validataclass
+        class SubClassB(SubClassA):
+            field2: str | None = Default(None)
+            field3: int = IntegerValidator()
+
+# Base class with errors
+- case: validataclass_base_class_with_errors
+  main: |
+    from validataclass.dataclasses import validataclass, Default
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class BaseClassWithErrors:
+        # Valid definitions, incorrect typing
+        wrong_validator: int = StringValidator(), Default(None)  # E: Incompatible types in assignment (expression has type "str | None", variable has type "int")  [assignment]
+
+        # Missing validator
+        missing_validator: int = Default(42)  # E: No Validator found in field definition  [validataclass]
+
+        # A valid field for good measure
+        valid_field: str = StringValidator()
+
+    @validataclass
+    class SubClass(BaseClassWithErrors):
+        # Modify fields
+        wrong_validator: int = Default(42)           # E: Incompatible types in assignment (expression has type "str | int", variable has type "int")  [assignment]
+        missing_validator: int = IntegerValidator()  # E: Field cannot be fully parsed because of a prior error in one of the base classes  [validataclass]
+
+        # New field (valid)
+        new_field: str = StringValidator()
+
+    # Initializations
+    obj1 = SubClass(
+        valid_field='example',
+        new_field='example',
+    )
+    obj2 = SubClass(
+        wrong_validator=1,
+        missing_validator=2,
+        valid_field='example',
+        new_field='example',
+    )
+
+# Valid base class, subclass with errors
+- case: validataclass_subclass_with_errors
+  main: |
+    from validataclass.dataclasses import validataclass, Default
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class Base:
+        field1: int = IntegerValidator(), Default(42)
+        field2: int | None = IntegerValidator(), Default(None)
+        not_a_method: int = IntegerValidator()
+
+    @validataclass
+    class SubClassWithErrors(Base):
+        # Incompatibilities with base class
+        field1: str = StringValidator()  # E: Incompatible types in assignment (expression has type "str | int", variable has type "str")  [assignment]
+        field2: str = Default('empty')   # E: Incompatible types in assignment (expression has type "int | str", variable has type "str")  [assignment]
+
+        # New fields with errors
+        missing_validator: int = Default(42)                                        # E: No Validator found in field definition  [validataclass]
+        double_validator: int = IntegerValidator(), Default(42), StringValidator()  # E: Multiple validator instances found in field definition  [validataclass]
+        double_default: int = IntegerValidator(), Default(42), Default(None)        # E: Multiple default objects found in field definition  [validataclass]
+        missing_rhs: int                                                            # E: Annotated field without assignment (missing Validator or BaseDefault on right-hand side)  [validataclass]
+        nonsense1: int = 42                                                         # E: Unexpected type "Literal[42]?" in field definition (expected Validator or BaseDefault)  [validataclass]
+
+        # Redefine dataclass field as method
+        def not_a_method(self) -> int:  # (line 24, multiple errors, see below)
+            return 42
+  out: |
+    main:24: error: Dataclass attribute may only be overridden by another attribute  [misc]
+    main:24: error: Signature of "not_a_method" incompatible with supertype "Base"  [override]
+    main:24: note:      Superclass:
+    main:24: note:          int
+    main:24: note:      Subclass:
+    main:24: note:          def not_a_method(self) -> int
+    main:24: error: Method "not_a_method" is not using @override but is overriding a method in class "main.Base"  [explicit-override]
+
+# Validataclass with ValidataclassMixin base class
+- case: validataclass_with_validataclass_mixin
+  main: |
+    from validataclass.dataclasses import Default, ValidataclassMixin, validataclass
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class Base(ValidataclassMixin):
+        field1: int = IntegerValidator()
+        field2: str | None = StringValidator(), Default(None)
+
+    @validataclass
+    class SubClass(Base):
+        field3: str = StringValidator()
+
+    base = Base(
+        field1=42,
+    )
+    reveal_type(base)            # N: Revealed type is "main.Base"
+    reveal_type(base.field1)     # N: Revealed type is "builtins.int"
+    reveal_type(base.field2)     # N: Revealed type is "builtins.str | None"
+    reveal_type(base.to_dict())  # N: Revealed type is "builtins.dict[builtins.str, Any]"
+
+    sub = SubClass(
+        field1=42,
+        field2=None,
+        field3='foo',
+    )
+    reveal_type(sub)   # N: Revealed type is "main.SubClass"
+    reveal_type(sub.field1)     # N: Revealed type is "builtins.int"
+    reveal_type(sub.field2)     # N: Revealed type is "builtins.str | None"
+    reveal_type(sub.field3)     # N: Revealed type is "builtins.str"
+    reveal_type(sub.to_dict())  # N: Revealed type is "builtins.dict[builtins.str, Any]"
+
+# Validataclass with other non-validataclass base classes
+- case: validataclass_with_non_validataclass_base
+  main: |
+    from validataclass.dataclasses import Default, ValidataclassMixin, validataclass
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    class Base:
+        field_validator: IntegerValidator = IntegerValidator()
+        field_default: Default[None] = Default(None)
+
+    @validataclass
+    class ActualValidataclass(Base):
+        field1: int | None = Base.field_validator, Base.field_default
+        field2: str = Base.field_validator  # E: Incompatible types in assignment (expression has type "int", variable has type "str")  [assignment]
+
+    valid = ActualValidataclass(field1=42)
+    reveal_type(valid)            # N: Revealed type is "main.ActualValidataclass"
+    reveal_type(valid.field1)     # N: Revealed type is "builtins.int | None"
+    reveal_type(valid.field2)     # N: Revealed type is "builtins.str"
+
+# Validataclasses and subclasses with fields created using validataclass_field() or dataclasses.field()
+- case: validataclass_subclasses_with_explicit_field_function
+  main: |
+    import dataclasses
+    from validataclass.dataclasses import Default, validataclass, validataclass_field
+    from validataclass.validators import IntegerValidator, StringValidator
+
+    @validataclass
+    class Base:
+        # Fields created explicitly with validataclass_field
+        explicit1: int = validataclass_field(IntegerValidator())
+        explicit2: int | None = validataclass_field(IntegerValidator(), default=Default(None))
+        explicit3: int = validataclass_field(IntegerValidator())
+        explicit4: int | None = validataclass_field(IntegerValidator(), default=Default(None))
+
+        # Fields created with tuples
+        tuple1: int = IntegerValidator()
+        tuple2: int | None = IntegerValidator(), Default(None)
+
+    @validataclass
+    class GoodSubClass(Base):
+        # Override fields created with validataclass_field using validataclass_field
+        # (Should override the default even when not specified)
+        explicit1: str | None = validataclass_field(StringValidator(), default=Default(None))
+        explicit2: str = validataclass_field(StringValidator())
+
+        # Override fields created with validataclass_field using tuples
+        # (Should take base class into account)
+        explicit3: int | None = Default(None)
+        explicit4: str | None = StringValidator()
+
+        # Override fields created with tuples using validataclass_field
+        # (Should override the default even when not specified)
+        tuple1: str | None = validataclass_field(StringValidator(), default=Default(None))
+        tuple2: str = validataclass_field(StringValidator())
+
+    @validataclass
+    class BadSubClass(Base):
+        # Override fields created with validataclass_field using validataclass_field
+        # (Should override the default even when not specified)
+        explicit1: int = validataclass_field(StringValidator(), default=Default(None))  # E: Incompatible types in assignment (expression has type "str | None", variable has type "int")  [assignment]
+        explicit2: int = validataclass_field(StringValidator())                         # E: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+
+        # Override fields created with validataclass_field using tuples
+        # (Should take base class into account)
+        explicit3: None = Default(None)     # E: Incompatible types in assignment (expression has type "int | None", variable has type "None")  [assignment]
+        explicit4: str = StringValidator()  # E: Incompatible types in assignment (expression has type "str | None", variable has type "str")  [assignment]
+
+        # Override fields created with tuples using validataclass_field
+        # (Should override the default even when not specified)
+        tuple1: str = validataclass_field(StringValidator(), default=Default(None))  # E: Incompatible types in assignment (expression has type "str | None", variable has type "str")  [assignment]
+        tuple2: int = validataclass_field(StringValidator())                         # E: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]

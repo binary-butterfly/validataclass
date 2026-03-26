@@ -56,7 +56,7 @@ class UnitTestNestedDataclass:
     name: str = StringValidator()
     test_fruit: UnitTestDataclass = DataclassValidator(UnitTestDataclass)
     test_vegetable: UnitTestDataclass | None = \
-        validataclass_field(DataclassValidator(UnitTestDataclass), default=None)
+        validataclass_field(DataclassValidator(UnitTestDataclass), default=Default(None))
 
 
 # Dataclass with non-init field and __post_init__() method
