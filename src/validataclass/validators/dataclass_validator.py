@@ -174,7 +174,7 @@ class DataclassValidator(Validator[T_Dataclass]):
             required_fields=required_fields,
             default_validator=default_validator,
         )
-    
+
     @staticmethod
     def _get_field_validator(field: dataclasses.Field[Any]) -> Validator[Any]:
         # Parse field metadata to get Validator

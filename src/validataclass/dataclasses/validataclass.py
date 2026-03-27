@@ -43,6 +43,7 @@ def validataclass(cls: None = None, /, **kwargs: Any) -> Callable[[type[_T]], ty
 def validataclass(
     cls: type[_T] | None = None,
     /,
+    reject_unknown_fields: bool | None = None,
     **kwargs: Any,
 ) -> type[_T] | Callable[[type[_T]], type[_T]]:
     """
@@ -105,9 +106,6 @@ def validataclass(
     """
 
     def decorator(_cls: type[_T]) -> type[_T]:
-        # Pop validataclass-specific options before passing kwargs to @dataclass
-        reject_unknown_fields = kwargs.pop('reject_unknown_fields', None)
-
         # Set kw_only=True as the default to allow required and optional fields in any order
         kwargs.setdefault('kw_only', True)
 
