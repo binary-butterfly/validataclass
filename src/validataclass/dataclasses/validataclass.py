@@ -43,6 +43,7 @@ def validataclass(cls: None = None, /, **kwargs: Any) -> Callable[[type[_T]], ty
 def validataclass(
     cls: type[_T] | None = None,
     /,
+    *,
     reject_unknown_fields: bool | None = None,
     **kwargs: Any,
 ) -> type[_T] | Callable[[type[_T]], type[_T]]:
