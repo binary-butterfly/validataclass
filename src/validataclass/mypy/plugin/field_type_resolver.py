@@ -27,6 +27,7 @@ from .constants import FIELD_DEFAULT_BASE_CLASS, VALIDATACLASS_FIELD_FUNCS, VALI
 from .error_codes import ERROR_CODE_VALIDATACLASS, ERROR_CODE_VALIDATACLASS_EMPTY_TYPE
 from .debug_logger import DebugLogger
 from .parsed_field_cache import ParsedFieldCache, ParsedValidataclassField
+from .plugin_config import PluginConfig
 
 
 class FieldTypeResolver:
@@ -40,15 +41,26 @@ class FieldTypeResolver:
     # Interface to mypy's type checker
     _api: CheckerPluginInterface
 
+    # Plugin configuration
+    _plugin_config: PluginConfig
+
     # Logger for plugin development and debugging
     _logger: DebugLogger
 
     # Internal cache for parsed validataclass fields (i.e. parsed types), shared across instances of this class
     _parsed_field_cache: ParsedFieldCache
 
-    def __init__(self, ctx: FunctionContext, logger: DebugLogger, parsed_field_cache: ParsedFieldCache):
+    def __init__(
+        self,
+        *,
+        ctx: FunctionContext,
+        plugin_config: PluginConfig,
+        logger: DebugLogger,
+        parsed_field_cache: ParsedFieldCache,
+    ):
         self._ctx = ctx
         self._api = ctx.api
+        self._plugin_config = plugin_config
         self._logger = logger
         self._parsed_field_cache = parsed_field_cache
 
@@ -182,8 +194,9 @@ class FieldTypeResolver:
         # entire field definition), we can shortcut the analysis here.
         # (Fields created with dataclasses.field() are skipped by the ValidataclassTransformer.)
         if isinstance(field_rhs_expr, CallExpr) and isinstance(field_rhs_expr.callee, RefExpr):
-            # Handle fields created explicitly using validataclass_field()
-            if field_rhs_expr.callee.fullname in VALIDATACLASS_FIELD_FUNCS:
+            # Handle fields created explicitly using validataclass_field() or a similar function
+            callee_name = field_rhs_expr.callee.fullname
+            if callee_name in VALIDATACLASS_FIELD_FUNCS or callee_name in self._plugin_config.custom_field_functions:
                 return self._parse_validataclass_field_callexpr(field_rhs_expr)
 
         # This will hold the end result that's returned at the end of the function
@@ -277,6 +290,12 @@ class FieldTypeResolver:
                 # Store type of default object for later
                 self._log_debug(f'  - Default type: {item_type}')
                 parsed_field.default_type = item_type
+                return
+
+            # Check for instances of user-defined types that should be ignored (via plugin config)
+            ignored_custom_types = self._plugin_config.ignore_custom_types_in_fields
+            if any(item_type.type.has_base(custom_type) for custom_type in ignored_custom_types):
+                self._log_debug(f'  - Ignore instance of user-defined type: {item_type}')
                 return
 
         # (Everything else is probably an error!)

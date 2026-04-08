@@ -17,7 +17,7 @@
 - case: simple_validataclass
   main: |
     from validataclass.dataclasses import validataclass
-    from validataclass.validators import ListValidator, IntegerValidator, Noneable, StringValidator
+    from validataclass.validators import IntegerValidator, ListValidator, Noneable, StringValidator
 
     @validataclass
     class SimpleDataclass:

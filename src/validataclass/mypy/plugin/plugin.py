@@ -4,8 +4,8 @@ Copyright (c) 2026, binary butterfly GmbH and contributors
 Use of this source code is governed by an MIT-style license that can be found in the LICENSE file.
 """
 
-import os
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable
 
 from mypy.options import Options
@@ -18,11 +18,27 @@ from .constants import VALIDATACLASS_DECORATORS, VIRTUAL_FIELD_WRAPPER_FUNC
 from .debug_logger import DebugLogger
 from .field_type_resolver import FieldTypeResolver
 from .parsed_field_cache import ParsedFieldCache
+from .plugin_config import PluginConfig, PluginConfigParser, PluginConfigParseError
 from .validataclass_transformer import ValidataclassTransformer
 
 
-def _is_debug_mode() -> bool:
-    return bool(os.getenv('VALIDATACLASS_MYPY_DEBUG', False))
+def _load_plugin_config(config_file: str | None) -> PluginConfig:
+    """
+    Load configuration for the validataclass mypy plugin from the mypy configuration, i.e. the same config file
+    that mypy is currently using.
+
+    If there is an error parsing the config, print that error message and exit with a non-zero exit code
+    """
+    # Fallback to empty config if there is no mypy config
+    if config_file is None:  # pragma: nocover
+        return PluginConfig()
+
+    config_parser = PluginConfigParser()
+    try:
+        return config_parser.load_config(Path(config_file))
+    except PluginConfigParseError as exc:  # pragma: nocover
+        print(f'Error while parsing plugin config for validataclass mypy plugin:\n{exc}')
+        exit(1)
 
 
 class ValidataclassPlugin(Plugin):
@@ -30,19 +46,32 @@ class ValidataclassPlugin(Plugin):
     Custom mypy plugin for validataclass support.
     """
 
+    # Plugin config
+    _plugin_config: PluginConfig
+
     # Logger class for easier debugging
     _logger: DebugLogger
 
     # Internal cache for parsed validataclass fields, shared between all instances of FieldTypeResolver
     _parsed_field_cache: ParsedFieldCache
 
+    # Set of all validataclass decorators, including the built-in ones and user-defined ones from the plugin config
+    _validataclass_decorator_fullnames: set[str]
+
     def __init__(self, options: Options):
         super().__init__(options)
 
-        self._logger = DebugLogger(
-            debug_mode=_is_debug_mode(),
-        )
+        # Load plugin config
+        self._plugin_config = _load_plugin_config(options.config_file)
+
+        # Initialize dependencies
+        self._logger = DebugLogger(debug_mode=self._plugin_config.debug_mode)
         self._parsed_field_cache = ParsedFieldCache()
+
+        # Cache some values for easier access
+        self._validataclass_decorator_fullnames = (
+            VALIDATACLASS_DECORATORS | self._plugin_config.custom_validataclass_decorators
+        )
 
     @override
     def report_config_data(self, ctx: ReportConfigContext) -> Any:
@@ -83,8 +112,8 @@ class ValidataclassPlugin(Plugin):
         In this plugin, we use this hook to tag all validataclasses so that we can recognize them later.
         We also call the corresponding callback of the dataclass plugin because it wouldn't be called otherwise.
         """
-        # Tag all classes decorated with `@validataclass` for later.
-        if fullname in VALIDATACLASS_DECORATORS:
+        # Tag all classes decorated with `@validataclass` or a similar decorator for later.
+        if fullname in self._validataclass_decorator_fullnames:
             return self._validataclass_decorator_tag_callback
 
         return None
@@ -103,8 +132,8 @@ class ValidataclassPlugin(Plugin):
         In this plugin, we transform the definition of validataclasses by wrapping each field definition (e.g. tuples of
         validator and default) in a virtual wrapper function which is analyzed later in `get_function_hook`.
         """
-        # Update classes decorated with `@validataclass` or similar.
-        if fullname in VALIDATACLASS_DECORATORS:
+        # Update classes decorated with `@validataclass` or a similar decorator.
+        if fullname in self._validataclass_decorator_fullnames:
             return self._validataclass_decorator_transform_callback
 
         return None
@@ -161,7 +190,11 @@ class ValidataclassPlugin(Plugin):
 
         Transform all `@validataclass`-decorated classes for later analysis.
         """
-        transformer = ValidataclassTransformer(ctx, self._logger)
+        transformer = ValidataclassTransformer(
+            ctx=ctx,
+            plugin_config=self._plugin_config,
+            logger=self._logger,
+        )
         return transformer.transform()
 
     def _virtual_field_wrapper_callback(self, ctx: FunctionContext) -> Type:
@@ -170,7 +203,12 @@ class ValidataclassPlugin(Plugin):
 
         Analyze type of field definition and adjust function return type.
         """
-        resolver = FieldTypeResolver(ctx, self._logger, self._parsed_field_cache)
+        resolver = FieldTypeResolver(
+            ctx=ctx,
+            plugin_config=self._plugin_config,
+            logger=self._logger,
+            parsed_field_cache=self._parsed_field_cache,
+        )
         return resolver.resolve()
 
 
