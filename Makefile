@@ -24,10 +24,15 @@ build:
 # Test suite
 # ----------
 
-# Run complete tox suite with local Python interpreter
+# Run complete tox suite with all locally installed Python interpreters
 .PHONY: tox
 tox:
 	tox run
+
+# Run tox suite with the latest installed Python version
+.PHONY: tox-latest
+tox-latest:
+	tox run -e clean,py,report,flake8,mypy
 
 # Run tox in venv (needs to be installed with `make venv` first)
 .PHONY: venv-tox
