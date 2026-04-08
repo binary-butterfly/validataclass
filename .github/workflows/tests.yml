@@ -29,10 +29,10 @@ jobs:
           - '3.14'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -44,7 +44,7 @@ jobs:
         run: tox run -e clean,py,report,flake8,mypy -- --junit-xml=reports/pytest_${{ matrix.python-version }}.xml
 
       - name: Upload test result artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: success() || failure()
         with:
           name: pytest-results-${{ matrix.python-version }}
@@ -61,17 +61,17 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download test result artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: reports/
           pattern: pytest-results-*
           merge-multiple: true
 
       - name: Publish unit test reports
-        uses: dorny/test-reporter@v2.1.1
+        uses: dorny/test-reporter@v3.0.0
         if: success() || failure()
         with:
           name: Pytest Report
