@@ -10,7 +10,7 @@
         def validate(self, input_data: Any, **kwargs: Any) -> str:
             return str(input_data)
   out: |
-    main:3: error: Missing type parameters for generic type "Validator"  [type-arg]
+    main:3: error: Missing type arguments for generic type "Validator"  [type-arg]
 
 # Check that mypy complains when return type of validate method doesn't match Validator type parameter.
 - case: validator_with_incompatible_validate_return_type
