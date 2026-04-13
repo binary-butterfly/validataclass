@@ -11,5 +11,5 @@
     var2: Validator[str] = validator   # error
   out: |
     main:3: note: Revealed type is "validataclass.validators.boolean_validator.BooleanValidator"
-    main:4: note: Revealed type is "builtins.bool"
+    main:4: note: Revealed type is "bool"
     main:6: error: Incompatible types in assignment (expression has type "BooleanValidator", variable has type "Validator[str]")  [assignment]

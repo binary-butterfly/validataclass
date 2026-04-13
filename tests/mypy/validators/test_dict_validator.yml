@@ -26,8 +26,8 @@
         'bar': StringValidator(),  # error (19)
     })
   out: |
-    main:8: note: Revealed type is "validataclass.validators.dict_validator.DictValidator[builtins.int | builtins.list[builtins.str]]"
-    main:9: note: Revealed type is "builtins.dict[builtins.str, builtins.int | builtins.list[builtins.str]]"
+    main:8: note: Revealed type is "validataclass.validators.dict_validator.DictValidator[int | list[str]]"
+    main:9: note: Revealed type is "dict[str, int | list[str]]"
     main:12: error: Incompatible types in assignment (expression has type "DictValidator[int | list[str]]", variable has type "DictValidator[int]")  [assignment]
     main:15: error: Incompatible types in assignment (expression has type "DictValidator[int | list[str]]", variable has type "Validator[dict[str, int]]")  [assignment]
     main:16: error: Incompatible types in assignment (expression has type "DictValidator[int | list[str]]", variable has type "Validator[str]")  [assignment]
@@ -49,8 +49,8 @@
     var6: Validator[dict[str, int]] = validator        # error (11)
     var7: Validator[str] = validator                   # error (12)
   out: |
-    main:4: note: Revealed type is "validataclass.validators.dict_validator.DictValidator[builtins.list[builtins.int]]"
-    main:5: note: Revealed type is "builtins.dict[builtins.str, builtins.list[builtins.int]]"
+    main:4: note: Revealed type is "validataclass.validators.dict_validator.DictValidator[list[int]]"
+    main:5: note: Revealed type is "dict[str, list[int]]"
     main:8: error: Incompatible types in assignment (expression has type "DictValidator[list[int]]", variable has type "DictValidator[int]")  [assignment]
     main:11: error: Incompatible types in assignment (expression has type "DictValidator[list[int]]", variable has type "Validator[dict[str, int]]")  [assignment]
     main:12: error: Incompatible types in assignment (expression has type "DictValidator[list[int]]", variable has type "Validator[str]")  [assignment]
@@ -85,7 +85,7 @@
         default_validator=StringValidator(),  # error (23)
     )
   out: |
-    main:10: note: Revealed type is "builtins.dict[builtins.str, builtins.int | builtins.str | builtins.list[builtins.str]]"
+    main:10: note: Revealed type is "dict[str, int | str | list[str]]"
     main:12: error: Incompatible types in assignment (expression has type "DictValidator[int | str | list[str]]", variable has type "DictValidator[int | list[str]]")  [assignment]
     main:13: error: Incompatible types in assignment (expression has type "DictValidator[int | str | list[str]]", variable has type "DictValidator[str]")  [assignment]
     main:16: error: Incompatible types in assignment (expression has type "DictValidator[int | str | list[str]]", variable has type "Validator[dict[str, int]]")  [assignment]

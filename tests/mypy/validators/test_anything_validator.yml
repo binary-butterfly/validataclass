@@ -17,9 +17,9 @@
     var5: Validator[Any] = validator             # correct
     var6: Validator[int] = validator             # error (13)
   out: |
-    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.object]"
-    main:5: note: Revealed type is "builtins.object"
-    main:7: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.object]"
+    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[object]"
+    main:5: note: Revealed type is "object"
+    main:7: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[object]"
     main:10: error: Incompatible types in assignment (expression has type "AnythingValidator[object]", variable has type "AnythingValidator[int]")  [assignment]
     main:13: error: Incompatible types in assignment (expression has type "AnythingValidator[object]", variable has type "Validator[int]")  [assignment]
 
@@ -38,9 +38,9 @@
     var3: Validator[str] = validator          # correct
     var4: Validator[int] = validator          # error (11)
   out: |
-    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.str]"
-    main:5: note: Revealed type is "builtins.str"
-    main:7: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.str]"
+    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[str]"
+    main:5: note: Revealed type is "str"
+    main:7: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[str]"
     main:9: error: Incompatible types in assignment (expression has type "AnythingValidator[str]", variable has type "AnythingValidator[int]")  [assignment]
     main:11: error: Incompatible types in assignment (expression has type "AnythingValidator[str]", variable has type "Validator[int]")  [assignment]
 
@@ -59,8 +59,8 @@
     var3: Validator[str | int | None] = validator          # correct
     var4: Validator[str | int] = validator                 # error (11)
   out: |
-    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.object]"
-    main:6: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[builtins.str | builtins.int | None]"
-    main:7: note: Revealed type is "builtins.str | builtins.int | None"
+    main:4: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[object]"
+    main:6: note: Revealed type is "validataclass.validators.anything_validator.AnythingValidator[str | int | None]"
+    main:7: note: Revealed type is "str | int | None"
     main:9: error: Incompatible types in assignment (expression has type "AnythingValidator[str | int | None]", variable has type "AnythingValidator[str | int]")  [assignment]
     main:11: error: Incompatible types in assignment (expression has type "AnythingValidator[str | int | None]", variable has type "Validator[str | int]")  [assignment]

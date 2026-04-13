@@ -12,5 +12,5 @@
     var3: IntegerValidator = validator  # correct
   out: |
     main:3: note: Revealed type is "validataclass.validators.big_integer_validator.BigIntegerValidator"
-    main:4: note: Revealed type is "builtins.int"
+    main:4: note: Revealed type is "int"
     main:6: error: Incompatible types in assignment (expression has type "BigIntegerValidator", variable has type "Validator[str]")  [assignment]

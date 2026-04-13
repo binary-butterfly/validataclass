@@ -37,8 +37,8 @@
     var5: Validator[None] = validator          # error (10)
     var6: Validator[Never] = validator         # error (11)
   out: |
-    main:4: note: Revealed type is "validataclass.validators.discard_validator.DiscardValidator[builtins.int]"
-    main:5: note: Revealed type is "builtins.int"
+    main:4: note: Revealed type is "validataclass.validators.discard_validator.DiscardValidator[int]"
+    main:5: note: Revealed type is "int"
     main:7: error: Incompatible types in assignment (expression has type "DiscardValidator[int]", variable has type "DiscardValidator[None]")  [assignment]
     main:8: error: Incompatible types in assignment (expression has type "DiscardValidator[int]", variable has type "DiscardValidator[Never]")  [assignment]
     main:10: error: Incompatible types in assignment (expression has type "DiscardValidator[int]", variable has type "Validator[None]")  [assignment]

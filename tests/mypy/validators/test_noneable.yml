@@ -15,9 +15,9 @@
     var4: Validator[int] = validator         # error (10)
     var5: Validator[None] = validator        # error (11)
   out: |
-    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, None]"
-    main:4: note: Revealed type is "builtins.int | None"
-    main:6: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, None]"
+    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[int, None]"
+    main:4: note: Revealed type is "int | None"
+    main:6: note: Revealed type is "validataclass.validators.noneable.Noneable[int, None]"
     main:8: error: Incompatible types in assignment (expression has type "Noneable[int, None]", variable has type "Noneable[int, int]")  [assignment]
     main:10: error: Incompatible types in assignment (expression has type "Noneable[int, None]", variable has type "Validator[int]")  [assignment]
     main:11: error: Incompatible types in assignment (expression has type "Noneable[int, None]", variable has type "Validator[None]")  [assignment]
@@ -35,8 +35,8 @@
     var3: Validator[int] = validator       # correct
     var4: Validator[str] = validator       # error (8)
   out: |
-    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, builtins.int]"
-    main:4: note: Revealed type is "builtins.int"
+    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[int, int]"
+    main:4: note: Revealed type is "int"
     main:6: error: Incompatible types in assignment (expression has type "Noneable[int, int]", variable has type "Noneable[int, None]")  [assignment]
     main:8: error: Incompatible types in assignment (expression has type "Noneable[int, int]", variable has type "Validator[str]")  [assignment]
 
@@ -55,8 +55,8 @@
     var5: Validator[int] = validator         # error (9)
     var6: Validator[str] = validator         # error (10)
   out: |
-    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[builtins.int, builtins.str]"
-    main:4: note: Revealed type is "builtins.int | builtins.str"
+    main:3: note: Revealed type is "validataclass.validators.noneable.Noneable[int, str]"
+    main:4: note: Revealed type is "int | str"
     main:6: error: Incompatible types in assignment (expression has type "Noneable[int, str]", variable has type "Noneable[str, int]")  [assignment]
     main:8: error: Incompatible types in assignment (expression has type "Noneable[int, str]", variable has type "Validator[int | None]")  [assignment]
     main:9: error: Incompatible types in assignment (expression has type "Noneable[int, str]", variable has type "Validator[int]")  [assignment]

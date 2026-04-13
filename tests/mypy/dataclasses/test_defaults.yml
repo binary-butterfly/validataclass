@@ -19,10 +19,10 @@
   out: |
     main:3: note: Revealed type is "validataclass.dataclasses.defaults.Default[None]"
     main:4: note: Revealed type is "None"
-    main:5: note: Revealed type is "validataclass.dataclasses.defaults.Default[builtins.int]"
-    main:6: note: Revealed type is "builtins.int"
-    main:7: note: Revealed type is "validataclass.dataclasses.defaults.Default[builtins.list[Never]]"
-    main:8: note: Revealed type is "builtins.list[Never]"
+    main:5: note: Revealed type is "validataclass.dataclasses.defaults.Default[int]"
+    main:6: note: Revealed type is "int"
+    main:7: note: Revealed type is "validataclass.dataclasses.defaults.Default[list[Never]]"
+    main:8: note: Revealed type is "list[Never]"
     main:10: error: Argument 1 to "Default" has incompatible type "int"; expected "str"  [arg-type]
     main:13: error: Argument 1 to "Default" has incompatible type "list[Never]"; expected "int"  [arg-type]
 
@@ -41,10 +41,10 @@
     var4: BaseDefault[list[int]] = DefaultFactory(list)  # correct
     var5: BaseDefault[int] = DefaultFactory(list)        # error (11)
   out: |
-    main:3: note: Revealed type is "validataclass.dataclasses.defaults.DefaultFactory[builtins.int]"
-    main:4: note: Revealed type is "builtins.int"
-    main:5: note: Revealed type is "validataclass.dataclasses.defaults.DefaultFactory[builtins.list[Never]]"
-    main:6: note: Revealed type is "builtins.list[Never]"
+    main:3: note: Revealed type is "validataclass.dataclasses.defaults.DefaultFactory[int]"
+    main:4: note: Revealed type is "int"
+    main:5: note: Revealed type is "validataclass.dataclasses.defaults.DefaultFactory[list[Never]]"
+    main:6: note: Revealed type is "list[Never]"
     main:8: error: Argument 1 to "DefaultFactory" has incompatible type "Callable[[], int]"; expected "Callable[[], str]"  [arg-type]
     main:8: error: Incompatible return value type (got "int", expected "str")  [return-value]
     main:11: error: Argument 1 to "DefaultFactory" has incompatible type "type[list[_T]]"; expected "Callable[[], int]"  [arg-type]

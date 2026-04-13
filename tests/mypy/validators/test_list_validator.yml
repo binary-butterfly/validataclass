@@ -13,8 +13,8 @@
     var4: Validator[list[str]] = validator  # error (8)
     var5: Validator[int] = validator        # error (9)
   out: |
-    main:3: note: Revealed type is "validataclass.validators.list_validator.ListValidator[builtins.int]"
-    main:4: note: Revealed type is "builtins.list[builtins.int]"
+    main:3: note: Revealed type is "validataclass.validators.list_validator.ListValidator[int]"
+    main:4: note: Revealed type is "list[int]"
     main:6: error: Incompatible types in assignment (expression has type "ListValidator[int]", variable has type "ListValidator[str]")  [assignment]
     main:8: error: Incompatible types in assignment (expression has type "ListValidator[int]", variable has type "Validator[list[str]]")  [assignment]
     main:9: error: Incompatible types in assignment (expression has type "ListValidator[int]", variable has type "Validator[int]")  [assignment]

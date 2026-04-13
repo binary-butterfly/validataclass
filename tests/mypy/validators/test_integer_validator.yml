@@ -11,5 +11,5 @@
     var2: Validator[str] = validator  # error
   out: |
     main:3: note: Revealed type is "validataclass.validators.integer_validator.IntegerValidator"
-    main:4: note: Revealed type is "builtins.int"
+    main:4: note: Revealed type is "int"
     main:6: error: Incompatible types in assignment (expression has type "IntegerValidator", variable has type "Validator[str]")  [assignment]

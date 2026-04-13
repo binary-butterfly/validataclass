@@ -7,11 +7,11 @@
     from validataclass.dataclasses import Default, NoDefault, validataclass_field
     from validataclass.validators import RejectValidator, StringValidator
 
-    reveal_type(validataclass_field(StringValidator()))                                         # N: Revealed type is "builtins.str"
-    reveal_type(validataclass_field(StringValidator(), default=NoDefault))                      # N: Revealed type is "builtins.str"
-    reveal_type(validataclass_field(StringValidator(), default=Default(None)))                  # N: Revealed type is "builtins.str | None"
-    reveal_type(validataclass_field(StringValidator(), default=Default(0), repr=False))         # N: Revealed type is "builtins.str | builtins.int"
-    reveal_type(validataclass_field(StringValidator(), default=Default(0), metadata={'a': 1}))  # N: Revealed type is "builtins.str | builtins.int"
+    reveal_type(validataclass_field(StringValidator()))                                         # N: Revealed type is "str"
+    reveal_type(validataclass_field(StringValidator(), default=NoDefault))                      # N: Revealed type is "str"
+    reveal_type(validataclass_field(StringValidator(), default=Default(None)))                  # N: Revealed type is "str | None"
+    reveal_type(validataclass_field(StringValidator(), default=Default(0), repr=False))         # N: Revealed type is "str | int"
+    reveal_type(validataclass_field(StringValidator(), default=Default(0), metadata={'a': 1}))  # N: Revealed type is "str | int"
 
     # Validator with Never type (but the result is not Never)
     reveal_type(validataclass_field(RejectValidator(), default=Default(None)))  # N: Revealed type is "None"

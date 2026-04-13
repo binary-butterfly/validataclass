@@ -32,8 +32,8 @@
     var3: Validator[int] = validator       # correct
     var4: Validator[str] = validator       # error (8)
   out: |
-    main:3: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[builtins.int]"
-    main:4: note: Revealed type is "builtins.int"
+    main:3: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[int]"
+    main:4: note: Revealed type is "int"
     main:6: error: Incompatible types in assignment (expression has type "AnyOfValidator[int]", variable has type "AnyOfValidator[str]")  [assignment]
     main:8: error: Incompatible types in assignment (expression has type "AnyOfValidator[int]", variable has type "Validator[str]")  [assignment]
 
@@ -55,8 +55,8 @@
     var3: Validator[object] = validator          # correct
     var4: Validator[int | str] = validator       # error (8)
   out: |
-    main:3: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[builtins.object]"
-    main:4: note: Revealed type is "builtins.object"
+    main:3: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[object]"
+    main:4: note: Revealed type is "object"
     main:6: error: Incompatible types in assignment (expression has type "AnyOfValidator[object]", variable has type "AnyOfValidator[int | str]")  [assignment]
     main:8: error: Incompatible types in assignment (expression has type "AnyOfValidator[object]", variable has type "Validator[int | str]")  [assignment]
 
@@ -74,7 +74,7 @@
     var3: Validator[int | str] = validator       # correct
     var4: Validator[str] = validator             # error (9)
   out: |
-    main:4: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[builtins.int | builtins.str]"
-    main:5: note: Revealed type is "builtins.int | builtins.str"
+    main:4: note: Revealed type is "validataclass.validators.any_of_validator.AnyOfValidator[int | str]"
+    main:5: note: Revealed type is "int | str"
     main:7: error: Incompatible types in assignment (expression has type "AnyOfValidator[int | str]", variable has type "AnyOfValidator[str]")  [assignment]
     main:9: error: Incompatible types in assignment (expression has type "AnyOfValidator[int | str]", variable has type "Validator[str]")  [assignment]

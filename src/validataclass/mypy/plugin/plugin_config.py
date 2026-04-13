@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-if sys.version_info >= (3, 11):
+if sys.version_info >= (3, 11):  # pragma: nocover
     import tomllib
 else:  # pragma: nocover
     import tomli as tomllib

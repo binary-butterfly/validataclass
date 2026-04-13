@@ -12,5 +12,5 @@
     var3: StringValidator = validator  # correct
   out: |
     main:3: note: Revealed type is "validataclass.validators.url_validator.UrlValidator"
-    main:4: note: Revealed type is "builtins.str"
+    main:4: note: Revealed type is "str"
     main:6: error: Incompatible types in assignment (expression has type "UrlValidator", variable has type "Validator[int]")  [assignment]

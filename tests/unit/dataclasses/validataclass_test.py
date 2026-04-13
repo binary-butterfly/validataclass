@@ -491,7 +491,7 @@ class ValidatorDataclassTest:
         ],
     )
     def test_validataclass_with_invalid_field_tuples(field_tuple, expected_exception_msg):
-        """ Test that @validataclass raises exceptions for with various invalid tuples. """
+        """ Test that @validataclass raises exceptions for various invalid tuples. """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
             class InvalidDataclass:
