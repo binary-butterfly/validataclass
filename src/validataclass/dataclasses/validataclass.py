@@ -43,6 +43,8 @@ def validataclass(cls: None = None, /, **kwargs: Any) -> Callable[[type[_T]], ty
 def validataclass(
     cls: type[_T] | None = None,
     /,
+    *,
+    reject_unknown_fields: bool | None = None,
     **kwargs: Any,
 ) -> type[_T] | Callable[[type[_T]], type[_T]]:
     """
@@ -86,6 +88,22 @@ def validataclass(
 
     Optional parameters to the decorator will be passed directly to the `@dataclass` decorator. In most cases no
     parameters are necessary. By default, the argument `kw_only=True` will be used for validataclasses.
+
+    Additionally, the following validataclass-specific parameter is supported:
+
+    `reject_unknown_fields`: If set to `True`, the `DataclassValidator` will reject any input fields that are not
+    defined in the validataclass, raising a validation error for each unknown field.
+
+    Example with `reject_unknown_fields`:
+
+    ```
+    @validataclass(reject_unknown_fields=True)
+    class StrictDataclass:
+        example_field1: str = StringValidator()
+    ```
+
+    In this example, validating `{'example_field1': 'cookie', 'unknown': 'value'}` would raise a
+    `DictFieldsValidationError` with an error for the `unknown` field.
     """
 
     def decorator(_cls: type[_T]) -> type[_T]:
@@ -96,7 +114,12 @@ def validataclass(
         _prepare_dataclass_metadata(_cls)
 
         # Use @dataclass decorator to turn class into a dataclass
-        return dataclasses.dataclass(**kwargs)(_cls)
+        _cls = dataclasses.dataclass(**kwargs)(_cls)
+
+        # Store validataclass-specific settings on the class
+        _cls.__reject_unknown_fields__ = reject_unknown_fields  # type: ignore[attr-defined]
+
+        return _cls
 
     # Wrap actual decorator if called with parentheses
     return decorator if cls is None else decorator(cls)

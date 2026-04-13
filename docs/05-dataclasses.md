@@ -297,6 +297,50 @@ It is also worth noting that you can use the `@validataclass` decorator with opt
 being applied to the class.
 
 
+## Reject unknown fields
+
+By default, validataclass just ignores any unknown fields in the input dictionary when validating an object.
+This makes sense for normal APIs, as additional fields are just filtered out, and it makes validataclass more robust to
+changes in the API. There might be situations where one needs to have a strict validation of additional fields,
+for example, to match an OpenAPI validation.
+
+You can reject unknown fields by setting `reject_unknown_fields` either on the `@validataclass` decorator or on the
+`DataclassValidator` itself. When set on the `DataclassValidator`, it overrides the setting from the decorator.
+
+Setting it on the decorator:
+
+```python
+from validataclass.dataclasses import validataclass
+from validataclass.validators import DataclassValidator, StringValidator
+
+@validataclass(reject_unknown_fields=True)
+class MyModel:
+    name: str = StringValidator()
+
+my_validator = DataclassValidator(MyModel)
+
+my_validator.validate({'name': 'test'})  # would work fine
+my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw a DictFieldsValidationError with FieldNotAllowedError
+```
+
+Setting it on the `DataclassValidator` (this also works with dataclasses that don't have `reject_unknown_fields` set
+on the decorator, and can override the decorator setting):
+
+```python
+from validataclass.dataclasses import validataclass
+from validataclass.validators import DataclassValidator, StringValidator
+
+@validataclass
+class MyModel:
+    name: str = StringValidator()
+
+my_validator = DataclassValidator(MyModel, reject_unknown_fields=True)
+
+my_validator.validate({'name': 'test'})  # would work fine
+my_validator.validate({'name': 'test', 'more': 'stuff'})  # would throw a DictFieldsValidationError with FieldNotAllowedError
+```
+
+
 ## Defining field defaults
 
 While dataclasses have built-in support for field default values, they unfortunately have a rather impractical
