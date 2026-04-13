@@ -7,6 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 from decimal import Decimal
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.validators import Validator
 
 
@@ -96,7 +98,7 @@ def assert_decimal(actual: Decimal, expected: Decimal | str) -> None:
 
 
 # Test validator that parses context arguments
-class UnitTestContextValidator(Validator):
+class UnitTestContextValidator(Validator[str]):
     """
     Context-sensitive string validator, only for unit testing.
 
@@ -109,6 +111,7 @@ class UnitTestContextValidator(Validator):
     def __init__(self, *, prefix: str = ''):
         self.prefix = f'[{prefix}] ' if prefix else ''
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> str:
         self._ensure_type(input_data, str)
         return f'{self.prefix}{input_data} / {kwargs}'

@@ -9,8 +9,11 @@ from datetime import time
 from enum import Enum
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import InvalidTimeError
 from .string_validator import StringValidator
+from .validator import Validator
 
 __all__ = [
     'TimeFormat',
@@ -42,7 +45,7 @@ class TimeFormat(Enum):
     OPTIONAL_SECONDS = ('HH:MM[:SS]', r'([01][0-9]|2[0-3])(:[0-5][0-9]){1,2}')
 
 
-class TimeValidator(StringValidator):
+class TimeValidator(Validator[time]):
     """
     Validator that parses time strings in the formats `HH:MM:SS` or `HH:MM` (e.g. `13:05:59` or `13:05`) to
     `datetime.time` objects.
@@ -74,6 +77,9 @@ class TimeValidator(StringValidator):
     Output: `datetime.time`
     """
 
+    # Base validator to parse input as a string first
+    string_validator: StringValidator
+
     # Time string format (enum)
     time_format: TimeFormat
 
@@ -88,18 +94,19 @@ class TimeValidator(StringValidator):
             `time_format`: `TimeFormat`, specifies the accepted string format (default: `TimeFormat.WITH_SECONDS`)
         """
         # Initialize StringValidator without any parameters
-        super().__init__()
+        self.string_validator = StringValidator()
 
         # Save time format and precompile regular expression
         self.time_format = time_format
         self.time_format_regex = re.compile(self.time_format.regex_str)
 
-    def validate(self, input_data: Any, **kwargs: Any) -> time:  # type: ignore[override]
+    @override
+    def validate(self, input_data: Any, **kwargs: Any) -> time:
         """
         Validates input as a valid time string and convert it to a `datetime.time` object.
         """
         # First, validate input data as string
-        time_string = super().validate(input_data, **kwargs)
+        time_string = self.string_validator.validate(input_data, **kwargs)
 
         # Validate string format with a regular expression
         if not self.time_format_regex.fullmatch(time_string):

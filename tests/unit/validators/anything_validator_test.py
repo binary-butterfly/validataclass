@@ -214,7 +214,7 @@ class AnythingValidatorTest:
         'allowed_types, error_type_repr',
         [
             # Single object that is not a type
-            ('banana', "'banana'"),
+            ('banana', "'b'"),
 
             # Lists/sets that contain something that is not a type
             (['banana'], "'banana'"),

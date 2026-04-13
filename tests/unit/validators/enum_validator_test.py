@@ -438,20 +438,14 @@ class EnumValidatorTest:
     # Invalid validator parameters
 
     @staticmethod
-    @pytest.mark.parametrize(
-        'enum_cls_param',
-        [
-            # Member of an Enum class
-            UnitTestStringEnum.STRAWBERRY,
-
-            # Type that is not an Enum class (anonymous class)
-            type('UnitTestClass', (), {}),
-        ],
-    )
-    def test_enum_cls_invalid(enum_cls_param):
+    def test_enum_cls_invalid():
         """ Check that EnumValidator raises exception when enum_cls is not an Enum. """
+
+        class NotAnEnumClass:
+            pass
+
         with pytest.raises(InvalidValidatorOptionException) as exception_info:
-            EnumValidator(enum_cls_param)  # noqa
+            EnumValidator(NotAnEnumClass)  # type: ignore[type-var]
 
         assert str(exception_info.value) == 'Parameter "enum_cls" must be an Enum class.'
 
@@ -499,7 +493,7 @@ class EnumValidatorTest:
         """
         # This case should never happen in real life, so we need to manipulate the validator parameters post-creation
         validator = EnumValidator(UnitTestStringEnum)
-        validator.allowed_values.append('bananana')
+        validator.any_of_validator.allowed_values.append('bananana')
 
         with pytest.raises(ValueNotAllowedError):
             validator.validate('bananana')

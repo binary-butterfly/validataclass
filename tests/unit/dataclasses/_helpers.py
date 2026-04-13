@@ -8,7 +8,6 @@ import dataclasses
 from typing import Any
 
 from validataclass.dataclasses import Default
-from validataclass.validators import T_Dataclass
 
 
 # Test helpers for dataclass tests
@@ -45,7 +44,7 @@ def assert_field_no_default(field: dataclasses.Field[Any]) -> None:
     assert 'validator_default' not in field.metadata
 
 
-def get_dataclass_fields(cls: type[T_Dataclass]) -> dict[str, dataclasses.Field[Any]]:
+def get_dataclass_fields(cls: type[object]) -> dict[str, dataclasses.Field[Any]]:
     """
     Returns a dictionary containing all fields of a given dataclass.
     """

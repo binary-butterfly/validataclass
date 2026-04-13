@@ -13,11 +13,8 @@ omit =
 show_missing = True
 skip_empty = True
 skip_covered = True
-exclude_lines =
-    pragma: no ?cover
+exclude_also =
     @abstractmethod
-    @overload
-    if TYPE_CHECKING:
 
 [html]
 directory = reports/coverage_html/

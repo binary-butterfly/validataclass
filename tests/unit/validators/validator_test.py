@@ -7,6 +7,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 from typing import Any
 
 import pytest
+from typing_extensions import override
 
 from validataclass.validators import Validator
 
@@ -23,7 +24,8 @@ class ValidatorTest:
         """
         # Ensure that Validator creation causes a DeprecationWarning
         with pytest.deprecated_call():
-            class ValidatorWithoutKwargs(Validator):
+            class ValidatorWithoutKwargs(Validator[Any]):
+                @override
                 def validate(self, input_data: Any) -> Any:  # type: ignore[override]  # noqa
                     return input_data
 

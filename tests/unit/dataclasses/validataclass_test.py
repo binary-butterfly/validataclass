@@ -5,6 +5,7 @@ Use of this source code is governed by an MIT-style license that can be found in
 """
 
 import dataclasses
+from dataclasses import FrozenInstanceError
 
 import pytest
 
@@ -49,7 +50,7 @@ class ValidatorDataclassTest:
         class UnitTestValidatorDataclass:
             foo: int = IntegerValidator()
             bar: int = validataclass_field(IntegerValidator(), default=Default(0))
-            baz: str | None = validataclass_field(Noneable(StringValidator()), default=None)
+            baz: str | None = validataclass_field(Noneable(StringValidator()), default=Default(None))
 
         # Check that @validataclass actually created a dataclass (i.e. used @dataclass on the class)
         assert dataclasses.is_dataclass(UnitTestValidatorDataclass)
@@ -77,29 +78,32 @@ class ValidatorDataclassTest:
     def test_validataclass_with_kwargs():
         """ Create a dataclass using @validataclass() with arguments and check that they are passed to @dataclass(). """
 
-        # Create two dataclasses, one without any arguments and one with unsafe_hash=True.
-        # The first won't have a __hash__ function, but the latter will have one.
-        # We can use this to check that the argument was really passed to @dataclass.
+        # As an example, create two dataclasses, one without any arguments and one with frozen=True.
+        # Writing to an object of the frozen dataclass should raise an exception.
 
         @validataclass()
-        class FooDataclass:
+        class NormalDataclass:
             foo: int = IntegerValidator()
 
-        @validataclass(unsafe_hash=True)
-        class BarDataclass:
+        @validataclass(frozen=True)
+        class FrozenDataclass:
             foo: int = IntegerValidator()
 
-        # Check that @validataclass actually created a dataclass (i.e. used @dataclass on the class)
-        assert dataclasses.is_dataclass(FooDataclass)
-        assert dataclasses.is_dataclass(BarDataclass)
+        # NormalDataclass is not frozen, writing is allowed
+        normal = NormalDataclass(foo=42)
+        assert normal.foo == 42
+        normal.foo = 13
+        assert normal.foo == 13
 
-        # Check if __hash__ exists
-        assert FooDataclass.__hash__ is None
-        assert BarDataclass.__hash__ is not None
+        # FrozenDataclass is frozen, writing should raise an exception!
+        frozen = FrozenDataclass(foo=42)
+        assert frozen.foo == 42
+        with pytest.raises(FrozenInstanceError, match="cannot assign to field 'foo'"):
+            frozen.foo = 13  # type: ignore[misc]
 
     @staticmethod
     def test_validataclass_with_tuples():
-        """ Create a dataclass using @validataclass with tuple syntax for setting Defaults. """
+        """ Create a dataclass using @validataclass with tuple syntax for setting defaults. """
 
         @validataclass
         class UnitTestValidatorDataclass:
@@ -187,7 +191,8 @@ class ValidatorDataclassTest:
     @staticmethod
     def test_validataclass_create_objects_invalid():
         """
-        Create a dataclass using @validataclass and try to instantiate objects from it, but missing a required value.
+        Create a dataclass using @validataclass and try to instantiate objects from it, but missing a required value or
+        using positional arguments.
         """
 
         @validataclass
@@ -196,12 +201,18 @@ class ValidatorDataclassTest:
             optional_field: int = IntegerValidator(), Default(10)
 
         # Try to instantiate without the required field
-        with pytest.raises(TypeError, match="required keyword-only argument"):
+        with pytest.raises(TypeError, match="missing 1 required keyword-only argument: 'required_field'"):
+            # TODO: It would be good if mypy detected the missing required kwargs here too
             UnitTestDataclass()
 
         # Try to instantiate with the optional field, but still lacking the required field
-        with pytest.raises(TypeError, match="required keyword-only argument"):
+        with pytest.raises(TypeError, match="missing 1 required keyword-only argument: 'required_field'"):
+            # TODO: It would be good if mypy detected the missing required kwargs here too
             UnitTestDataclass(optional_field=42)
+
+        # Try to instantiate with positional arguments
+        with pytest.raises(TypeError, match="takes 1 positional argument but 2 were given"):
+            UnitTestDataclass(42)  # type: ignore[misc]
 
     @staticmethod
     def test_validataclass_with_mutable_defaults():
@@ -214,7 +225,8 @@ class ValidatorDataclassTest:
         class UnitTestDataclass:
             field_list: list[int] = ListValidator(IntegerValidator()), Default([])
             field_dict: dict[str, int] = (
-                DictValidator(field_validators={'foo': IntegerValidator()}),
+                # TODO: Proper typing requires mypy plugin
+                DictValidator(field_validators={'foo': IntegerValidator()}),  # type: ignore[arg-type]
                 Default({'foo': 0}),
             )
 
@@ -276,9 +288,14 @@ class ValidatorDataclassTest:
         ]
 
         # Check type annotations
-        assert all(fields[field].type == int for field in ['required1', 'required2', 'optional2', 'optional4'])
-        assert all(fields[field].type == int | None for field in ['required3', 'optional1'])
-        assert all(fields[field].type == int | UnsetValueType for field in ['required4', 'optional3'])
+        assert fields['required1'].type == int
+        assert fields['required2'].type == int
+        assert fields['required3'].type == int | None
+        assert fields['required4'].type == int | UnsetValueType
+        assert fields['optional1'].type == int | None
+        assert fields['optional2'].type == int
+        assert fields['optional3'].type == int | UnsetValueType
+        assert fields['optional4'].type == int
 
         # Check validators
         assert all(type(field.metadata.get('validator')) is IntegerValidator for field in fields.values())
@@ -316,7 +333,7 @@ class ValidatorDataclassTest:
             required2: str | None = StringValidator(), Default(None)
 
             # Optional fields
-            optional1: str = StringValidator()  # No default override, so the default should still be Default(3)
+            optional1: str | int = StringValidator()  # No default override, so the default should still be Default(3)
             optional2: str | None = StringValidator(), Default(None)
 
             # New fields
@@ -330,8 +347,12 @@ class ValidatorDataclassTest:
         assert list(fields.keys()) == ['required1', 'required2', 'optional1', 'optional2', 'new1', 'new2']
 
         # Check type annotations
-        assert all(fields[field].type == str for field in ['required1', 'optional1', 'new1'])
-        assert all(fields[field].type == str | None for field in ['required2', 'optional2', 'new2'])
+        assert fields['required1'].type == str
+        assert fields['required2'].type == str | None
+        assert fields['optional1'].type == str | int
+        assert fields['optional2'].type == str | None
+        assert fields['new1'].type == str
+        assert fields['new2'].type == str | None
 
         # Check validators
         assert all(type(field.metadata.get('validator')) is StringValidator for field in fields.values())
@@ -368,7 +389,8 @@ class ValidatorDataclassTest:
 
         # Check names and types of all fields
         assert list(fields.keys()) == ['validated', 'non_init']
-        assert all(f.type == int for f in fields.values())
+        assert fields['validated'].type == int
+        assert fields['non_init'].type == int
 
         # Check non-init field
         assert fields['non_init'].init is False
@@ -390,7 +412,7 @@ class ValidatorDataclassTest:
             field_both: str = StringValidator()
 
         @validataclass
-        class SubClass(BaseB, BaseA):  # type: ignore[misc]
+        class SubClass(BaseB, BaseA):
             # Override the defaults to test that the decorator recognizes all fields of both base classes.
             # If it does not, a "no validator for field X" error would be raised.
             field_a: int = Default(42)
@@ -423,9 +445,9 @@ class ValidatorDataclassTest:
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
             class InvalidDataclass:
-                foo: int
+                foo: int  # type: ignore[validataclass]
 
-        assert str(exception_info.value) == 'Dataclass field "foo" must specify a Validator.'
+        assert str(exception_info.value) == 'Dataclass field "foo" must specify a validator.'
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -434,12 +456,12 @@ class ValidatorDataclassTest:
             (
                 # None, missing validator
                 None,
-                'Dataclass field "foo" must specify a Validator.',
+                'Dataclass field "foo" must specify a validator.',
             ),
             (
                 # Default only, missing validator
                 (Default(3)),
-                'Dataclass field "foo" must specify a Validator.',
+                'Dataclass field "foo" must specify a validator.',
             ),
             (
                 # Tuple with invalid length
@@ -459,21 +481,21 @@ class ValidatorDataclassTest:
             (
                 # Two validators in a tuple
                 (IntegerValidator(), StringValidator()),
-                'Dataclass field "foo": Only one Validator can be specified.',
+                'Dataclass field "foo": Only one validator can be specified.',
             ),
             (
                 # Two defaults in a tuple
                 (Default(3), Default(None)),
-                'Dataclass field "foo": Only one Default can be specified.',
+                'Dataclass field "foo": Only one default can be specified.',
             ),
         ],
     )
     def test_validataclass_with_invalid_field_tuples(field_tuple, expected_exception_msg):
-        """ Test that @validataclass raises exceptions for with various invalid tuples. """
+        """ Test that @validataclass raises exceptions for various invalid tuples. """
         with pytest.raises(DataclassValidatorFieldException) as exception_info:
             @validataclass
             class InvalidDataclass:
-                foo: int = field_tuple
+                foo: int = field_tuple  # type: ignore[validataclass]
 
         assert str(exception_info.value) == expected_exception_msg
 
@@ -511,7 +533,7 @@ class ValidatorDataclassTest:
 
         assert (
             str(exception_info.value)
-            == 'Dataclass field "foo" has a defined Validator and/or Default object, but no type annotation.'
+            == 'Dataclass field "foo" has a defined validator and/or default object, but no type annotation.'
         )
 
     @staticmethod

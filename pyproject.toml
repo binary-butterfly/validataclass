@@ -8,23 +8,44 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "src/validataclass/_version.py"
-version_scheme = "post-release"
+version_scheme = "no-guess-dev"
 
 [tool.mypy]
 files = ["src/", "tests/"]
 mypy_path = "src/"
 explicit_package_bases = true
 
+# Enable mypy plugins
+plugins = [
+    # Our custom mypy plugin for type checking validataclasses
+    "validataclass.mypy.plugin",
+
+    # Plugin to type check mypy plugins (only for plugin development)
+    "mypy.plugins.proper_plugin",
+]
+
 # Enable strict type checking
 strict = true
+
+# Enable further checks that are not included in strict mode
+disallow_any_unimported = true
+strict_equality_for_none = true
+warn_unreachable = true
+enable_error_code = [
+    "deprecated",
+    "explicit-override",
+    "ignore-without-code",
+    "mutable-override",
+    "possibly-undefined",
+    "redundant-expr",
+    "redundant-self",
+    "truthy-bool",
+    "truthy-iterable",
+    "unused-awaitable",
+]
 
 [[tool.mypy.overrides]]
 module = 'tests.*'
 
 # Don't enforce typed definitions in tests, this is a lot of unnecessary work (most parameters would be Any anyway).
 allow_untyped_defs = true
-
-# TODO: This is the main issue with mypy and validataclass right now.
-# Defining dataclasses with validators using the @validataclass decorator, like `some_field: str = StringValidator()`,
-# will cause "Incompatible types in assignment" errors. Until we find a way to solve this, ignore this error for now.
-disable_error_code = "assignment"

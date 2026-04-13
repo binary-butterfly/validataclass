@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any
 
+from typing_extensions import override
+
 from .base_exceptions import ValidationError
 
 __all__ = [
@@ -32,6 +34,7 @@ class ListItemsValidationError(ValidationError):
         assert all(isinstance(error, ValidationError) for error in item_errors.values())
         self.item_errors = item_errors
 
+    @override
     def _get_repr_dict(self) -> dict[str, str]:
         base_dict = super()._get_repr_dict()
         return {
@@ -39,6 +42,7 @@ class ListItemsValidationError(ValidationError):
             'item_errors': repr(self.item_errors),
         }
 
+    @override
     def to_dict(self) -> dict[str, Any]:
         base_dict = super().to_dict()
         return {

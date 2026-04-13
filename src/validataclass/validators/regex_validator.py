@@ -7,6 +7,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 import re
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import RegexMatchError, ValidationError
 from .string_validator import StringValidator
 
@@ -144,6 +146,7 @@ class RegexValidator(StringValidator):
 
         self.allow_empty = allow_empty
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> str:
         """
         Validates input as string and match full string against regular expression.

@@ -6,6 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found in
 
 from typing import Any, Generic, TypeVar
 
+from typing_extensions import override
+
 from validataclass.exceptions import (
     InvalidValidatorOptionException,
     ListItemsValidationError,
@@ -16,14 +18,13 @@ from .validator import Validator
 
 __all__ = [
     'ListValidator',
-    'T_ListItem',
 ]
 
-# Type variable for type hints in DataclassValidator
+# Type parameter for the list items in the output of a ListValidator
 T_ListItem = TypeVar('T_ListItem')
 
 
-class ListValidator(Generic[T_ListItem], Validator):
+class ListValidator(Validator[list[T_ListItem]], Generic[T_ListItem]):
     """
     Validator for lists that validates list items with a specified item validator.
 
@@ -68,7 +69,7 @@ class ListValidator(Generic[T_ListItem], Validator):
     """
 
     # Validator used to validate the list items
-    item_validator: Validator
+    item_validator: Validator[T_ListItem]
 
     # List length constraints
     min_length: int | None = None
@@ -79,7 +80,7 @@ class ListValidator(Generic[T_ListItem], Validator):
 
     def __init__(
         self,
-        item_validator: Validator,
+        item_validator: Validator[T_ListItem],
         *,
         min_length: int | None = None,
         max_length: int | None = None,
@@ -109,6 +110,7 @@ class ListValidator(Generic[T_ListItem], Validator):
         self.max_length = max_length
         self.discard_invalid = discard_invalid
 
+    @override
     def validate(self, input_data: Any, **kwargs: Any) -> list[T_ListItem]:
         """
         Validates input data. Returns a validated list.

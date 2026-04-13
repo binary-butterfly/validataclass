@@ -9,6 +9,8 @@ import math
 from decimal import Decimal
 from typing import Any
 
+from typing_extensions import override
+
 from validataclass.exceptions import NonFiniteNumberError
 from .decimal_validator import DecimalValidator
 
@@ -113,7 +115,8 @@ class FloatToDecimalValidator(DecimalValidator):
         if allow_strings:
             self.allowed_types.append(str)
 
-    def validate(self, input_data: Any, **kwargs: Any) -> Decimal:  # type: ignore[override]
+    @override
+    def validate(self, input_data: Any, **kwargs: Any) -> Decimal:
         """
         Validates input data as a float (optionally also as integer or string), then converts it to a `Decimal` object.
         """

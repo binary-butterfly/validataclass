@@ -167,12 +167,12 @@ _Let me tell you about the `DataclassValidator`._
 
 ## The DataclassValidator
 
-The `DataclassValidator` basically is just a very specialized `DictValidator`. It validates dictionaries using **field validators**,
-and then converts the validated dictionaries to objects of a specified **dataclass**.
+The `DataclassValidator` validates dictionaries using **field validators** similar to the `DictValidator` and then
+converts the validated dictionaries to objects of a specified **dataclass**.
 
-But instead of specifying the field validators in the validator, you can now define the validators directly inside the dataclass.
-The `DataclassValidator` will read these field validators from the dataclass and pass them to the underlying `DictValidator`. In the
-same way it also determines which fields are required and which are optional.
+But instead of specifying the field validators in the validator, you can now define the validators directly inside the
+dataclass. The `DataclassValidator` will read these field validators from the dataclass and use them to validate the
+input dictionary. In the same way it also determines which fields are required and which are optional.
 
 The usage of the `DataclassValidator` then is pretty trivial, assuming we have already defined the dataclass:
 
@@ -342,8 +342,10 @@ default values for fields.
 
 ### Setting defaults with `validataclass_field()`
 
-To set a default value with `validataclass_field()`, you simply specify the `default` parameter. This parameter can be
-set either to a `Default` object (which we will explain in a moment) or directly to a value.
+To set a default value with `validataclass_field()`, you need to set the `default` parameter to a "default object".
+These are special validataclass objects that will be explained in more detail in a moment.
+
+Using raw default values instead of default objects has been deprecated in version 0.12.0.
 
 **Example:**
 
@@ -355,16 +357,18 @@ from validataclass.validators import IntegerValidator
 
 @dataclass
 class ExampleDataclass:
-    # The following fields are equivalent
-    field_a: int = validataclass_field(IntegerValidator(), default=42)           # Specify default as direct value
-    field_b: int = validataclass_field(IntegerValidator(), default=Default(42))  # Specify default using a Default object
+    # Field with integer default
+    field1: int = validataclass_field(IntegerValidator(), default=Default(42))
+    
+    # Field that defaults to None
+    field2: int | None = validataclass_field(IntegerValidator(), default=Default(None))
 ```
 
 
 ### Setting defaults with `@validataclass`
 
 To set a default value for a field using the `@validataclass` decorator, you have to define the field as a **tuple**
-consisting of the validator and a `Default` object, e.g. `IntegerValidator(), Default(42)`.
+consisting of the validator and a default object, e.g. `IntegerValidator(), Default(42)`.
 
 **Example:**
 
@@ -379,67 +383,91 @@ class ExampleDataclass:
 ```
 
 
-### The `Default` classes
+### The default objects
 
-To specify default values for fields, the helper class `Default` can be used. There also are some subclasses of `Default` which will be
-covered in a moment: `DefaultFactory`, `DefaultUnset` and `NoDefault`.
+To specify default values for fields, there are special helper classes and objects, most notably the `Default` class.
+They all are based on the abstract base class `BaseDefault`.
+
+As of now, there are the two classes `Default` and `DefaultFactory`, as well as the special values `DefaultUnset` and
+`NoDefault`.
+
+You can also implement custom default classes if you need to, though usually this isn't necessary.
 
 
-#### Default (base class)
+#### Default
 
-Use the `Default` class if you want to specify a single, constant value as a field default. This class is basically just a wrapper that
-encapsulates a "raw" value in an object and returns this value if needed. The value can be of any type (including `None` or some object).
+Use the `Default` class if you want to specify a single, constant value as a field default.
 
-For example, with `Default('')` the default would always be an empty string, `Default(42)` would set the default to the integer `42`,
-and `Default(None)` would result in the default value being `None`.
+This class is basically just a wrapper that encapsulates a "raw" value in an object and returns this value if needed.
+The value can be of any type (including `None` or some object).
 
-The value will be deepcopied, which means that if you use lists, dictionaries or objects as default values, every validated object will
-have a **copy** of the value. For example, with `Default([])` the default would always be a new empty list. Modifying the list of one
-validated object would **not** result in a change of the list of other validated objects.
+For example, with `Default('')` the default value would be an empty string, `Default(42)` would set the default to the
+integer `42`, and `Default(None)` would result in the default value being `None`.
+
+The value will be deepcopied, which means that if you use mutable objects like lists, dictionaries or custom classes as
+defaults, every validated object will have a unique **copy** of the value. For example, with `Default([])` you will
+always get a unique empty list as the default, rather than a shared instance.
+
+(In the context of regular dataclasses, this means that mutable objects will automatically result in a `default_factory`
+rather than a `default`. In regular dataclasses, using mutable objects as `default` would result in an error.)
 
 
 #### DefaultFactory
 
-The `DefaultFactory` class uses **callables** to generate default values dynamically at validation time. Use this class if you need
-dynamic default values.  You can use a `DefaultFactory` with any callable, e.g. with a function reference or a lambda function.
+The `DefaultFactory` class uses callables to generate default values dynamically at validation time, for example a
+class type, a function reference or a lambda function.
 
-For example, specifying `DefaultFactory(datetime.now)` (with `from datetime import datetime`) would result in the default value always
-being the datetime at which the input dictionary was validated. To use the current year as default, you could use a lambda function:
-`DefaultFactory(lambda: datetime.now().year)`.
+Use this if you need dynamic default values or want to create instances of a class.
 
-Contrary to `Default` the values will **not** be deepcopied. This also means that you can use a `DefaultFactory` as a workaround if you
-actually want to use an object **reference** as a default value. For example, if you have a list `some_list = []` and use a
-`DefaultFactory(lambda: some_list)` as default for a dataclass field, all objects validated using this dataclass will use **the same**
-list as their default. Modifying the list of one validated object will modify the list for **all** objects.
+For example, specifying `DefaultFactory(datetime.now)` (with `from datetime import datetime`) would result in the
+default value always being the datetime at which the input dictionary was validated. To use the current year as default,
+you could use a lambda function: `DefaultFactory(lambda: datetime.now().year)`.
+
+Please note that `Default` can be used with (simple) mutable objects, so you don't need to write `DefaultFactory(list)`
+to create new lists, but can just use `Default([])`.
+
+If you ever want to use a **shared instance** of an object as a default value (i.e. bypassing the deepcopy that's done
+by `Default`), you can use a `DefaultFactory` with a lambda function. For example, if you have a list `some_list = []`,
+you can use `DefaultFactory(lambda: some_list)`. Every validated object with this default value will point to the same
+instance `some_list`.
 
 
-#### DefaultUnset and the `UnsetValue` object
+#### Unset values: The `UnsetValue` object and `DefaultUnset`
 
-If you set a default value for a field in a dataclass, this field will **always** have a value: Either the value from the input dictionary
-if the field exists, or the default value. If you don't set a default value, the field is **required**, meaning an input dictionary
-without this field will fail validation.
+If you set a default value for a field in a dataclass, this field will **always** have a value: Either the value from
+the input dictionary if the field exists, or the default value. If you don't set a default value, the field is
+**required**, meaning an input dictionary without this field will fail validation.
 
-Sometimes you want optional fields **without** default values though: If a string field uses `Default('')` for example, it will always
-have a string value (either empty or not empty), and you cannot distinguish whether the field was omitted in the input dictionary or
+Sometimes you want optional fields **without** default values though: If a string field uses `Default('')` for example,
+it will always have a string value, and you cannot distinguish whether the field was omitted in the input dictionary or
 whether the user explicitly set the field to an empty string.
 
-One solution is to use `Default(None)` instead: If the field is `None`, you know that the field did not exist in the input dictionary.
+One solution is to use `Default(None)` instead: If the field is `None`, you know that the field did not exist in the
+input dictionary.
 
-This is sufficient in a lot of cases, but sometimes `None` is an allowed value for a field (e.g. when using the `Noneable`
-wrapper) and you need to distinguish between "the field did not exist" and "the field was explicitly set to `None`".
+This is sufficient in many cases, but sometimes you have a field where `None` is a valid value (e.g. when using the
+`Noneable` wrapper validator), and you need to distinguish between `None` and "the field does not exist".
 
-For this case, we defined a special value called `UnsetValue`, which you can use similarly to `None`. These values are so called
-[sentinel objects](https://python-patterns.guide/python/sentinel-object/): Their purpose is to represent a missing value. They also are
-unique objects, which means you cannot copy them: Trying to create a new object using `UnsetValue()` or even using `deepcopy(UnsetValue)`
-will always result in a reference to the **same** object. This ensures that you can check for this value using the identity operator `is`,
-e.g. `if some_value is UnsetValue` (just like `is None` or `is True`).
+(Example: You have an API to modify objects from a database. The object has a nullable datetime field which is either a
+valid point in time or NULL (`None` in Python). The user can set the field to a datetime string or to null (`None`) to
+reset the field, e.g. with a `Noneable(DateTimeValidator())`. But you only want to modify database fields that are set
+in the API request, others should stay unmodified. So you cannot use `Default(None)` and need a distinct default value.)
 
-So, to define an **optional field without default** you can simply specify `UnsetValue` as the default value, and then use `is UnsetValue`
-in your code to distinguish it from other values like `None`.
+For this case, we defined the special value `UnsetValue`, which works similar to Python's `None` but is its own unique
+value. It has the type `UnsetValueType` and is the only possible instance of this type (copying it will result in the
+same object). You can compare values with it using the identity operator `is`, e.g. `if some_value is UnsetValue` (just
+like `is None`).
 
-For this you can use the `DefaultUnset` object, which is a shortcut for `Default(UnsetValue)`.
+(For reference: Special values like `None` or `UnsetValue` are so called
+[sentinel objects](https://python-patterns.guide/python/sentinel-object/).)
 
-Remember to adjust the type hints in your dataclass though. There is a type alias `OptionalUnset[T]` which you can use
+So, to define an "optional field without default" you can simply specify `UnsetValue` as the default value, and then
+use `is UnsetValue` in your code to distinguish it from other values, including `None`. (Using `==` works too, but `is`
+is generally recommended.)
+
+As a shortcut, the library defines the object `DefaultUnset`, which is equivalent to `Default(UnsetValue)`.
+
+Remember to adjust the type hints in your dataclass. There is a type alias `OptionalUnset[T]` which you can use
 for this, for example: `some_var: OptionalUnset[int]`, which is equivalent to `int | UnsetValueType`. For fields that
 can be both `None` and `UnsetValue`, there is also the type alias `OptionalUnsetNone[T]` as a shortcut for
 `OptionalUnset[Optional[T]]` or `T | UnsetValueType | None`.
@@ -447,16 +475,19 @@ can be both `None` and `UnsetValue`, there is also the type alias `OptionalUnset
 
 #### NoDefault
 
-Specifying the `NoDefault` object for a field default literally means that the field does not have any default value. This is equivalent
-to **not specifying a default value at all**, meaning the field will be **required** and not optional.
+If a field has no default value, it is a **required field**. This is represented by the `NoDefault` object (which is a
+sentinel object of an internal subclass of `BaseDefault`).
 
-In most cases you won't need this value, but it can be useful to overwrite an existing default in a subclass (see the "Subclassing"
-section below).
+In most cases, you don't need to specify this. `NoDefault` is the implicit "default default" of a validataclass field.
+
+However, in some cases you might need to set `NoDefault` explicitly. This can be the case when you create a subclass of
+a validataclass and want to remove the default of a field from the base class. Overriding the field's default with
+`NoDefault` will make it a required field again. (See the "Subclassing" section below for details.)
 
 
-#### Examples for the various Default classes
+#### Examples for the various default classes
 
-The following code contains examples for all the various `Default` classes that we've seen above.
+The following code contains examples for all the various default classes that we've seen above.
 
 ```python
 from datetime import datetime
@@ -468,19 +499,26 @@ from validataclass.validators import IntegerValidator, ListValidator, DateTimeVa
 
 @validataclass
 class ExampleClass:
-    # Simple defaults for integer fields
-    field_a: int = IntegerValidator(), Default(42)                  # Default value is 42
-    field_b: Optional[int] = IntegerValidator(), Default(None)      # Default value is None
-    field_c: OptionalUnset[int] = IntegerValidator(), DefaultUnset  # Default value is UnsetValue
+    # Validated as an integer if set, defaults to 42
+    field_a: int = IntegerValidator(), Default(42)
+    
+    # Validated as an integer if set, defaults to the value None
+    field_b: Optional[int] = IntegerValidator(), Default(None)
+    
+    # Validated as an integer if set, defaults to the special value UnsetValue
+    field_c: OptionalUnset[int] = IntegerValidator(), DefaultUnset
 
-    # Defaults for lists
-    field_d: list = ListValidator(IntegerValidator()), Default([])  # Default value is an empty list
+    # Validated as a list of integers if set, defaults to an empty list
+    field_d: list = ListValidator(IntegerValidator()), Default([])
 
-    # DefaultFactories for datetime fields
-    field_e: datetime = DateTimeValidator(), DefaultFactory(datetime.now)           # Default value will be datetime of validation
-    field_f: int = IntegerValidator(), DefaultFactory(lambda: datetime.now().year)  # Default value will be YEAR of validation (as int)
+    # Validated as a datetime string and converted to a datetime object if set.
+    # Defaults to the current datetime (time when the field was validated)
+    field_e: datetime = DateTimeValidator(), DefaultFactory(datetime.now)
+    
+    # Validated as an integer, defaults to the current year (as integer)
+    field_f: int = IntegerValidator(), DefaultFactory(lambda: datetime.now().year)
 
-    # No default: The following two fields are exactly the same (both are required)
+    # No default: The following two fields are exactly the same (both are required fields)
     field_g: int = IntegerValidator()
     field_h: int = IntegerValidator(), NoDefault
 ```
@@ -490,9 +528,10 @@ class ExampleClass:
 
 One more important thing to understand about optional fields is what "optional" exactly means.
 
-When a field is optional, this means that the field is allowed to be **omitted completely** in the input dictionary. However, this
-does **not** automatically mean that the input value is allowed to have the value `None`. A field with a default value would still raise
-a `RequiredValueError` if the input value is `None`. This is, unless a field validator that explicitly allows `None` as value is used.
+When a field is optional, this means that the field is allowed to be **omitted completely** in the input dictionary.
+However, this does **not** automatically mean that the input value is allowed to have the value `None`. A field with a
+default value would still raise a `RequiredValueError` if the input value is `None`. This is, unless a field validator
+that explicitly allows `None` as value is used.
 
 For example, imagine a dataclass with only one field: `some_var: int | None = IntegerValidator(), Default(None)`. An
 empty input dictionary  `{}` would result in an object with the default value `some_var = None`, but the input
@@ -503,12 +542,19 @@ Instead, to explicitly allow `None` as value, you can use the `Noneable` wrapper
 **not** make the field optional, so an input dictionary with the value `None` would be allowed, but omitting the field
 in an input dictionary would be invalid.
 
-To make a field both optional **and** allow `None` as value, you can simply combine `Noneable()` and a `Default` value. \
-For example: `some_var: int | None = Noneable(IntegerValidator()), Default(None)`.
+To make a field both optional **and** allow `None` as value, you can simply combine `Noneable()` and a default value.
+For example:
 
-You can also configure the `Noneable` wrapper to use a different default value than `None`. For example, to always use `0` as the
-default value, regardless of whether the field is missing in the input dictionary or whether the field has the input value `None`: \
-`some_var: int = Noneable(IntegerValidator(), default=0), Default(0)`.
+```
+some_var: int | None = Noneable(IntegerValidator()), Default(None)`.
+```
+
+You can also configure the `Noneable` wrapper to use a different default value than `None`. For example, the following
+field will always be an integer. If it's set to `None` **or** is missing in the input, it defaults to 0:
+
+```
+some_var: int = Noneable(IntegerValidator(), default=0), Default(0)
+```
 
 
 ## Subclassing
