@@ -6,7 +6,153 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased](https://github.com/binary-butterfly/validataclass/compare/0.10.0...HEAD)
+## [Unreleased](https://github.com/binary-butterfly/validataclass/compare/0.12.0...HEAD)
+
+
+## [0.12.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.12.0) - 2026-04-14
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.11.0...0.12.0)
+
+This release adds proper support for type checking with [mypy](https://mypy-lang.org/) using a custom mypy plugin, and
+significantly improves the typing of the library in general.
+
+A lot of changes have been made to make this possible. This includes some smaller breaking changes and deprecations.
+However, most of them are practically irrelevant because they affect edge cases that are unlikely to be found in any
+real life code or similar.
+
+If you're using or planning to use mypy in your project, you should enable the validataclass mypy plugin. Furthermore,
+some code changes might be necessary to fix typing issues, especially if you have custom validator classes. Please refer
+to [`docs/07-mypy-plugin.md`](https://github.com/binary-butterfly/validataclass/blob/main/docs/07-mypy-plugin.md) for
+how to configure the mypy plugin, as well as how to fix common typing issues.
+
+While the mypy plugin is (hopefully) production-ready, keep in mind that it's a complex thing that has not been tested
+in real life projects yet. There are some known issues and probably several unknown issues, and some features are still
+missing. Please report any issues or bugs that you encounter using this plugin.
+
+Apart from all this, the release also introduces a new feature to optionally reject unknown fields in validataclasses
+with validation errors.
+
+Finally, this version drops support for Python 3.8 and 3.9 and adds support for Python 3.13 and 3.14.
+
+### Added
+
+- Add support for Python 3.13. [#132]
+- Add support for Python 3.14. [#137]
+- Add mypy plugin for type checking validataclasses with mypy. [#140], [#141]
+  - Please note that the mypy plugin needs to be enabled explicitly in your mypy configuration!
+  - See [`docs/07-mypy-plugin.md`](https://github.com/binary-butterfly/validataclass/blob/main/docs/07-mypy-plugin.md)
+    for details on how to enable and configure the plugin.
+- Add option to reject unknown fields in validataclasses (by [@the-infinity]). [#139]
+  - The new option `reject_unknown_fields` can be set both in the `@validataclass` decorator and the `DataclassValidator`.
+  - If this option is `True`, the `DataclassValidator` will reject unknown fields with a `field_not_allowed` error.
+    This is the same validation error used by the `RejectValidator`.
+  - When the option is set both in the `@validataclass` decorator *and* in the `DataclassValidator`, the option of the
+    `DataclassValidator` takes precedence. It's recommended to use the decorator option to define the default behavior
+    for a specific validataclass, and the validator option to override this behavior, e.g. for debugging purposes.
+
+### Changed
+
+Note: Many of the following changes can be considered breaking changes to some degree. However, it is unlikely that any
+of them affects any real life code. The most notable change is the first one, but it primarily concern typing and
+should not break any existing code. It's still advised to take a closer look at them when updating.
+
+- Generic-based typing for validator classes. [#134]
+  - The validator base class `Validator` is now a generic class with one type parameter. This type parameter specifies
+    the type of the **output** of this validator: Given a validator of type `Validator[T]`, the return type of
+    `validator.validate()` must be `T`. This does **not** relate to the type of input data.
+  - For example, the `DecimalValidator` is of type `Validator[Decimal]` because it always returns a `Decimal` object.
+  - Validator classes can have their own type parameters as well. For example, the `ListValidator` has a type parameter
+    to indicate the type of items in the returned list: `ListValidator[T]` inherits from `Validator[list[T]]`, it
+    requires an item validator of type `Validator[T]` and always returns a `list[T]`.
+  - In most cases, type parameters will be automatically inferred from the construction arguments, e.g. when using
+    `ListValidator(StringValidator())` in a validataclass, its type will be inferred as `ListValidator[str]`. However,
+    there are some edge cases where type inference doesn't always work (e.g. for `DictValidator`). In those cases, mypy
+    might report an error. A possible solution is to define the validator as a variable outside the validataclass and
+    annotate it explicitly, although the more convenient option is to just add a `# type: ignore` for this validator.
+    This problem might be solved in a future version.
+  - There can be typing problems when inheriting from another validator and changing its output type (e.g. implementing
+    the `DecimalValidator` as a subclassed `StringValidator` will result in typing errors). Please refer to the
+    [docs](https://github.com/binary-butterfly/validataclass/blob/main/docs/07-mypy-plugin.md#incompatible-return-type-in-custom-validators).
+  - The base classes for several validators have been changed for correct typing (see previous point). This also implies
+    that attributes from base validators (e.g. `min_length` from `StringValidator`) might not be accessible directly
+    anymore. In general, you should not rely on the existence or names of attributes in validator classes.
+- Generic-based typing for default objects. [#136]
+  - Default classes (e.g. `Default`, `DefaultFactory`) all inherit from a new generic base class `BaseDefault[T]` now,
+    where `T` specifies the type of the actual default value. (Previously, `Default` was the base class, which was
+    problematic for several reasons.)
+  - The classes `Default[T]` and `DefaultFactory[T]` are generic as well, specifying the type of their output value.
+- `DefaultUnset` is now simply an alias for `Default(UnsetValue)` rather than a special subclass. [#136]
+  - As a side effect, its string representation (`repr(DefaultUnset)`) has changed to `Default(UnsetValue)`.
+  - Also, `DefaultUnset` is not unique anymore. Use `==` rather than `is` to check if something is `DefaultUnset`.
+- The `default` parameter of `validataclass_field()` is keyword-only now, to be consistent with `dataclasses.field()`. [#140]
+- `Validator`: The helper method `_ensure_type()` now allows `None` if `NoneType` is in the list of expected types. [#134]
+- Several error messages have been changed for consistency. This usually shouldn't have any effect on code.
+
+### Deprecated
+
+The following things have been deprecated and might be removed in a future version (possibly the next minor release).
+
+- Deprecate calling `DefaultUnset()` and `NoDefault()`. [#136]
+  - You should use them without parentheses instead: `DefaultUnset` and `NoDefault`.
+- `validataclass_field()`: Deprecate using the `default` argument with "raw" values and `dataclasses.MISSING`. [#140]
+  - Currently, you can use "raw" default values (meaning: not wrapped in `Default` or similar) as well as the special
+    value `dataclasses.MISSING` as the default in `validataclass_field()`. This overcomplicates the typing without any
+    real benefit, for a function that usually isn't used directly anyway.
+  - You should use default objects instead, e.g. `Default(...)` instead of raw default values or `NoDefault` instead of
+    `dataclasses.MISSING`.
+- Deprecate reusing TypeVars from the library by removing them from `__all__`. [#134]
+  - Previously, TypeVars like `T_Enum` (used by the `EnumValidator`) could be imported and reused in user code. These
+    TypeVars are for internal use and can be renamed or removed at any point. There also is no good reason to reuse
+    them, it's better to just define your own TypeVars instead.
+  - The TypeVars still exist and *can* still be imported, but since they're removed from `__all__`, linters should
+    complain about importing them. This effectively deprecates usings them without breaking anything during runtime.
+
+### Removed
+
+- Drop support for Python 3.8. [#128]
+- Drop support for Python 3.9. [#130]
+- **Breaking change:** Remove support for using `Default()` without any arguments. [#136]
+  - This was an undocumented feature that most likely wasn't used anyway.
+  - Previously, using `Default()` was equivalent to `Default(None)`. You should use `Default(None)` instead, which is
+    also more explicit.
+
+### Dependencies
+
+- Increase minimum required version of `typing-extensions` to 4.14. [#131]
+- Add conditional dependency `tomli` for Python version 3.10 and below. [#141]
+  - The mypy plugin requires a TOML library to parse `pyproject.toml`. Tomli is a simple library without dependencies.
+  - Since Python 3.11, the standard library comes with the module `tomllib` (which in fact is based on `tomli`), so the
+    library will only installed for older Python versions.
+
+### Testing / CI
+
+- Improve file structure for tests: Move unit tests to `tests/unit/`. [#133]
+- Add [pytest-mypy-plugins](https://github.com/typeddjango/pytest-mypy-plugins) to testing dependencies. [#134]
+  - This library is a pytest plugin that can be used to test the output of mypy for a given piece of code. It's mostly
+    used for testing the custom mypy plugin, but also for verifying the typing of the generic-based validator classes.
+- Update testing dependencies and pin them to minor versions. [#143]
+- Update GitHub actions. [#131], [#143]
+
+### Miscellaneous
+
+- Various code modernizations after dropping support for Python 3.8 and 3.9. [#128], [#130]
+- Various typing improvements and fixes. [#138]
+
+[#128]: https://github.com/binary-butterfly/validataclass/pull/128
+[#130]: https://github.com/binary-butterfly/validataclass/pull/130
+[#131]: https://github.com/binary-butterfly/validataclass/pull/131
+[#132]: https://github.com/binary-butterfly/validataclass/pull/132
+[#133]: https://github.com/binary-butterfly/validataclass/pull/133
+[#134]: https://github.com/binary-butterfly/validataclass/pull/134
+[#136]: https://github.com/binary-butterfly/validataclass/pull/136
+[#137]: https://github.com/binary-butterfly/validataclass/pull/137
+[#138]: https://github.com/binary-butterfly/validataclass/pull/138
+[#139]: https://github.com/binary-butterfly/validataclass/pull/139
+[#140]: https://github.com/binary-butterfly/validataclass/pull/140
+[#141]: https://github.com/binary-butterfly/validataclass/pull/141
+[#143]: https://github.com/binary-butterfly/validataclass/pull/143
+
+[@the-infinity]: https://github.com/the-infinity
 
 
 ## [0.11.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.11.0) - 2024-08-12
