@@ -9,6 +9,7 @@ from .validator import Validator  # isort:skip
 
 # Validators
 from .allow_empty_string import AllowEmptyString
+from .any_dict_validator import AnyDictValidator
 from .any_of_validator import AnyOfValidator
 from .anything_validator import AnythingValidator
 from .big_integer_validator import BigIntegerValidator
@@ -44,6 +45,7 @@ from .list_validator import T_ListItem  # noqa  # isort:skip
 
 __all__ = [
     'AllowEmptyString',
+    'AnyDictValidator',
     'AnyOfValidator',
     'AnythingValidator',
     'BigIntegerValidator',

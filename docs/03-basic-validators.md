@@ -49,6 +49,7 @@ The validators provided by the library can be roughly categorized based on their
   - `Noneable`: Wraps another validator but allows the input to be `None`
   - `NoneToUnsetValue`: Like `Noneable`, but converts `None` to `UnsetValue`
   - `AnythingValidator`: Accepts any input without validation (optionally with type restrictions)
+  - `AnyDictValidator`: Accepts any **dict** with string keys, without validating its values
   - `RejectValidator`: Rejects any input with a validation error (except for `None` if allowed)
   - `DiscardValidator`: Discards any input and returns a predefined value
   - `AllowEmptyString`: Wraps another validator but allows the input to be empty string `('')`
@@ -1192,11 +1193,42 @@ validator.validate('')    # raises InvalidTypeError (with expected_types=['float
 validator.validate(42)    # returns 42
 
 # Accepts only dictionaries (which are returned completely unvalidated!)
+# Please note that this validator accepts dictionaries with any type of keys, unlike the DictValidator which only
+# allows string keys (like in JSON objects). Check out the AnyDictValidator for a similar validator *with* key type
+# validation.
 validator = AnythingValidator(allowed_types=dict)
 validator.validate(None)      # raises RequiredValueError
 validator.validate('')        # raises InvalidTypeError (with expected_type='dict')
 validator.validate({})        # returns {} (empty dictionary)
 validator.validate({13: 12})  # returns {13: 12}
+```
+
+
+### AnyDictValidator
+
+The `AnyDictValidator` is a validator that accepts dictionaries with arbitrary values.
+
+This validator is equivalent to a `DictValidator(default_validator=AnythingValidator())`, so a regular `DictValidator`
+that accepts any field with any value. The only validation that happens here is that **keys have to be strings**, just
+like in the `DictValidator` and just like in JSON objects.
+
+This makes it different from an `AnythingValidator(allowed_types=[dict])`, which allows arbitrary dictionaries with
+arbitrary key types!
+
+In short, if you need a validator for arbitrary dictionaries of the type `dict[str, Any]`, use the `AnyDictValidator()`.
+Only use the `AnythingValidator` if you explicitly want to allow arbitrary key types as well (i.e. `dict[Any, Any]`).
+
+**Examples:**
+
+```python
+from validataclass.validators import AnyDictValidator
+
+# Accepts any dictionary as long as all keys are strings
+validator = AnyDictValidator()
+validator.validate(None)         # raises RequiredValueError
+validator.validate('')           # raises InvalidTypeError (with expected_type='dict')
+validator.validate({})           # returns {} (empty dictionary)
+validator.validate({'foo': 42})  # returns {'foo': 42}
 ```
 
 

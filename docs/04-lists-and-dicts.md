@@ -278,6 +278,12 @@ except ValidationError as error:
 ```
 
 
+### See also
+
+If you need a validator that accepts dictionaries with arbitrary values, check out the `AnyDictValidator`, which is
+essentially a shorthand for `DictValidator(default_validator=AnythingValidator())`.
+
+
 ## Summary
 
 We have now learned how to validate lists and dictionaries which can contain all sorts of data. This basically is enough to build

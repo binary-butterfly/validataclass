@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Check that validator has correct type parameter for Validator[T]
+- case: any_dict_validator
+  main: |
+    from typing import Any
+    from validataclass.validators import AnyDictValidator, DictValidator, Validator
+
+    validator = AnyDictValidator()
+    reveal_type(validator)                       # N: Revealed type is "validataclass.validators.any_dict_validator.AnyDictValidator"
+    reveal_type(validator.validate({'a': 42}))   # N: Revealed type is "dict[str, object]"
+
+    var1: Validator[dict[str, object]] = validator  # correct
+    var2: Validator[dict[str, Any]] = validator     # correct
+    var3: Validator[dict[str, str]] = validator     # E: Incompatible types in assignment (expression has type "AnyDictValidator", variable has type "Validator[dict[str, str]]")  [assignment]
+    var4: Validator[str] = validator                # E: Incompatible types in assignment (expression has type "AnyDictValidator", variable has type "Validator[str]")  [assignment]
+    var5: DictValidator[object] = validator         # correct
+    var6: DictValidator[Any] = validator            # correct
+    var7: DictValidator[str] = validator            # E: Incompatible types in assignment (expression has type "AnyDictValidator", variable has type "DictValidator[str]")  [assignment]
