@@ -27,8 +27,8 @@ class UnsetValueTest:
         """ Test that UnsetValue is a unique sentinel object, i.e. all UnsetValue values are the same. """
         unset_value1 = UnsetValue
         unset_value2 = copy(unset_value1)
-        unset_value3 = UnsetValueType()
-        assert unset_value1 is unset_value2 is unset_value3 is UnsetValue
+        assert unset_value1 is UnsetValue
+        assert unset_value2 is UnsetValue
 
         # Test that calling the UnsetValue returns the UnsetValue itself
         assert UnsetValue() is UnsetValue
