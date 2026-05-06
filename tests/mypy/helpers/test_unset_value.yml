@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
+
+# Test that a type containing UnsetValueType is narrowed down correctly with `is`, `==` and boolean evaluation.
+- case: unset_value_type_narrowing
+  main: |
+    from validataclass.helpers import UnsetValue, UnsetValueType
+
+    var: str | UnsetValueType
+    reveal_type(var)  # N: Revealed type is "str | validataclass.helpers.unset_value.UnsetValueType"
+
+    # Type narrowing with is
+    if var is not UnsetValue:
+        reveal_type(var)  # N: Revealed type is "str"
+    else:
+        reveal_type(var)  # N: Revealed type is "Literal[validataclass.helpers.unset_value.UnsetValueType.UnsetValue]"
+
+    # Type narrowing with equality
+    if var == UnsetValue:
+        reveal_type(var)  # N: Revealed type is "Literal[validataclass.helpers.unset_value.UnsetValueType.UnsetValue]"
+    else:
+        reveal_type(var)  # N: Revealed type is "str"
+
+    # Type narrowing by checking falsiness
+    if var:
+        reveal_type(var)  # N: Revealed type is "str"
+    else:
+        reveal_type(var)  # N: Revealed type is "Literal[''] | validataclass.helpers.unset_value.UnsetValueType"
