@@ -228,7 +228,7 @@ class FieldTypeResolver:
         for base_class in base_classes:
             try:
                 base_parsed_field = self._parsed_field_cache.get_field(base_class, field_name)
-            except KeyError:  # pragma:
+            except KeyError:  # pragma: nocover
                 # A cache miss is most likely a bug in the plugin, so we report it to the user as an internal error
                 self._fail_internal_error(
                     f'Cannot retrieve base class field "{base_class}.{field_name}" from parsed field cache.',
