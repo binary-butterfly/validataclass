@@ -75,7 +75,7 @@ defined your own decorator that extends `@validataclass` or you're using another
 
 All these settings require fully qualified names, e.g. `example.module.my_custom_decorator`.
 
-- `custom_validataclass_decorators` (list of strings): Custom decorators for creating validataclasses. 
+- `custom_validataclass_decorators` (list of strings): Custom decorators for creating validataclasses.
   - These are basically treated as aliases to `@validataclass`, so their signature and behaviour should be compatible to
     the original decorator.
   - They are also required to be decorated with `@typing.dataclass_transform(kw_only_default=True)`.
@@ -110,10 +110,14 @@ All error codes are sub codes of `validataclass`, so disabling `validataclass` w
 - `validataclass-empty-type`: Field that has an empty type, i.e. the dataclass can never be validated because the
   validator and default don't allow any value. This can happen when you're using a `RejectValidator` without a default.
   The validator will reject every input, but without a default the field is still required.
-- `validataclass-not-implemented`: Special error code for edge cases that are currently not supported by the plugin.
-  If you get this error, you found an edge case that was unknown to the developers. Please create a bug report for this
-  to help with the plugin development. Even if you believe it was a mistake on your part, you might have found a way to
-  cause an edge case that we thought can never happen.
+
+Additionally, the following error codes likely indicate an issue with the plugin rather than your code. This could be
+an inconsistency in the cache (clearing `.mypy_cache` might help) or an edge case that was unknown to the developers.
+Please create a bug report for these errors to help with plugin development. Even if you believe it was a mistake on
+your part, you might have found a way to cause an edge case that we thought can never happen.
+
+- `validataclass-internal-error`: Internal plugin error, for example because there was an unexpected cache miss.
+- `validataclass-not-implemented`: Error code for edge cases that are currently not supported by the plugin.
 
 
 ## Common mistakes / migration guide
