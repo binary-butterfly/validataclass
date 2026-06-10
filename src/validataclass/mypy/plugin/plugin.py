@@ -58,6 +58,9 @@ class ValidataclassPlugin(Plugin):
     # Set of all validataclass decorators, including the built-in ones and user-defined ones from the plugin config
     _validataclass_decorator_fullnames: set[str]
 
+    # Set of the module names that contain the validataclass decorators from _validataclass_decorator_fullnames
+    _validataclass_decorator_module_names: set[str]
+
     def __init__(self, options: Options):
         super().__init__(options)
 
@@ -71,6 +74,9 @@ class ValidataclassPlugin(Plugin):
         # Cache some values for easier access
         self._validataclass_decorator_fullnames = (
             VALIDATACLASS_DECORATORS | self._plugin_config.custom_validataclass_decorators
+        )
+        self._validataclass_decorator_module_names = set(
+            fullname.rsplit('.', 1)[0] for fullname in self._validataclass_decorator_fullnames
         )
 
     @override
@@ -95,9 +101,9 @@ class ValidataclassPlugin(Plugin):
         TODO: This is a workaround that partially disables caching (which is still better than disabling caching
           completely). We should find a better solution that works without cache invalidation, but for now this is fine.
         """
-        # Always invalidate cache for the module that defines the validataclass decorator to trigger rechecking of all
-        # files that define validataclasses.
-        if ctx.id == 'validataclass.dataclasses.validataclass':
+        # Always invalidate cache for the modules that define the validataclass decorator (as well as custom decorators)
+        # to trigger rechecking of all files that define validataclasses.
+        if ctx.id in self._validataclass_decorator_module_names:
             return str(datetime.now())
 
         return None
