@@ -24,7 +24,11 @@ from mypy.types import (
 )
 
 from .constants import FIELD_DEFAULT_BASE_CLASS, VALIDATACLASS_FIELD_FUNCS, VALIDATOR_BASE_CLASS
-from .error_codes import ERROR_CODE_VALIDATACLASS, ERROR_CODE_VALIDATACLASS_EMPTY_TYPE
+from .error_codes import (
+    ERROR_CODE_VALIDATACLASS,
+    ERROR_CODE_VALIDATACLASS_EMPTY_TYPE,
+    ERROR_CODE_VALIDATACLASS_INTERNAL_ERROR,
+)
 from .debug_logger import DebugLogger
 from .parsed_field_cache import ParsedFieldCache, ParsedValidataclassField
 from .plugin_config import PluginConfig
@@ -95,6 +99,24 @@ class FieldTypeResolver:
             msg,
             context or self._ctx.context,
             code=code or ERROR_CODE_VALIDATACLASS,
+        )
+
+    def _fail_internal_error(self, msg: str, note_msg: str, context: Context | None = None) -> None:  # pragma: nocover
+        """
+        Report an internal plugin error using the error code "validataclass-internal-error" as well as a note with more
+        explanation.
+        """
+        context = context or self._ctx.context
+        error_info = self._api.msg.fail(
+            f'Internal plugin error: {msg}',
+            context,
+            code=ERROR_CODE_VALIDATACLASS_INTERNAL_ERROR,
+        )
+        self._api.msg.note(
+            f'{note_msg} If the issue persists, please report this as a bug to: '
+            'https://github.com/binary-butterfly/validataclass/issues',
+            context,
+            parent_error=error_info,
         )
 
     def resolve(self) -> Type:
@@ -204,7 +226,16 @@ class FieldTypeResolver:
 
         # First, retrieve the parsed field of all base classes from our cache, starting with the "oldest" class
         for base_class in base_classes:
-            base_parsed_field = self._parsed_field_cache.get_field(base_class, field_name)
+            try:
+                base_parsed_field = self._parsed_field_cache.get_field(base_class, field_name)
+            except KeyError:  # pragma: nocover
+                # A cache miss is most likely a bug in the plugin, so we report it to the user as an internal error
+                self._fail_internal_error(
+                    f'Cannot retrieve base class field "{base_class}.{field_name}" from parsed field cache.',
+                    'Try removing ".mypy_cache" or use "--no-incremental" to disable the mypy cache as a workaround.',
+                )
+                fully_parsed_field.error = True
+                return fully_parsed_field
 
             # If there was an error when the field in the base class was parsed, set the error flag for later, then
             # ignore the base class and continue.

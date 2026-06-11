@@ -29,6 +29,13 @@ ERROR_CODE_VALIDATACLASS_EMPTY_TYPE: Final = ErrorCode(
     sub_code_of=ERROR_CODE_VALIDATACLASS,
 )
 
+ERROR_CODE_VALIDATACLASS_INTERNAL_ERROR: Final = ErrorCode(
+    'validataclass-internal-error',
+    'Internal error in the validataclass mypy plugin (please create a bug report)',
+    'Plugin',
+    sub_code_of=ERROR_CODE_VALIDATACLASS,
+)
+
 ERROR_CODE_VALIDATACLASS_NOT_IMPLEMENTED: Final = ErrorCode(
     'validataclass-not-implemented',
     'Special code for edge cases that are currently not supported by the plugin (please create a bug report)',
