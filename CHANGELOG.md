@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/binary-butterfly/validataclass/compare/0.12.0...HEAD)
 
 
+## [0.13.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.13.0) - 2026-06-15
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.12.0...0.13.0)
+
+This release further improves type checking with mypy by allowing type narrowing for `UnsetValue`. This means you can
+now test for `value is not UnsetValue` in conditions and the type of `value` will be correctly narrowed down to exclude
+`UnsetValueType`.
+
+The release also introduces a small new validator and fixes a crash in the mypy plugin.
+
+### Added
+
+- `AnyDictValidator`: New validator that accepts arbitray dictionaries (as long as the keys are strings). [#148]
+
+### Changed
+
+- Change `UnsetValueType` to a single-value enum for better type narrowing of `UnsetValue`. [#147]
+
+### Fixed
+
+- mypy plugin: Add error handling for field cache misses by reporting a mypy error instead of crashing. [#149]
+  - Previously an uncaught exception was raised when a field of a base class was not found in the field cache. Now the
+    plugin will report a `validataclass-internal-error` instead, which gives the user better error messages and the
+    possibility to silence the error until it is fixed upstream while still being able to use the plugin.
+- mypy plugin: Fix crash related to cache invalidation when using custom validataclass decorators. [#149]
+
+[#147]: https://github.com/binary-butterfly/validataclass/pull/147
+[#148]: https://github.com/binary-butterfly/validataclass/pull/148
+[#149]: https://github.com/binary-butterfly/validataclass/pull/149
+
+
 ## [0.12.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.12.0) - 2026-04-14
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.11.0...0.12.0)
