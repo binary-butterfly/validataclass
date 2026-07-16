@@ -25,11 +25,14 @@ class Validator(Generic[T_Validated], ABC):
     """
     Base class for building extendable validator classes that validate, sanitize and transform input.
     """
+    _validate_accepts_kwargs: bool = False
 
     @override
     def __init_subclass__(cls, **kwargs: Any):
+        cls._validate_accepts_kwargs = inspect.getfullargspec(cls.validate).varkw is not None
+
         # Check if subclasses are future-proof
-        if inspect.getfullargspec(cls.validate).varkw is None:
+        if not cls._validate_accepts_kwargs:
             warnings.warn(
                 "Validator classes will be required to accept arbitrary keyword arguments in their validate() method "
                 f"in the future. Please add **kwargs to the list of parameters of {cls.__name__}.validate().",
@@ -67,7 +70,7 @@ class Validator(Generic[T_Validated], ABC):
         Use this method only if you want/need to pass context arguments to a validator and don't know for sure that the
         validator accepts keyword arguments (e.g. because you don't know the class of the validator).
         """
-        if inspect.getfullargspec(self.validate).varkw is not None:
+        if self._validate_accepts_kwargs:
             return self.validate(input_data, **kwargs)
         else:
             return self.validate(input_data)
