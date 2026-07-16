@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/binary-butterfly/validataclass/compare/0.12.0...HEAD)
 
 
+## [0.13.1](https://github.com/binary-butterfly/validataclass/releases/tag/0.13.1) - 2026-07-16
+
+[Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.13.0...0.13.1)
+
+### Improved
+
+- Improve performance of validators by removing expensive runtime code inspection (by [@the-infinity]). [#151]
+
+[#151]: https://github.com/binary-butterfly/validataclass/pull/151
+
+
 ## [0.13.0](https://github.com/binary-butterfly/validataclass/releases/tag/0.13.0) - 2026-06-15
 
 [Full changelog](https://github.com/binary-butterfly/validataclass/compare/0.12.0...0.13.0)
