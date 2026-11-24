@@ -51,8 +51,7 @@ Alternatively you can manually run the following commands (which do the same as 
 ```
 $ virtualenv venv
 $ source venv/bin/activate
-$ pip install -r requirements.txt
-$ pip install -e .
+$ pip install -e ".[testing]"
 ```
 
 
